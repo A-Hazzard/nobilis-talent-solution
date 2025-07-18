@@ -2,41 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Kareem Payne Leadership Coaching Design System */
 
 @layer base {
   :root {
+    /* Core brand colors */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 215 25% 27%;
 
+    /* Kareem's Brand Palette */
+    --primary: 176 84% 47%;        /* Teal primary */
+    --primary-light: 176 67% 56%;  /* Light teal */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 264 83% 70%;      /* Soft purple */
+    --secondary-light: 264 67% 80%; /* Light purple */
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 215 28% 17%;         /* Dark gray */
+    --accent-light: 215 15% 35%;   /* Medium gray */
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 14% 50%;
+
+    /* Card and surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 27%;
+    --card-border: 214 20% 92%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Interactive elements */
+    --border: 214 20% 92%;
+    --input: 214 20% 92%;
+    --ring: 176 84% 47%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(176 84% 47%) 0%, hsl(176 67% 56%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(264 83% 70%) 0%, hsl(264 67% 80%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(176 84% 47%) 0%, hsl(264 83% 70%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -2px hsl(215 25% 27% / 0.08);
+    --shadow-medium: 0 8px 25px -5px hsl(215 25% 27% / 0.12);
+    --shadow-strong: 0 16px 40px -12px hsl(215 25% 27% / 0.18);
+    --shadow-teal: 0 8px 32px -8px hsl(176 84% 47% / 0.3);
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +116,87 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer components {
+  /* Button variants */
+  .btn-primary {
+    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-light))] text-primary-foreground px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:shadow-[--shadow-teal] hover:scale-105 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-gradient-to-r from-[hsl(var(--secondary))] to-[hsl(var(--secondary-light))] text-secondary-foreground px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:shadow-[--shadow-medium] hover:scale-105 active:scale-95;
+  }
+
+  .btn-outline {
+    @apply border-2 border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:bg-[hsl(var(--primary))] hover:text-primary-foreground hover:scale-105 active:scale-95;
+  }
+
+  /* Card styles */
+  .card-elevated {
+    @apply bg-card rounded-2xl p-8 shadow-[--shadow-soft] border border-[hsl(var(--card-border))] transition-all duration-300 hover:shadow-[--shadow-medium] hover:-translate-y-1;
+  }
+
+  .card-feature {
+    @apply bg-card rounded-3xl p-10 shadow-[--shadow-medium] border border-[hsl(var(--card-border))] transition-all duration-500 hover:shadow-[--shadow-strong] hover:-translate-y-2;
+  }
+
+  /* Gradients */
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-subtle {
+    background: var(--gradient-subtle);
+  }
+
+  /* Text styles */
+  .text-hero {
+    @apply text-5xl md:text-6xl lg:text-7xl font-bold leading-tight;
+  }
+
+  .text-section {
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold;
+  }
+
+  .text-subsection {
+    @apply text-xl md:text-2xl font-semibold;
+  }
+
+  /* Animations */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-fade-up {
+    animation: fadeUp 0.8s ease-out forwards;
+  }
+}
+
+@layer utilities {
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+
+  .transition-bounce {
+    transition: var(--transition-bounce);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

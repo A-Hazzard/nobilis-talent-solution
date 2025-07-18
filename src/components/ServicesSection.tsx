@@ -67,7 +67,7 @@ const ServicesSection = () => {
     <section id="services" className="py-20 lg:py-32 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16 animate-fade-up">
+        <div className="text-center mb-16" data-animate>
           <h2 className="text-section text-accent mb-6">
             Leadership Solutions That Drive Results
           </h2>
@@ -82,7 +82,8 @@ const ServicesSection = () => {
           {services.map((service, index) => (
             <div
               key={index}
-              className="card-feature group animate-fade-up"
+              className="card-feature group hover-glow"
+              data-animate
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="flex items-center mb-6">
@@ -122,7 +123,7 @@ const ServicesSection = () => {
         </div>
 
         {/* Testimonial Highlight */}
-        <div className="card-elevated bg-gradient-subtle text-center max-w-4xl mx-auto animate-fade-up">
+        <div className="card-elevated bg-gradient-subtle text-center max-w-4xl mx-auto hover-glow" data-animate>
           <div className="flex justify-center mb-6">
             {[...Array(testimonialHighlight.rating)].map((_, i) => (
               <Star key={i} className="w-6 h-6 text-secondary fill-current" />
@@ -138,7 +139,7 @@ const ServicesSection = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center mt-16 animate-fade-up">
+        <div className="text-center mt-16" data-animate>
           <h3 className="text-3xl font-bold text-accent mb-6">
             Ready to Transform Your Leadership?
           </h3>

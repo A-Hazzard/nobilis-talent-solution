@@ -32,12 +32,12 @@ const AboutSection = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left side - Image and stats */}
-          <div className="relative">
+          <div className="relative" data-animate>
             <div className="relative z-10">
               <img
                 src={kareemProfile}
                 alt="Kareem Payne - Leadership Coach"
-                className="w-full max-w-md mx-auto rounded-3xl shadow-strong"
+                className="w-full max-w-md mx-auto rounded-3xl shadow-strong hover-float"
               />
             </div>
             
@@ -58,7 +58,7 @@ const AboutSection = () => {
           </div>
 
           {/* Right side - Content */}
-          <div className="animate-fade-up">
+          <div data-animate>
             <h2 className="text-section text-accent mb-6">
               Meet Kareem Payne
             </h2>

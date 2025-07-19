@@ -1,4 +1,6 @@
-# Welcome to your Lovable project
+# Payne Leadership Web
+
+A modern leadership coaching website built with Next.js 15, TypeScript, and Tailwind CSS.
 
 ## Project info
 
@@ -18,7 +20,7 @@ Changes made via Lovable will be committed automatically to this repo.
 
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The only requirement is having Node.js & pnpm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
 Follow these steps:
 
@@ -30,10 +32,16 @@ git clone <YOUR_GIT_URL>
 cd <YOUR_PROJECT_NAME>
 
 # Step 3: Install the necessary dependencies.
-npm i
+pnpm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Step 4: Start the development server with Turbopack for fast refresh.
+pnpm dev
+
+# Step 5: Build for production.
+pnpm build
+
+# Step 6: Start production server.
+pnpm start
 ```
 
 **Edit a file directly in GitHub**
@@ -54,11 +62,23 @@ npm run dev
 
 This project is built with:
 
-- Vite
+- Next.js 15 (with Turbopack)
 - TypeScript
-- React
-- shadcn-ui
+- React 18
+- shadcn/ui
 - Tailwind CSS
+- Radix UI
+- Lucide React Icons
+
+## Features
+
+- Modern, responsive design
+- Fast development with Turbopack
+- Type-safe with TypeScript
+- Beautiful UI components with shadcn/ui
+- Optimized images with Next.js Image component
+- Smooth animations and transitions
+- SEO optimized
 
 ## How can I deploy this project?
 

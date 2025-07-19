@@ -1,29 +1,35 @@
-import js from "@eslint/js";
-import globals from "globals";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
-import tseslint from "typescript-eslint";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import path from "path";
 
-export default tseslint.config(
-  { ignores: ["dist"] },
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const project = path.resolve(__dirname, "tsconfig.json");
+
+/** @type {import("eslint").Linter.Config} */
+const config = [
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ["**/*.{ts,tsx}"],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
+    extends: ["next/core-web-vitals"],
+    parserOptions: {
+      project,
     },
-    plugins: {
-      "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
+    globals: {
+      React: true,
+      JSX: true,
     },
+    settings: {
+      "import/resolver": {
+        typescript: {
+          project,
+        },
+      },
+    },
+    ignorePatterns: ["node_modules/", "dist/", ".next/"],
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
-      "@typescript-eslint/no-unused-vars": "off",
+      "import/no-duplicates": "error",
     },
-  }
-);
+  },
+];
+
+export default config;

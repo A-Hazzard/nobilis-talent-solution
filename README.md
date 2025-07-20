@@ -1,4 +1,4 @@
-# Payne Leadership Platform
+# Consultation Website Made In NextJs 15
 
 A modern leadership coaching and business management platform built with Next.js 15, TypeScript, and Firebase. Features comprehensive lead management, resource sharing, calendar scheduling, and analytics dashboard.
 

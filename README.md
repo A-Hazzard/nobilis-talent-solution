@@ -26,7 +26,7 @@ A modern leadership coaching and business management platform built with Next.js
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/A-Hazzard/scalable-consultation-website.git
 cd payne-leadership-web
 
 # Copy environment template

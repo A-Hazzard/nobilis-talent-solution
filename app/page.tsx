@@ -8,9 +8,8 @@ import TestimonialsSection from '@/components/TestimonialsSection';
 import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 import StickyCallButton from '@/components/StickyCallButton';
-import CustomCursor from '@/components/CustomCursor';
 import ScrollToTop from '@/components/ScrollToTop';
-import { useScrollAnimations, useParallax } from '@/hooks/useScrollAnimations';
+import { useScrollAnimations, useParallax } from '@/lib/hooks/useScrollAnimations';
 import { useEffect } from 'react';
 
 export default function Home() {
@@ -37,17 +36,13 @@ export default function Home() {
       });
     });
 
-    // Hide default cursor on interactive elements
-    document.body.style.cursor = 'none';
-    
     return () => {
-      document.body.style.cursor = 'auto';
+      // Cleanup
     };
   }, []);
 
   return (
     <div className="min-h-screen relative">
-      <CustomCursor />
       <Navigation />
       <HeroSection />
       <AboutSection />

@@ -7,10 +7,29 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependency directories
 node_modules
+
+# Build output
 dist
 dist-ssr
+.next
+out
+.next/cache
+.next/static
+.next/standalone
+
+# Local environment files
+.env
+.env.*
 *.local
+
+# Next.js build artifacts
+.next/
+out/
+.vercel/
+.vercel/output/
+.vercel/project.json
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +41,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# Misc
+coverage/
+npm-packages-offline-cache/
+*.tgz
+*.patch
+*.orig
+*.rej
+*.bak
+*.tmp
+*.temp
+*.cache
+*.log.[0-9]*
+# End of Selection

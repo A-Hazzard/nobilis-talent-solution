@@ -29,8 +29,8 @@ A modern leadership coaching and business management platform built with Next.js
 git clone https://github.com/A-Hazzard/scalable-consultation-website.git
 cd payne-leadership-web
 
-# Copy environment template
-cp .env.example .env
+# Create environment file
+# Copy the example below and create a .env file in the root directory
 
 # Edit .env with your Firebase credentials
 # See Environment Setup section below
@@ -49,7 +49,7 @@ docker run -p 3000:3000 --env-file .env payne-leadership
 pnpm install
 
 # Set up environment variables
-cp .env.example .env
+# Create a .env file with the content from Environment Setup section
 
 # Start development server
 pnpm dev
@@ -57,16 +57,21 @@ pnpm dev
 
 ## 🔧 Environment Setup
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory with the following content:
 
 ```env
 # Firebase Configuration
+# Replace these values with your actual Firebase project credentials
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
 NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef123456
+
+# Application Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
 ```
 
 ### Firebase Setup

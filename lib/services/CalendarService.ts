@@ -1,4 +1,6 @@
 import type { CalendarEvent } from '@/shared/types/entities';
+import { db } from '@/lib/firebase/config';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy, where } from 'firebase/firestore';
 
 export interface CreateEventData {
   title: string;
@@ -28,10 +30,10 @@ export interface CalendarServiceResponse<T> {
 export class CalendarService {
   private static instance: CalendarService;
   private events: CalendarEvent[] = [];
-  private storageKey = 'calendar-events';
+  private collectionName = 'calendar-events';
 
   private constructor() {
-    this.loadEvents();
+    // No need to load events in constructor since we'll fetch from Firebase
   }
 
   static getInstance(): CalendarService {
@@ -57,17 +59,24 @@ export class CalendarService {
         };
       }
 
-      const newEvent: CalendarEvent = {
-        id: this.generateId(),
+      const newEvent: Omit<CalendarEvent, 'id'> = {
         ...eventData,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      this.events.push(newEvent);
-      this.saveEvents();
+      // Add to Firebase
+      const docRef = await addDoc(collection(db, this.collectionName), newEvent);
+      
+      const createdEvent: CalendarEvent = {
+        id: docRef.id,
+        ...newEvent,
+      };
 
-      return { data: newEvent };
+      // Add to local cache
+      this.events.push(createdEvent);
+
+      return { data: createdEvent };
     } catch (error) {
       console.error('Error creating event:', error);
       return {
@@ -98,7 +107,7 @@ export class CalendarService {
 
       // Validate update data if provided
       if (Object.keys(updateData).length > 0) {
-        const validation = this.validateEventData(updateData as CreateEventData);
+        const validation = this.validateEventData(updateData);
         if (!validation.isValid) {
           return {
             error: {
@@ -109,16 +118,21 @@ export class CalendarService {
         }
       }
 
-      const updatedEvent: CalendarEvent = {
+      // Update in Firebase
+      const eventRef = doc(db, this.collectionName, id);
+      await updateDoc(eventRef, {
+        ...updateData,
+        updatedAt: new Date(),
+      });
+
+      // Update local cache
+      this.events[eventIndex] = {
         ...this.events[eventIndex],
         ...updateData,
         updatedAt: new Date(),
       };
 
-      this.events[eventIndex] = updatedEvent;
-      this.saveEvents();
-
-      return { data: updatedEvent };
+      return { data: this.events[eventIndex] };
     } catch (error) {
       console.error('Error updating event:', error);
       return {
@@ -146,8 +160,12 @@ export class CalendarService {
         };
       }
 
+      // Delete from Firebase
+      const eventRef = doc(db, this.collectionName, eventId);
+      await deleteDoc(eventRef);
+
+      // Remove from local cache
       this.events.splice(eventIndex, 1);
-      this.saveEvents();
 
       return {};
     } catch (error) {
@@ -162,11 +180,30 @@ export class CalendarService {
   }
 
   /**
-   * Get all events
+   * Get all calendar events
    */
   async getEvents(): Promise<CalendarServiceResponse<CalendarEvent[]>> {
     try {
-      return { data: [...this.events] };
+      // Fetch from Firebase
+      const eventsRef = collection(db, this.collectionName);
+      const q = query(eventsRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const firebaseEvents: CalendarEvent[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        firebaseEvents.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+        } as CalendarEvent);
+      });
+
+      // Update local cache
+      this.events = firebaseEvents;
+
+      return { data: firebaseEvents };
     } catch (error) {
       console.error('Error getting events:', error);
       return {
@@ -179,32 +216,63 @@ export class CalendarService {
   }
 
   /**
-   * Get events for a specific date
+   * Get events by date
    */
   async getEventsByDate(date: string): Promise<CalendarServiceResponse<CalendarEvent[]>> {
     try {
-      const events = this.events.filter(event => event.date === date);
+      const eventsRef = collection(db, this.collectionName);
+      const q = query(eventsRef, where('date', '==', date));
+      const querySnapshot = await getDocs(q);
+      
+      const events: CalendarEvent[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        events.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+        } as CalendarEvent);
+      });
+
       return { data: events };
     } catch (error) {
       console.error('Error getting events by date:', error);
       return {
         error: {
           code: 'fetch-error',
-          message: 'Failed to fetch events for date'
+          message: 'Failed to fetch events by date'
         }
       };
     }
   }
 
   /**
-   * Get upcoming events (sorted by date)
+   * Get upcoming events
    */
   async getUpcomingEvents(limit: number = 5): Promise<CalendarServiceResponse<CalendarEvent[]>> {
     try {
-      const sortedEvents = [...this.events].sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+      const today = new Date().toISOString().split('T')[0];
+      const eventsRef = collection(db, this.collectionName);
+      const q = query(
+        eventsRef, 
+        where('date', '>=', today),
+        orderBy('date', 'asc')
       );
-      return { data: sortedEvents.slice(0, limit) };
+      const querySnapshot = await getDocs(q);
+      
+      const events: CalendarEvent[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        events.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+        } as CalendarEvent);
+      });
+
+      return { data: events.slice(0, limit) };
     } catch (error) {
       console.error('Error getting upcoming events:', error);
       return {
@@ -221,7 +289,21 @@ export class CalendarService {
    */
   async getEventsByType(type: CalendarEvent['type']): Promise<CalendarServiceResponse<CalendarEvent[]>> {
     try {
-      const events = this.events.filter(event => event.type === type);
+      const eventsRef = collection(db, this.collectionName);
+      const q = query(eventsRef, where('type', '==', type));
+      const querySnapshot = await getDocs(q);
+      
+      const events: CalendarEvent[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        events.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+        } as CalendarEvent);
+      });
+
       return { data: events };
     } catch (error) {
       console.error('Error getting events by type:', error);
@@ -271,38 +353,5 @@ export class CalendarService {
   private isValidDate(dateString: string): boolean {
     const date = new Date(dateString);
     return date instanceof Date && !isNaN(date.getTime());
-  }
-
-  /**
-   * Generate unique ID for events
-   */
-  private generateId(): string {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-  }
-
-  /**
-   * Load events from localStorage
-   */
-  private loadEvents(): void {
-    try {
-      const savedEvents = localStorage.getItem(this.storageKey);
-      if (savedEvents) {
-        this.events = JSON.parse(savedEvents);
-      }
-    } catch (error) {
-      console.error('Error loading events from localStorage:', error);
-      this.events = [];
-    }
-  }
-
-  /**
-   * Save events to localStorage
-   */
-  private saveEvents(): void {
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.events));
-    } catch (error) {
-      console.error('Error saving events to localStorage:', error);
-    }
   }
 } 

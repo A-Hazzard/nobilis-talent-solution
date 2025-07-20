@@ -131,6 +131,9 @@ export class CalendlyService {
    */
   setAccessToken(token: string) {
     this.accessToken = token;
+    // Store token in localStorage for persistence
+    localStorage.setItem('calendly_access_token', token);
+    console.log('🔑 Calendly access token set and stored');
   }
 
   /**
@@ -410,6 +413,10 @@ export class CalendlyService {
    * Map Calendly event type to internal event type
    */
   private mapEventTypeToInternal(calendlyEventType: string): CalendarEvent['type'] {
+    // Extract event type name from URI
+    // URI format: https://api.calendly.com/event_types/EVENT_TYPE_ID
+    const eventTypeName = calendlyEventType.split('/').pop() || '';
+    
     const typeMap: Record<string, CalendarEvent['type']> = {
       'consultation': 'consultation',
       'coaching': 'consultation',
@@ -418,9 +425,10 @@ export class CalendlyService {
       'meeting': 'meeting',
       'strategy': 'consultation',
       'review': 'meeting',
+      'test': 'meeting', // Add test as a meeting type
     };
 
-    const lowerType = calendlyEventType.toLowerCase();
+    const lowerType = eventTypeName.toLowerCase();
     
     for (const [key, value] of Object.entries(typeMap)) {
       if (lowerType.includes(key)) {
@@ -428,7 +436,7 @@ export class CalendlyService {
       }
     }
 
-    return 'consultation'; // Default fallback
+    return 'meeting'; // Default fallback
   }
 
   /**
@@ -448,25 +456,22 @@ export class CalendlyService {
       
       for (const calendlyEvent of events.data) {
         try {
-          // The event data is at the root level, not nested under 'event'
-          if (!calendlyEvent.name) {
-            console.warn('⚠️ Skipping event with missing name:', calendlyEvent);
+          // Skip canceled events
+          if (calendlyEvent.status === 'canceled') {
+            console.log('⏭️ Skipping canceled event:', calendlyEvent.name);
             continue;
           }
 
-          const eventData = {
-            title: calendlyEvent.name || 'Calendly Event',
-            date: calendlyEvent.start_time ? new Date(calendlyEvent.start_time).toISOString().split('T')[0] : '',
-            time: calendlyEvent.start_time ? new Date(calendlyEvent.start_time).toLocaleTimeString() : '',
-            location: calendlyEvent.location?.type || 'Online',
-            attendees: calendlyEvent.invitees_counter?.total || 1,
-            type: 'meeting' as const,
-            calendlyId: calendlyEvent.uri,
-            calendlyData: calendlyEvent
-          };
+          // Skip events with missing required data
+          if (!calendlyEvent.name || !calendlyEvent.start_time) {
+            console.warn('⚠️ Skipping event with missing data:', calendlyEvent);
+            continue;
+          }
 
-          console.log('📅 Processing event:', eventData.title, 'at', eventData.date, eventData.time);
-          syncedEvents.push(eventData);
+          // Use the new conversion method
+          const convertedEvent = this.convertCalendlyEventToCalendarEvent(calendlyEvent);
+          console.log('🔄 Converting event:', calendlyEvent.name, 'to:', convertedEvent);
+          syncedEvents.push(convertedEvent);
         } catch (eventError) {
           console.error('❌ Error processing individual event:', eventError);
           continue;
@@ -533,6 +538,240 @@ export class CalendlyService {
     } catch (error) {
       console.error('Error testing event fetching:', error);
       return { data: null, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  /**
+   * Create a new Calendly event
+   */
+  async createEvent(eventData: {
+    event_type: string;
+    start_time: string;
+    end_time: string;
+    invitee: {
+      name: string;
+      email: string;
+    };
+    location?: {
+      type: string;
+      location?: string;
+    };
+    custom_questions?: Array<{
+      question: string;
+      answer: string;
+    }>;
+  }): Promise<{ data: CalendlyScheduledEvent | null; error?: string }> {
+    try {
+      if (!this.accessToken) {
+        return { data: null, error: 'Not authenticated. Please connect your Calendly account.' };
+      }
+
+      const url = `${this.baseUrl}/scheduling_links`;
+      console.log('🔗 Creating Calendly event:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(eventData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Calendly API error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        
+        if (response.status === 401) {
+          return { data: null, error: 'Authentication expired. Please reconnect your Calendly account.' };
+        }
+        if (response.status === 400) {
+          return { data: null, error: `Bad request: ${errorText}. This might be due to missing permissions or incorrect parameters.` };
+        }
+        throw new Error(`Calendly API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Calendly event created:', result);
+      
+      return { data: result };
+    } catch (error) {
+      console.error('Error creating Calendly event:', error);
+      return { data: null, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  /**
+   * Check if a Calendly event exists
+   */
+  async checkEventExists(eventUri: string): Promise<{ exists: boolean; error?: string }> {
+    try {
+      if (!this.accessToken) {
+        return { exists: false, error: 'Not authenticated. Please connect your Calendly account.' };
+      }
+
+      console.log('🔍 Checking if event exists:', eventUri);
+
+      const response = await fetch(eventUri, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📊 Event existence check response status:', response.status);
+
+      if (response.status === 404) {
+        console.log('❌ Event not found in Calendly');
+        return { exists: false };
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Error checking event existence:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          url: eventUri
+        });
+        return { exists: false, error: `Error checking event: ${response.status} ${response.statusText}` };
+      }
+
+      const eventData = await response.json();
+      console.log('✅ Event exists in Calendly:', eventData.uri);
+      return { exists: true };
+    } catch (error) {
+      console.error('Error checking event existence:', error);
+      return { exists: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  /**
+   * Update a Calendly event
+   */
+  async updateEvent(eventUri: string, updateData: {
+    name?: string;
+    start_time?: string;
+    end_time?: string;
+    location?: {
+      type: string;
+      location?: string;
+    };
+    meeting_notes_plain?: string;
+  }): Promise<{ data: CalendlyScheduledEvent | null; error?: string }> {
+    try {
+      if (!this.accessToken) {
+        return { data: null, error: 'Not authenticated. Please connect your Calendly account.' };
+      }
+
+      console.log('🔗 Updating Calendly event with URI:', eventUri);
+      console.log('📝 Update data:', updateData);
+
+      // Use the full Calendly URI for the API call
+      const url = eventUri;
+      console.log('🔗 Updating Calendly event at URL:', url);
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      console.log('📊 Calendly update response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Calendly API error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          url: url
+        });
+        
+        if (response.status === 401) {
+          return { data: null, error: 'Authentication expired. Please reconnect your Calendly account.' };
+        }
+        if (response.status === 404) {
+          return { data: null, error: 'Event not found in Calendly.' };
+        }
+        if (response.status === 403) {
+          return { data: null, error: 'Permission denied. You may not have permission to update this event.' };
+        }
+        throw new Error(`Calendly API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Calendly event updated successfully:', result);
+      
+      return { data: result };
+    } catch (error) {
+      console.error('Error updating Calendly event:', error);
+      return { data: null, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  /**
+   * Cancel a Calendly event
+   */
+  async cancelEvent(eventUri: string, reason?: string): Promise<{ data: boolean; error?: string }> {
+    try {
+      if (!this.accessToken) {
+        return { data: false, error: 'Not authenticated. Please connect your Calendly account.' };
+      }
+
+      console.log('🔗 Canceling Calendly event with URI:', eventUri);
+
+      // Use the full Calendly URI for cancellation
+      const url = `${eventUri}/cancellation`;
+      console.log('🔗 Canceling Calendly event at URL:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reason: reason || 'Event canceled by user'
+        }),
+      });
+
+      console.log('📊 Calendly cancellation response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Calendly API error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          url: url
+        });
+        
+        if (response.status === 401) {
+          return { data: false, error: 'Authentication expired. Please reconnect your Calendly account.' };
+        }
+        if (response.status === 404) {
+          return { data: false, error: 'Event not found in Calendly.' };
+        }
+        if (response.status === 403) {
+          return { data: false, error: 'Permission denied. You may not have permission to cancel this event.' };
+        }
+        throw new Error(`Calendly API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      console.log('✅ Calendly event canceled successfully');
+      return { data: true };
+    } catch (error) {
+      console.error('Error canceling Calendly event:', error);
+      return { data: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 } 

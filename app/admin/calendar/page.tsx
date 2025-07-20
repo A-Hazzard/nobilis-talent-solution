@@ -6,7 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar as CalendarIcon, Plus, Clock, MapPin, Users, Trash2, Edit, RefreshCw, Link, Info, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  CalendarIcon, 
+  Plus, 
+  Users, 
+  MapPin, 
+  Clock, 
+  Info, 
+  CheckCircle, 
+  AlertCircle, 
+  RefreshCw, 
+  Link, 
+  Trash2,
+  Edit
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -126,11 +139,30 @@ export default function CalendarPage() {
 
       console.log('🔄 Synced events:', result.data);
       
-      // Save synced events to the database
+      // Get existing events to check for duplicates
+      const existingEvents = await calendarService.getEvents();
+      const existingCalendlyIds = new Set(
+        (existingEvents.data || [])
+          .filter(e => e.calendlyUri)
+          .map(e => e.calendlyUri)
+      );
+      
+      console.log('📋 Existing Calendly IDs:', Array.from(existingCalendlyIds));
+      
+      // Save synced events to the database (avoiding duplicates)
       let syncedCount = 0;
+      let skippedCount = 0;
+      
       for (const eventData of result.data) {
         try {
           if (!user) continue;
+          
+          // Check if this Calendly event already exists
+          if (existingCalendlyIds.has(eventData.calendlyId)) {
+            console.log('⏭️ Skipping duplicate event:', eventData.title, eventData.calendlyId);
+            skippedCount++;
+            continue;
+          }
           
           const response = await calendarService.createEvent({
             ...eventData,
@@ -139,7 +171,9 @@ export default function CalendarPage() {
           
           if (!response.error) {
             syncedCount++;
-            console.log('✅ Saved event:', eventData.title);
+            console.log('✅ Saved new event:', eventData.title);
+            // Add to existing set to prevent duplicates within this sync
+            existingCalendlyIds.add(eventData.calendlyId);
           } else {
             console.error('❌ Failed to save event:', eventData.title, response.error);
           }
@@ -155,7 +189,7 @@ export default function CalendarPage() {
       // Reload events to show the new ones
       await loadEvents();
       
-      console.log(`🎉 Sync complete! ${syncedCount} events synced.`);
+      console.log(`🎉 Sync complete! ${syncedCount} new events synced, ${skippedCount} duplicates skipped.`);
     } catch (error) {
       console.error('Sync error:', error);
       setSyncStatus('error');
@@ -340,6 +374,68 @@ export default function CalendarPage() {
     setSelectedEventType(null);
   };
 
+  const cleanupDuplicateEvents = async () => {
+    try {
+      console.log('🧹 Starting duplicate cleanup...');
+      
+      const response = await calendarService.getEvents();
+      if (response.error) {
+        console.error('Error loading events for cleanup:', response.error);
+        return;
+      }
+      
+      const events = response.data || [];
+      const calendlyEvents = events.filter(e => e.calendlyUri);
+      
+      // Group events by Calendly URI
+      const eventsByCalendlyId = new Map<string, CalendarEvent[]>();
+      
+      calendlyEvents.forEach(event => {
+        if (!eventsByCalendlyId.has(event.calendlyUri!)) {
+          eventsByCalendlyId.set(event.calendlyUri!, []);
+        }
+        eventsByCalendlyId.get(event.calendlyUri!)!.push(event);
+      });
+      
+      // Find and delete duplicates (keep the oldest one)
+      let deletedCount = 0;
+      
+      for (const [calendlyId, duplicates] of eventsByCalendlyId.entries()) {
+        if (duplicates.length > 1) {
+          console.log(`🗑️ Found ${duplicates.length} duplicates for Calendly ID: ${calendlyId}`);
+          
+          // Sort by creation date and keep the oldest
+          duplicates.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          const toDelete = duplicates.slice(1); // Keep first, delete the rest
+          
+          for (const duplicate of toDelete) {
+            try {
+              const deleteResponse = await calendarService.deleteEvent(duplicate.id);
+              if (!deleteResponse.error) {
+                deletedCount++;
+                console.log(`✅ Deleted duplicate: ${duplicate.title}`);
+              } else {
+                console.error(`❌ Failed to delete duplicate: ${duplicate.title}`, deleteResponse.error);
+              }
+            } catch (error) {
+              console.error(`❌ Error deleting duplicate: ${duplicate.title}`, error);
+            }
+          }
+        }
+      }
+      
+      console.log(`🎉 Cleanup complete! Deleted ${deletedCount} duplicate events.`);
+      
+      // Reload events to show the cleaned up list
+      await loadEvents();
+      
+      alert(`Cleanup complete! Deleted ${deletedCount} duplicate events.`);
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+      alert('Error during cleanup. Check console for details.');
+    }
+  };
+
   const getEventTypeBadge = (type: string) => {
     switch (type) {
       case 'workshop':
@@ -441,16 +537,17 @@ export default function CalendarPage() {
           <p className="text-gray-600">Manage your appointments and events</p>
         </div>
         <div className="flex gap-2">
-          {calendlyAuthStatus === 'connected' ? (
+          {calendlyAuthStatus === 'connected' && (
             <Button 
-              variant="outline" 
               onClick={syncCalendlyEvents}
-              disabled={isSyncing}
+              disabled={syncStatus === 'syncing'}
+              className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Syncing...' : 'Sync Calendly'}
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+              {syncStatus === 'syncing' ? 'Syncing...' : 'Sync Calendly'}
             </Button>
-          ) : (
+          )}
+          {calendlyAuthStatus === 'disconnected' && (
             <Button 
               variant="outline" 
               onClick={connectCalendly}
@@ -460,6 +557,14 @@ export default function CalendarPage() {
               Connect Calendly
             </Button>
           )}
+          <Button 
+            variant="outline" 
+            onClick={cleanupDuplicateEvents}
+            className="bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clean Duplicates
+          </Button>
           <div className="flex gap-2">
             <Button onClick={() => handleOpenModal()}>
               <Plus className="h-4 w-4 mr-2" />

@@ -34,6 +34,7 @@ export type CalendarEvent = {
   title: string;
   date: string; // ISO date string (YYYY-MM-DD)
   time: string; // Time range (e.g., "10:00 AM - 12:00 PM")
+  endTime?: string; // End time for the event
   location: string;
   attendees: number;
   type: 'workshop' | 'consultation' | 'training' | 'meeting';
@@ -41,6 +42,11 @@ export type CalendarEvent = {
   createdBy: string; // user ID
   createdAt: Date;
   updatedAt: Date;
+  // Calendly integration fields
+  calendlyUri?: string; // Calendly event URI
+  inviteeEmail?: string; // Calendly invitee email
+  inviteeName?: string; // Calendly invitee name
+  status?: 'confirmed' | 'canceled' | 'pending'; // Event status
 };
 
 export type Resource = {

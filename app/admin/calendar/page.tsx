@@ -1,18 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar as CalendarIcon, Plus, Clock, MapPin, Users, Trash2, Edit } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar as CalendarIcon, Plus, Clock, MapPin, Users, Trash2, Edit, RefreshCw, Link, Info, CheckCircle, AlertCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import type { CalendarEvent } from '@/shared/types/entities';
 import { CalendarService } from '@/lib/services/CalendarService';
+import { CalendlyService } from '@/lib/services/CalendlyService';
 import { useUserStore } from '@/lib/stores/userStore';
+import CalendlyWidget from '@/components/admin/CalendlyWidget';
 
 type EventFormData = {
   title: string;
@@ -24,6 +29,7 @@ type EventFormData = {
 };
 
 export default function CalendarPage() {
+  const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,9 +45,39 @@ export default function CalendarPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [activeTab, setActiveTab] = useState('calendar');
+  const [calendlyAuthStatus, setCalendlyAuthStatus] = useState<'connected' | 'disconnected' | 'error'>('disconnected');
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [syncStats, setSyncStats] = useState<{ synced: number; total: number }>({ synced: 0, total: 0 });
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [showDebug, setShowDebug] = useState(false);
+  const [showCalendlyBooking, setShowCalendlyBooking] = useState(false);
+  const [selectedEventType, setSelectedEventType] = useState<any>(null);
 
   const { user } = useUserStore();
   const calendarService = CalendarService.getInstance();
+  const calendlyService = CalendlyService.getInstance();
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const token = searchParams.get('token');
+    const error = searchParams.get('error');
+
+    if (success && token) {
+      calendlyService.setAccessToken(token);
+      setCalendlyAuthStatus('connected');
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Show success message and instructions
+      setShowInstructions(true);
+    } else if (error) {
+      setCalendlyAuthStatus('error');
+      console.error('Calendly OAuth error:', error);
+    }
+  }, [searchParams, calendlyService]);
 
   // Load events on component mount
   useEffect(() => {
@@ -63,6 +99,99 @@ export default function CalendarPage() {
       console.error('Error loading events:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const connectCalendly = () => {
+    try {
+      const authUrl = calendlyService.getAuthorizationUrl();
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error getting authorization URL:', error);
+      setCalendlyAuthStatus('error');
+    }
+  };
+
+  const syncCalendlyEvents = async () => {
+    try {
+      setIsSyncing(true);
+      const { data: calendlyEvents, error } = await calendlyService.syncCalendlyEvents();
+      
+      if (error) {
+        console.error('Error syncing Calendly events:', error);
+        if (error.includes('Not authenticated')) {
+          setCalendlyAuthStatus('disconnected');
+        }
+        return;
+      }
+
+      // Merge Calendly events with existing events
+      const existingEventIds = new Set(events.map(e => e.id));
+      const newCalendlyEvents = calendlyEvents.filter(e => !existingEventIds.has(e.id));
+      
+      if (newCalendlyEvents.length > 0) {
+        // Save new Calendly events to database
+        for (const event of newCalendlyEvents) {
+          await calendarService.createEvent(event);
+        }
+        
+        // Reload all events
+        await loadEvents();
+        
+        // Update sync stats
+        setSyncStats({ synced: newCalendlyEvents.length, total: calendlyEvents.length });
+        setLastSyncTime(new Date());
+      } else {
+        setSyncStats({ synced: 0, total: calendlyEvents.length });
+        setLastSyncTime(new Date());
+      }
+    } catch (error) {
+      console.error('Error syncing Calendly events:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleCalendlyEventScheduled = async (eventDetails: any) => {
+    console.log('Calendly event scheduled:', eventDetails);
+    // Optionally sync events immediately when a new one is scheduled
+    await syncCalendlyEvents();
+  };
+
+  const debugCalendlyConnection = async () => {
+    try {
+      setShowDebug(true);
+      const debugData: any = {};
+
+      // Test user info
+      const userInfo = await calendlyService.getUserInfo();
+      debugData.userInfo = userInfo;
+      console.log('👤 User info:', userInfo);
+
+      // Test event types
+      const eventTypes = await calendlyService.getEventTypes();
+      debugData.eventTypes = eventTypes;
+      console.log('📋 Event types:', eventTypes);
+
+      // Test raw events
+      const rawEvents = await calendlyService.getScheduledEvents();
+      debugData.rawEvents = rawEvents;
+      console.log('📅 Raw events:', rawEvents);
+
+      // Test different event fetching approaches
+      const eventTests = await calendlyService.testEventFetching();
+      debugData.eventTests = eventTests;
+      console.log('🧪 Event tests:', eventTests);
+
+      // Test sync
+      const syncResult = await calendlyService.syncCalendlyEvents();
+      debugData.syncResult = syncResult;
+      console.log('🔄 Sync result:', syncResult);
+
+      setDebugInfo(debugData);
+    } catch (error) {
+      console.error('Debug error:', error);
+      setDebugInfo({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   };
 
@@ -180,6 +309,27 @@ export default function CalendarPage() {
     setIsModalOpen(true);
   };
 
+  const openCalendlyBooking = async () => {
+    try {
+      // Get available event types from Calendly
+      const eventTypes = await calendlyService.getEventTypes();
+      if (eventTypes.data && eventTypes.data.length > 0) {
+        setSelectedEventType(eventTypes.data[0]); // Use first available event type
+        setShowCalendlyBooking(true);
+      } else {
+        alert('No Calendly event types found. Please create an event type in Calendly first.');
+      }
+    } catch (error) {
+      console.error('Error opening Calendly booking:', error);
+      alert('Error connecting to Calendly. Please try again.');
+    }
+  };
+
+  const closeCalendlyBooking = () => {
+    setShowCalendlyBooking(false);
+    setSelectedEventType(null);
+  };
+
   const getEventTypeBadge = (type: string) => {
     switch (type) {
       case 'workshop':
@@ -280,13 +430,187 @@ export default function CalendarPage() {
           <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
           <p className="text-gray-600">Manage your appointments and events</p>
         </div>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Event
-        </Button>
+        <div className="flex gap-2">
+          {calendlyAuthStatus === 'connected' ? (
+            <Button 
+              variant="outline" 
+              onClick={syncCalendlyEvents}
+              disabled={isSyncing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Syncing...' : 'Sync Calendly'}
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              onClick={connectCalendly}
+              className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+            >
+              <Link className="h-4 w-4 mr-2" />
+              Connect Calendly
+            </Button>
+          )}
+          <div className="flex gap-2">
+            <Button onClick={() => handleOpenModal()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Custom Event
+            </Button>
+            {calendlyAuthStatus === 'connected' && (
+              <Button 
+                variant="outline" 
+                onClick={openCalendlyBooking}
+                className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+              >
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                Book with Calendly
+              </Button>
+            )}
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowInstructions(!showInstructions)}
+          >
+            <Info className="h-4 w-4 mr-2" />
+            Instructions
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={debugCalendlyConnection}
+            className="bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100"
+          >
+            🐛 Debug
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Instructions Panel */}
+      {showInstructions && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-blue-800">
+              <CheckCircle className="h-5 w-5 mr-2" />
+              Calendly Integration Guide
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-blue-700">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">🎉 Welcome to Your Integrated Calendar!</h4>
+                <p>Your Calendly account is now connected. Here's how to use the integrated system:</p>
+              </div>
+              
+              <Separator className="bg-blue-300" />
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h5 className="font-semibold mb-2">📅 Calendar View Tab:</h5>
+                  <ul className="space-y-1 text-sm">
+                    <li>• View all your events in one place</li>
+                    <li>• Events from Calendly appear with a special badge</li>
+                    <li>• Add custom events directly to your calendar</li>
+                    <li>• Edit or delete any event</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h5 className="font-semibold mb-2">📋 Schedule Meeting Tab:</h5>
+                  <ul className="space-y-1 text-sm">
+                    <li>• Embed Calendly scheduling widget</li>
+                    <li>• Let clients book meetings directly</li>
+                    <li>• Automatic sync when meetings are scheduled</li>
+                    <li>• Real-time availability updates</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <Separator className="bg-blue-300" />
+              
+              <div>
+                <h5 className="font-semibold mb-2">🔄 Sync Process:</h5>
+                <ul className="space-y-1 text-sm">
+                  <li>• Click "Sync Calendly" to fetch new events</li>
+                  <li>• New Calendly events automatically appear in your calendar</li>
+                  <li>• Custom events remain separate from Calendly events</li>
+                  <li>• All events are stored in your database for easy management</li>
+                </ul>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowInstructions(false)}
+                className="mt-4"
+              >
+                Got it! Hide instructions
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Debug Panel */}
+      {showDebug && debugInfo && (
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-yellow-800">
+              🐛 Debug Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-yellow-700">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">🔍 Calendly API Debug Results:</h4>
+                <pre className="bg-white p-4 rounded text-xs overflow-auto max-h-96">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowDebug(false)}
+                className="mt-4"
+              >
+                Hide Debug Info
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Calendly Connection Status */}
+      {calendlyAuthStatus === 'connected' && (
+        <Alert className="bg-green-50 border-green-200">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            ✅ Calendly connected successfully! You can now sync events and use the scheduling widget.
+            {lastSyncTime && (
+              <span className="block text-sm mt-1">
+                Last synced: {lastSyncTime.toLocaleString()} 
+                {syncStats.synced > 0 && ` (${syncStats.synced} new events)`}
+              </span>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {calendlyAuthStatus === 'error' && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            ❌ Failed to connect Calendly. Please try again or check your configuration.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+          <TabsTrigger value="scheduling">Schedule Meeting</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="calendar" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendar View */}
         <div className="lg:col-span-2">
           <Card>
@@ -455,6 +779,34 @@ export default function CalendarPage() {
           </Card>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="scheduling" className="space-y-6">
+          {calendlyAuthStatus === 'connected' ? (
+            <CalendlyWidget 
+              calendlyUrl="https://calendly.com/your-calendly-link"
+              onEventScheduled={handleCalendlyEventScheduled}
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Connect Calendly</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center py-8">
+                <Link className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-medium mb-2">Connect Your Calendly Account</h3>
+                <p className="text-gray-600 mb-6">
+                  To use the scheduling widget and sync events, you need to connect your Calendly account first.
+                </p>
+                <Button onClick={connectCalendly} size="lg">
+                  <Link className="h-4 w-4 mr-2" />
+                  Connect Calendly
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -569,6 +921,55 @@ export default function CalendarPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Calendly Booking Modal */}
+      <Dialog open={showCalendlyBooking} onOpenChange={setShowCalendlyBooking}>
+        <DialogContent className="sm:max-w-[600px] h-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5" />
+              Book with Calendly
+            </DialogTitle>
+            <DialogDescription>
+              Schedule a meeting using your Calendly event type: {selectedEventType?.name || 'Loading...'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 min-h-0">
+            {selectedEventType && (
+              <div className="h-full">
+                <iframe
+                  src={`${selectedEventType.scheduling_url}?embed_domain=${encodeURIComponent(window.location.origin)}`}
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  title="Calendly Booking"
+                  className="rounded-md"
+                />
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeCalendlyBooking}>
+              Close
+            </Button>
+            <Button 
+              type="button" 
+              onClick={() => {
+                closeCalendlyBooking();
+                // Refresh events after booking
+                setTimeout(() => {
+                  loadEvents();
+                  syncCalendlyEvents();
+                }, 2000);
+              }}
+            >
+              Done & Refresh
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

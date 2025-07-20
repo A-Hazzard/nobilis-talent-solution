@@ -69,6 +69,10 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
 NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef123456
 
+# Calendly Integration
+NEXT_PUBLIC_CALENDLY_API_KEY=your_calendly_api_key_here
+NEXT_PUBLIC_CALENDLY_URL=https://calendly.com/your-calendly-link
+
 # Application Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
@@ -215,6 +219,10 @@ This project is proprietary software. All rights reserved.
 - Create an issue in the repository
 - Check the documentation
 - Contact the development team
+
+---
+
+**Built with ❤️ using Next.js, TypeScript, and Firebase** 
 
 ---
 

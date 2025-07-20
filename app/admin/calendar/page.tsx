@@ -1,53 +1,184 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar as CalendarIcon, Plus, Clock, MapPin, Users } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Clock, MapPin, Users, Trash2, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { CalendarEvent } from '@/shared/types/entities';
+import { CalendarService } from '@/lib/services/CalendarService';
+import { useUserStore } from '@/lib/stores/userStore';
+
+type EventFormData = {
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  attendees: number;
+  type: CalendarEvent['type'];
+};
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [form, setForm] = useState<EventFormData>({
+    title: '',
+    date: '',
+    time: '',
+    location: '',
+    attendees: 1,
+    type: 'workshop',
+  });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock calendar events
-  const events = [
-    {
-      id: 1,
-      title: 'Leadership Workshop',
-      date: '2024-01-15',
-      time: '10:00 AM - 12:00 PM',
-      location: 'Conference Room A',
-      attendees: 12,
-      type: 'workshop',
-    },
-    {
-      id: 2,
-      title: 'Client Consultation - John Smith',
-      date: '2024-01-16',
-      time: '2:00 PM - 3:00 PM',
-      location: 'Virtual Meeting',
-      attendees: 2,
-      type: 'consultation',
-    },
-    {
-      id: 3,
-      title: 'Team Building Session',
-      date: '2024-01-17',
-      time: '9:00 AM - 11:00 AM',
-      location: 'Training Center',
-      attendees: 8,
-      type: 'training',
-    },
-    {
-      id: 4,
-      title: 'Strategy Planning Meeting',
-      date: '2024-01-18',
-      time: '1:00 PM - 4:00 PM',
-      location: 'Board Room',
-      attendees: 6,
-      type: 'meeting',
-    },
-  ];
+  const { user } = useUserStore();
+  const calendarService = CalendarService.getInstance();
+
+  // Load events on component mount
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    try {
+      setIsLoading(true);
+      const response = await calendarService.getEvents();
+      
+      if (response.error) {
+        console.error('Error loading events:', response.error);
+        return;
+      }
+      
+      setEvents(response.data || []);
+    } catch (error) {
+      console.error('Error loading events:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setForm({ title: '', date: '', time: '', location: '', attendees: 1, type: 'workshop' });
+    setFormError(null);
+    setEditingEvent(null);
+  };
+
+  const handleOpenModal = (event?: CalendarEvent) => {
+    if (event) {
+      setEditingEvent(event);
+      setForm({
+        title: event.title,
+        date: event.date,
+        time: event.time,
+        location: event.location,
+        attendees: event.attendees,
+        type: event.type,
+      });
+    } else {
+      resetForm();
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    resetForm();
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: name === 'attendees' ? Number(value) : value }));
+    setFormError(null);
+  };
+
+  const handleTypeChange = (value: string) => {
+    setForm((prev) => ({ ...prev, type: value as CalendarEvent['type'] }));
+    setFormError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      setFormError('User not authenticated');
+      return;
+    }
+
+    try {
+      if (editingEvent) {
+        // Update existing event
+        const response = await calendarService.updateEvent({
+          id: editingEvent.id,
+          ...form,
+          createdBy: user.id,
+        });
+        
+        if (response.error) {
+          setFormError(response.error.message);
+          return;
+        }
+      } else {
+        // Create new event
+        const response = await calendarService.createEvent({
+          ...form,
+          createdBy: user.id,
+        });
+        
+        if (response.error) {
+          setFormError(response.error.message);
+          return;
+        }
+      }
+      
+      // Reload events and close modal
+      await loadEvents();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving event:', error);
+      setFormError('Failed to save event');
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to delete this event?')) {
+      return;
+    }
+
+    try {
+      const response = await calendarService.deleteEvent(eventId);
+      
+      if (response.error) {
+        console.error('Error deleting event:', response.error);
+        return;
+      }
+      
+      await loadEvents();
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
+  };
+
+  const handleQuickAction = (type: CalendarEvent['type']) => {
+    const today = new Date().toISOString().split('T')[0];
+    setForm({
+      title: '',
+      date: today,
+      time: '',
+      location: '',
+      attendees: 1,
+      type,
+    });
+    setIsModalOpen(true);
+  };
 
   const getEventTypeBadge = (type: string) => {
     switch (type) {
@@ -79,6 +210,68 @@ export default function CalendarPage() {
     }
   };
 
+  // Get calendar days for current month
+  const getCalendarDays = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay();
+
+    const days = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startDay; i++) {
+      days.push(null);
+    }
+    
+    // Add days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    
+    return days;
+  };
+
+  const formatDate = (day: number) => {
+    const year = currentMonth.getFullYear();
+    const month = (currentMonth.getMonth() + 1).toString().padStart(2, '0');
+    const dayStr = day.toString().padStart(2, '0');
+    return `${year}-${month}-${dayStr}`;
+  };
+
+  const getMonthName = () => {
+    return currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  const changeMonth = (direction: 'prev' | 'next') => {
+    setCurrentMonth((prev) => {
+      const newMonth = new Date(prev);
+      if (direction === 'prev') {
+        newMonth.setMonth(newMonth.getMonth() - 1);
+      } else {
+        newMonth.setMonth(newMonth.getMonth() + 1);
+      }
+      return newMonth;
+    });
+  };
+
+  // Sort events by date for upcoming events
+  const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const upcomingEvents = sortedEvents.slice(0, 5);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <CalendarIcon className="h-12 w-12 mx-auto mb-4 animate-spin" />
+          <p>Loading calendar...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -87,7 +280,7 @@ export default function CalendarPage() {
           <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
           <p className="text-gray-600">Manage your appointments and events</p>
         </div>
-        <Button>
+        <Button onClick={() => handleOpenModal()}>
           <Plus className="h-4 w-4 mr-2" />
           Add Event
         </Button>
@@ -98,10 +291,28 @@ export default function CalendarPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5" />
-                January 2024
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5" />
+                  {getMonthName()}
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => changeMonth('prev')}
+                  >
+                    ←
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => changeMonth('next')}
+                  >
+                    →
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-7 gap-1 mb-4">
@@ -113,23 +324,29 @@ export default function CalendarPage() {
               </div>
               
               <div className="grid grid-cols-7 gap-1">
-                {Array.from({ length: 31 }, (_, i) => {
-                  const date = i + 1;
-                  const dateString = `2024-01-${date.toString().padStart(2, '0')}`;
+                {getCalendarDays().map((day, index) => {
+                  if (!day) {
+                    return <div key={index} className="min-h-[80px] p-2 border border-gray-200 bg-gray-50" />;
+                  }
+                  
+                  const dateString = formatDate(day);
                   const dayEvents = events.filter(event => event.date === dateString);
+                  const isToday = new Date().toDateString() === new Date(dateString).toDateString();
                   
                   return (
                     <div
-                      key={date}
+                      key={day}
                       className={`min-h-[80px] p-2 border border-gray-200 ${
-                        date === selectedDate.getDate() ? 'bg-primary/10 border-primary' : ''
+                        isToday ? 'bg-primary/10 border-primary' : ''
                       }`}
                     >
-                      <div className="text-sm font-medium mb-1">{date}</div>
+                      <div className="text-sm font-medium mb-1">{day}</div>
                       {dayEvents.map((event) => (
                         <div
                           key={event.id}
-                          className={`text-xs p-1 mb-1 rounded border-l-4 ${getEventTypeColor(event.type)} bg-gray-50`}
+                          className={`text-xs p-1 mb-1 rounded border-l-4 ${getEventTypeColor(event.type)} bg-gray-50 cursor-pointer hover:bg-gray-100`}
+                          onClick={() => handleOpenModal(event)}
+                          title={`${event.title} - ${event.time}`}
                         >
                           {event.title}
                         </div>
@@ -149,33 +366,56 @@ export default function CalendarPage() {
               <CardTitle>Upcoming Events</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {events.slice(0, 5).map((event) => (
-                  <div
-                    key={event.id}
-                    className={`p-4 rounded-lg border-l-4 ${getEventTypeColor(event.type)} bg-gray-50`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">{event.title}</h4>
-                      {getEventTypeBadge(event.type)}
+              {upcomingEvents.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No upcoming events</p>
+                  <p className="text-sm">Click "Add Event" to get started</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {upcomingEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className={`p-4 rounded-lg border-l-4 ${getEventTypeColor(event.type)} bg-gray-50`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium text-gray-900">{event.title}</h4>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenModal(event)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteEvent(event.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-3 w-3" />
+                          {event.time}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-3 w-3" />
+                          {event.location}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-3 w-3" />
+                          {event.attendees} attendees
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-3 w-3" />
-                        {event.time}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-3 w-3" />
-                        {event.location}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-3 w-3" />
-                        {event.attendees} attendees
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -186,15 +426,27 @@ export default function CalendarPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => handleQuickAction('consultation')}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Schedule Consultation
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => handleQuickAction('workshop')}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Book Workshop
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => handleQuickAction('training')}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Plan Training Session
                 </Button>
@@ -203,6 +455,122 @@ export default function CalendarPage() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingEvent ? 'Edit Event' : 'Add Event'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              {formError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">
+                  Title
+                </Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={form.title}
+                  onChange={handleFormChange}
+                  className="col-span-3"
+                  placeholder="Enter event title"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="date" className="text-right">
+                  Date
+                </Label>
+                <Input
+                  id="date"
+                  name="date"
+                  type="date"
+                  value={form.date}
+                  onChange={handleFormChange}
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="time" className="text-right">
+                  Time
+                </Label>
+                <Input
+                  id="time"
+                  name="time"
+                  value={form.time}
+                  onChange={handleFormChange}
+                  className="col-span-3"
+                  placeholder="e.g., 10:00 AM - 12:00 PM"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="location" className="text-right">
+                  Location
+                </Label>
+                <Input
+                  id="location"
+                  name="location"
+                  value={form.location}
+                  onChange={handleFormChange}
+                  className="col-span-3"
+                  placeholder="Enter location"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="attendees" className="text-right">
+                  Attendees
+                </Label>
+                <Input
+                  id="attendees"
+                  name="attendees"
+                  type="number"
+                  min="1"
+                  value={form.attendees}
+                  onChange={handleFormChange}
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="type" className="text-right">
+                  Type
+                </Label>
+                <Select
+                  value={form.type}
+                  onValueChange={handleTypeChange}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select event type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="workshop">Workshop</SelectItem>
+                    <SelectItem value="consultation">Consultation</SelectItem>
+                    <SelectItem value="training">Training</SelectItem>
+                    <SelectItem value="meeting">Meeting</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseModal}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                {editingEvent ? 'Update Event' : 'Add Event'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

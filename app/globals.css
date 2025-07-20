@@ -136,6 +136,25 @@
     @apply bg-card rounded-3xl p-10 shadow-[--shadow-medium] border border-[hsl(var(--card-border))] transition-all duration-500 hover:shadow-[--shadow-strong] hover:-translate-y-2;
   }
 
+  /* Fix select dropdown transparency */
+  [data-radix-popper-content-wrapper] {
+    background: white !important;
+  }
+
+  [data-radix-select-content] {
+    background: white !important;
+    border: 1px solid hsl(var(--border)) !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  }
+
+  [data-radix-select-item] {
+    background: white !important;
+  }
+
+  [data-radix-select-item]:hover {
+    background: hsl(var(--muted)) !important;
+  }
+
   /* Gradients */
   .gradient-hero {
     background: var(--gradient-hero);
@@ -230,6 +249,24 @@
 
   .transition-bounce {
     transition: var(--transition-bounce);
+  }
+
+  /* Fix select dropdown transparency */
+  [data-radix-popper-content-wrapper] {
+    background: white !important;
+  }
+
+  /* File upload styling */
+  .file-upload-zone {
+    @apply border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-all duration-300 hover:border-primary hover:bg-gray-50;
+  }
+
+  .file-upload-zone.drag-over {
+    @apply border-primary bg-primary/5 scale-105;
+  }
+
+  .file-upload-zone.has-file {
+    @apply border-green-500 bg-green-50;
   }
 }
 

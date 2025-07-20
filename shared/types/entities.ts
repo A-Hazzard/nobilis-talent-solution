@@ -5,7 +5,10 @@
 export type User = {
   id: string;
   email: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  organization?: string;
   role: 'admin' | 'user';
   createdAt: Date;
   lastLoginAt?: Date;
@@ -14,25 +17,37 @@ export type User = {
 
 export type Lead = {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  company: string;
   phone?: string;
-  challenges: string;
-  status: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
-  source: 'website' | 'referral' | 'social' | 'other';
+  organization?: string;
   createdAt: Date;
   updatedAt: Date;
-  notes?: string;
-  demoScheduled?: Date;
-  paymentStatus?: 'pending' | 'completed' | 'failed';
+  // Authentication fields (stored in users collection)
+  uid?: string; // Firebase Auth UID
+  displayName?: string; // Computed from firstName + lastName
+};
+
+export type CalendarEvent = {
+  id: string;
+  title: string;
+  date: string; // ISO date string (YYYY-MM-DD)
+  time: string; // Time range (e.g., "10:00 AM - 12:00 PM")
+  location: string;
+  attendees: number;
+  type: 'workshop' | 'consultation' | 'training' | 'meeting';
+  description?: string;
+  createdBy: string; // user ID
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type Resource = {
   id: string;
   title: string;
   description: string;
-  type: 'video' | 'article' | 'pdf' | 'whitepaper';
+  type: 'pdf' | 'docx' | 'image' | 'video' | 'audio';
   category: 'leadership' | 'team-building' | 'communication' | 'strategy' | 'other';
   fileUrl: string;
   thumbnailUrl?: string;

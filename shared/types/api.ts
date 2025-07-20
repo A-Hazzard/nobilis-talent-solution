@@ -22,20 +22,16 @@ export type AuthResponse = {
 
 // Leads
 export type CreateLeadRequest = {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  company: string;
+  password: string;
+  confirmPassword: string;
+  organization?: string;
   phone?: string;
-  challenges: string;
-  source: Lead['source'];
 };
 
-export type UpdateLeadRequest = Partial<CreateLeadRequest> & {
-  status?: Lead['status'];
-  notes?: string;
-  demoScheduled?: Date;
-  paymentStatus?: Lead['paymentStatus'];
-};
+export type UpdateLeadRequest = Partial<Omit<CreateLeadRequest, 'password' | 'confirmPassword'>>;
 
 export type LeadsResponse = {
   leads: Lead[];

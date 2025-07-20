@@ -12,43 +12,71 @@ import {
   DollarSign, 
   Download,
   Calendar,
-  Target
+  Target,
+  Plus
 } from 'lucide-react';
 import { analyticsApi } from '@/lib/helpers/api';
+import { FakeDataService } from '@/lib/services/FakeDataService';
+import { useDashboardStore } from '@/lib/stores/dashboardStore';
 import type { Analytics } from '@/shared/types/entities';
+import DashboardStats from '@/components/admin/DashboardStats';
+import DashboardCharts from '@/components/admin/DashboardCharts';
+import FakeDataToggle from '@/components/admin/FakeDataToggle';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+
+  const { isFakeDataEnabled } = useDashboardStore();
+  const fakeDataService = FakeDataService.getInstance();
 
   useEffect(() => {
-    loadAnalytics();
-  }, [period]);
+    loadDashboardData();
+  }, [period, isFakeDataEnabled]);
 
-  const loadAnalytics = async () => {
+  const loadDashboardData = async () => {
     setIsLoading(true);
     try {
-      const response = await analyticsApi.getDashboard(period);
-      if (response.success && response.data) {
-        setAnalytics(response.data);
+      if (isFakeDataEnabled) {
+        // Use fake data
+        const fakeAnalytics = fakeDataService.generateFakeAnalytics();
+        setAnalytics(fakeAnalytics);
+        setRecentActivity(fakeDataService.generateFakeRecentActivity());
+        setPerformanceMetrics(fakeDataService.generateFakePerformanceMetrics());
+        setUpcomingEvents(fakeDataService.generateFakeUpcomingEvents());
       } else {
-        console.error('Failed to load analytics:', response.error);
-        // Set default empty analytics to prevent errors
-        setAnalytics({
-          totalLeads: 0,
-          leadsThisMonth: 0,
-          conversionRate: 0,
-          totalRevenue: 0,
-          revenueThisMonth: 0,
-          activeUsers: 0,
-          resourceDownloads: 0,
-          topResources: [],
-          leadSources: [],
-        });
+        // Use real data
+        const response = await analyticsApi.getDashboard(period);
+        if (response.success && response.data) {
+          setAnalytics(response.data);
+        } else {
+          console.error('Failed to load analytics:', response.error);
+          // Set default empty analytics to prevent errors
+          setAnalytics({
+            totalLeads: 0,
+            leadsThisMonth: 0,
+            conversionRate: 0,
+            totalRevenue: 0,
+            revenueThisMonth: 0,
+            activeUsers: 0,
+            resourceDownloads: 0,
+            topResources: [],
+            leadSources: [],
+          });
+        }
+        
+        // Set empty arrays for real data (these would come from actual API calls)
+        setRecentActivity([]);
+        setPerformanceMetrics([]);
+        setUpcomingEvents([]);
       }
     } catch (error) {
-      console.error('Failed to load analytics:', error);
+      console.error('Failed to load dashboard data:', error);
       // Set default empty analytics to prevent errors
       setAnalytics({
         totalLeads: 0,
@@ -139,136 +167,124 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Overview of your leadership coaching business</p>
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome to your admin dashboard. Here's an overview of your business.
+          </p>
         </div>
-        <div className="flex space-x-2">
-          {['week', 'month', 'year'].map((p) => (
-            <Button
-              key={p}
-              variant={period === p ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setPeriod(p as 'week' | 'month' | 'year')}
-            >
-              {p.charAt(0).toUpperCase() + p.slice(1)}
-            </Button>
-          ))}
+        <div className="flex items-center gap-2">
+          <FakeDataToggle />
+          <Button asChild>
+            <Link href="/admin/leads">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Lead
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                {stat.title}
-              </CardTitle>
-              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-              <p className="text-xs text-green-600 mt-1">
-                {stat.change} this {period}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Stats Cards */}
+      <DashboardStats />
 
-      {/* Top Resources */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Top Resources
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {analytics?.topResources?.slice(0, 5).map((resource, index) => (
-                <div key={resource.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
-                      <span className="text-sm font-semibold text-primary">
-                        {index + 1}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{resource.title}</p>
-                                             <p className="text-sm text-gray-500">{resource.downloads} downloads</p>
-                    </div>
-                  </div>
-                </div>
-              )) || (
-                <div className="text-center py-4">
-                  <p className="text-gray-500">No resources available</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Lead Sources */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Lead Sources
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {analytics?.leadSources?.map((source) => (
-                <div key={source.source} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="secondary" className="capitalize">
-                      {source.source}
-                    </Badge>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900">{source.count}</p>
-                    <p className="text-sm text-gray-500">leads</p>
-                  </div>
-                </div>
-              )) || (
-                <div className="text-center py-4">
-                  <p className="text-gray-500">No lead sources available</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Charts */}
+      <DashboardCharts />
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="h-20 flex flex-col items-center justify-center gap-2">
-              <Users className="h-6 w-6" />
-              <span>View All Leads</span>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/admin/leads">
+                <Users className="mr-2 h-4 w-4" />
+                Manage Leads
+              </Link>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-2">
-              <FileText className="h-6 w-6" />
-              <span>Add Resource</span>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/admin/resources">
+                <FileText className="mr-2 h-4 w-4" />
+                View Resources
+              </Link>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-2">
-              <Star className="h-6 w-6" />
-              <span>Add Testimonial</span>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/admin/calendar">
+                <Calendar className="mr-2 h-4 w-4" />
+                Check Calendar
+              </Link>
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-center justify-between text-sm">
+                  <span>{activity.action}</span>
+                  <span className="text-muted-foreground">{activity.time}</span>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                No recent activity
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Performance</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {performanceMetrics.length > 0 ? (
+              performanceMetrics.map((metric, index) => (
+                <div key={index} className="flex items-center justify-between text-sm">
+                  <span>{metric.metric}</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {metric.value}
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                No performance data
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {upcomingEvents.length > 0 ? (
+              upcomingEvents.map((event, index) => (
+                <div key={index} className="flex items-center justify-between text-sm">
+                  <span>{event.event}</span>
+                  <span className="text-muted-foreground">{event.time}</span>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                No upcoming events
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 } 

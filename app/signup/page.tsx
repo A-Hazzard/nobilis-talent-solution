@@ -1,167 +1,198 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Mail, Lock, User, Chrome } from 'lucide-react';
-
-type KindeConfig = {
-  clientId: string;
-  issuerUrl: string;
-  siteUrl: string;
-};
+import { Check, X, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Building, UserCheck, Phone } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { validateSignupForm, validatePassword } from '@/lib/utils/validation';
 
 export default function SignupPage() {
+  const router = useRouter();
+  const { signUp, user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [kindeConfig, setKindeConfig] = useState<KindeConfig | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    firstName?: string;
+    lastName?: string;
+    organization?: string;
+    phone?: string;
+  }>({});
+  const [passwordValidation, setPasswordValidation] = useState({
+    hasMinLength: false,
+    hasUppercase: false,
+    hasSpecialChar: false
+  });
+
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    organization: '',
+    phone: ''
   });
 
+  // Redirect if user is already authenticated
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await fetch('/api/auth/config');
-        if (response.ok) {
-          const config = await response.json();
-          setKindeConfig(config);
-        }
-      } catch (error) {
-        console.error('Error fetching Kinde config:', error);
-      }
-    };
-    fetchConfig();
-  }, []);
-
-  const handleGoogleSignUp = async () => {
-    if (!kindeConfig) {
-      setError('Configuration not loaded. Please try again.');
-      return;
+    if (!authLoading && isAuthenticated && user) {
+      console.log('SignupPage: User already authenticated, redirecting to admin...');
+      console.log('SignupPage: User details:', user);
+      console.log('SignupPage: Current pathname:', window.location.pathname);
+      
+      console.log('SignupPage: Executing redirect to /admin');
+      router.push('/admin');
     }
-
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const state = Math.random().toString(36).substring(2) + Date.now().toString(36);
-      const params = new URLSearchParams({
-        client_id: kindeConfig.clientId,
-        redirect_uri: `${kindeConfig.siteUrl}/api/auth/kinde`,
-        response_type: 'code',
-        scope: 'openid profile email',
-        state,
-        prompt: 'select_account',
-      });
-
-      const authUrl = `${kindeConfig.issuerUrl}/oauth2/auth?${params.toString()}`;
-      window.location.href = authUrl;
-    } catch (error) {
-      console.error('Google sign-up error:', error);
-      setError('Failed to initiate Google sign-up. Please try again.');
-      setIsLoading(false);
-    }
-  };
-
-  const handleEmailSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!kindeConfig) {
-      setError('Configuration not loaded. Please try again.');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const state = Math.random().toString(36).substring(2) + Date.now().toString(36);
-      const params = new URLSearchParams({
-        client_id: kindeConfig.clientId,
-        redirect_uri: `${kindeConfig.siteUrl}/api/auth/kinde`,
-        response_type: 'code',
-        scope: 'openid profile email',
-        state,
-        login_hint: formData.email,
-      });
-
-      const authUrl = `${kindeConfig.issuerUrl}/oauth2/auth?${params.toString()}`;
-      window.location.href = authUrl;
-    } catch (error) {
-      console.error('Email sign-up error:', error);
-      setError('Failed to sign up. Please try again.');
-      setIsLoading(false);
-    }
-  };
+  }, [authLoading, isAuthenticated, user, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setError(null);
+
+    // Clear field-specific error when user starts typing
+    if (fieldErrors[name as keyof typeof fieldErrors]) {
+      setFieldErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+
+    // Real-time password validation
+    if (name === 'password') {
+      const validation = validatePassword(value);
+      setPasswordValidation({
+        hasMinLength: validation.hasMinLength,
+        hasUppercase: validation.hasUppercase,
+        hasSpecialChar: validation.hasSpecialChar
+      });
+    }
+
+    // Real-time validation for other fields
+    if (name === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (value && !emailRegex.test(value)) {
+        setFieldErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+      } else {
+        setFieldErrors(prev => ({ ...prev, email: undefined }));
+      }
+    }
+
+    if (name === 'firstName' || name === 'lastName') {
+      const fieldName = name === 'firstName' ? 'First name' : 'Last name';
+      if (value && value.trim().length < 3) {
+        setFieldErrors(prev => ({ ...prev, [name]: `${fieldName} must be at least 3 characters long` }));
+      } else {
+        setFieldErrors(prev => ({ ...prev, [name]: undefined }));
+      }
+    }
+
+    if (name === 'organization' && value) {
+      if (value.trim().length < 3) {
+        setFieldErrors(prev => ({ ...prev, organization: 'Organization must be at least 3 characters long' }));
+      } else {
+        setFieldErrors(prev => ({ ...prev, organization: undefined }));
+      }
+    }
+
+    if (name === 'phone' && value) {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
+        setFieldErrors(prev => ({ ...prev, phone: 'Please enter a valid phone number' }));
+      } else {
+        setFieldErrors(prev => ({ ...prev, phone: undefined }));
+      }
+    }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    // Validate form
+    const validation = validateSignupForm(formData);
+    if (!validation.isValid) {
+      setFieldErrors(validation.errors);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      console.log('SignupPage: Attempting to sign up...');
+      const { error } = await signUp(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName,
+        formData.organization || 'Not specified',
+        formData.phone || ''
+      );
+      if (error) {
+        console.log('SignupPage: Sign up error:', error);
+        setError(error.message);
+      } else {
+        console.log('SignupPage: Sign up successful, waiting for auth state update...');
+        // The redirect will happen automatically via useEffect when auth state updates
+      }
+    } catch (error) {
+      console.error('SignupPage: Email sign-up error:', error);
+      setError('Failed to sign up. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getFieldError = (fieldName: string) => {
+    return fieldErrors[fieldName as keyof typeof fieldErrors];
+  };
+
+  const isFieldValid = (fieldName: string) => {
+    return !getFieldError(fieldName) && formData[fieldName as keyof typeof formData]?.trim() !== '';
+  };
+
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Create Account
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
           <CardDescription className="text-center">
-            Sign up to get started with your account
+            Enter your information to create your account
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {/* Google Sign Up */}
-          <Button
-            onClick={handleGoogleSignUp}
-            disabled={isLoading || !kindeConfig}
-            variant="outline"
-            className="w-full"
-          >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : !kindeConfig ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Chrome className="mr-2 h-4 w-4" />
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <X className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-            {!kindeConfig ? 'Loading...' : 'Continue with Google'}
-          </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          {/* Email/Password Form */}
-          <form onSubmit={handleEmailSignUp} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
@@ -171,30 +202,42 @@ export default function SignupPage() {
                     id="firstName"
                     name="firstName"
                     type="text"
-                    placeholder="First name"
+                    placeholder="John"
                     value={formData.firstName}
                     onChange={handleInputChange}
                     required
-                    className="pl-10"
+                    className={`pl-10 ${isFieldValid('firstName') ? 'border-green-500' : getFieldError('firstName') ? 'border-red-500' : ''}`}
                   />
+                  {isFieldValid('firstName') && (
+                    <Check className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                  )}
                 </div>
+                {getFieldError('firstName') && (
+                  <p className="text-sm text-red-500">{getFieldError('firstName')}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <UserCheck className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="lastName"
                     name="lastName"
                     type="text"
-                    placeholder="Last name"
+                    placeholder="Doe"
                     value={formData.lastName}
                     onChange={handleInputChange}
                     required
-                    className="pl-10"
+                    className={`pl-10 ${isFieldValid('lastName') ? 'border-green-500' : getFieldError('lastName') ? 'border-red-500' : ''}`}
                   />
+                  {isFieldValid('lastName') && (
+                    <Check className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                  )}
                 </div>
+                {getFieldError('lastName') && (
+                  <p className="text-sm text-red-500">{getFieldError('lastName')}</p>
+                )}
               </div>
             </div>
 
@@ -206,13 +249,63 @@ export default function SignupPage() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="john@example.com"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="pl-10"
+                  className={`pl-10 ${isFieldValid('email') ? 'border-green-500' : getFieldError('email') ? 'border-red-500' : ''}`}
                 />
+                {isFieldValid('email') && (
+                  <Check className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                )}
               </div>
+              {getFieldError('email') && (
+                <p className="text-sm text-red-500">{getFieldError('email')}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="organization">Organization (Optional)</Label>
+              <div className="relative">
+                <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="organization"
+                  name="organization"
+                  type="text"
+                  placeholder="Your organization (optional)"
+                  value={formData.organization}
+                  onChange={handleInputChange}
+                  className={`pl-10 ${formData.organization && isFieldValid('organization') ? 'border-green-500' : getFieldError('organization') ? 'border-red-500' : ''}`}
+                />
+                {formData.organization && isFieldValid('organization') && (
+                  <Check className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                )}
+              </div>
+              {getFieldError('organization') && (
+                <p className="text-sm text-red-500">{getFieldError('organization')}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone (Optional)</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="+1 (555) 123-4567"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className={`pl-10 ${formData.phone && isFieldValid('phone') ? 'border-green-500' : getFieldError('phone') ? 'border-red-500' : ''}`}
+                />
+                {formData.phone && isFieldValid('phone') && (
+                  <Check className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                )}
+              </div>
+              {getFieldError('phone') && (
+                <p className="text-sm text-red-500">{getFieldError('phone')}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -222,14 +315,42 @@ export default function SignupPage() {
                 <Input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Create a password"
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  className="pl-10"
+                  className={`pl-10 pr-10 ${isFieldValid('password') ? 'border-green-500' : getFieldError('password') ? 'border-red-500' : ''}`}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
+              {getFieldError('password') && (
+                <p className="text-sm text-red-500">{getFieldError('password')}</p>
+              )}
+              
+              {/* Password strength indicator */}
+              {formData.password && (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${passwordValidation.hasMinLength ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <span className="text-xs text-gray-600">At least 8 characters</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${passwordValidation.hasUppercase ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <span className="text-xs text-gray-600">1 uppercase letter</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${passwordValidation.hasSpecialChar ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <span className="text-xs text-gray-600">1 special character</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -239,38 +360,34 @@ export default function SignupPage() {
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   required
-                  className="pl-10"
+                  className={`pl-10 pr-10 ${formData.confirmPassword && formData.password === formData.confirmPassword ? 'border-green-500' : getFieldError('confirmPassword') ? 'border-red-500' : ''}`}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
+              {getFieldError('confirmPassword') && (
+                <p className="text-sm text-red-500">{getFieldError('confirmPassword')}</p>
+              )}
             </div>
 
-            <Button
-              type="submit"
-              disabled={isLoading || !kindeConfig}
-              className="w-full"
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : !kindeConfig ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                'Create Account'
-              )}
-              {!kindeConfig ? 'Loading...' : (isLoading ? 'Creating Account...' : 'Create Account')}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
 
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <a
-              href="/login"
-              className="text-primary hover:underline"
-            >
+            <a href="/login" className="text-blue-600 hover:text-blue-500">
               Sign in
             </a>
           </div>

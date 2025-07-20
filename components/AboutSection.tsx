@@ -37,11 +37,11 @@ const AboutSection = () => {
               <div className="relative w-full max-w-md mx-auto">
                 <Image
                   src="/assets/kareem-profile.jpg"
-                  alt="Kareem Payne - Leadership Coach"
+                alt="Kareem Payne - Leadership Coach"
                   width={400}
                   height={500}
                   className="rounded-3xl shadow-strong hover-float"
-                />
+              />
               </div>
             </div>
             

@@ -8,14 +8,12 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  Star,
-  BarChart3,
-  Settings,
   Calendar,
-  Target,
+  Settings,
+  Star,
 } from 'lucide-react';
 
-const menuItems = [
+const sidebarItems = [
   {
     title: 'Dashboard',
     href: '/admin',
@@ -37,11 +35,6 @@ const menuItems = [
     icon: Star,
   },
   {
-    title: 'Analytics',
-    href: '/admin/analytics',
-    icon: BarChart3,
-  },
-  {
     title: 'Calendar',
     href: '/admin/calendar',
     icon: Calendar,
@@ -57,32 +50,31 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 min-h-screen">
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-8">
-          <Target className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold text-gray-900">Admin</span>
-        </div>
-
-        <nav className="space-y-2">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant={isActive ? 'default' : 'ghost'}
-                  className={cn(
-                    'w-full justify-start gap-3',
-                    isActive && 'bg-primary text-primary-foreground'
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
+    <div className="pb-12 min-h-screen">
+      <div className="space-y-4 py-4">
+        <div className="px-3 py-2">
+          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight hidden lg:block">
+            Admin Panel
+          </h2>
+          <div className="space-y-1">
+            {sidebarItems.map((item) => (
+              <Button
+                key={item.href}
+                asChild
+                variant={pathname === item.href ? 'secondary' : 'ghost'}
+                className={cn(
+                  'w-full justify-start text-sm lg:text-base',
+                  pathname === item.href && 'bg-secondary'
+                )}
+              >
+                <Link href={item.href}>
+                  <item.icon className="mr-2 h-4 w-4" />
                   {item.title}
-                </Button>
-              </Link>
-            );
-          })}
-        </nav>
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

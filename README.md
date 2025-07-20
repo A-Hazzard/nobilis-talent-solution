@@ -1,93 +1,179 @@
-# Payne Leadership Web
+# Payne Leadership Platform
 
-A modern leadership coaching website built with Next.js 15, TypeScript, and Tailwind CSS.
+A modern leadership coaching and business management platform built with Next.js 15, TypeScript, and Firebase. Features comprehensive lead management, resource sharing, calendar scheduling, and analytics dashboard.
 
-## Project info
+## ✨ Features
 
-**URL**: https://lovable.dev/projects/9007a8ca-ef92-4da1-8860-81c06b4b9618
+- **🎯 Lead Management** - Track and manage client leads with detailed analytics
+- **📚 Resource Library** - Upload and share leadership resources with download tracking
+- **📅 Calendar System** - Schedule and manage events, workshops, and consultations
+- **⭐ Testimonials** - Collect and showcase client testimonials with ratings
+- **📊 Analytics Dashboard** - Comprehensive insights with demo mode for presentations
+- **🔐 Secure Authentication** - Firebase Auth with role-based access control
+- **📱 Responsive Design** - Works seamlessly on desktop, tablet, and mobile
 
-## How can I edit this code?
+## 🛠️ Tech Stack
 
-There are several ways of editing your application.
+- **Frontend**: Next.js 15, TypeScript, Tailwind CSS, Radix UI
+- **State Management**: Zustand with persistence
+- **Backend**: Firebase (Auth, Firestore, Storage)
+- **UI Components**: shadcn/ui with Lucide icons
+- **Package Manager**: pnpm
 
-**Use Lovable**
+## 🚀 Quick Start
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/9007a8ca-ef92-4da1-8860-81c06b4b9618) and start prompting.
+### Using Docker
 
-Changes made via Lovable will be committed automatically to this repo.
+```bash
+# Clone the repository
+git clone <repository-url>
+cd payne-leadership-web
 
-**Use your preferred IDE**
+# Copy environment template
+cp .env.example .env
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# Edit .env with your Firebase credentials
+# See Environment Setup section below
 
-The only requirement is having Node.js & pnpm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Build and run with Docker
+docker build -t payne-leadership .
+docker run -p 3000:3000 --env-file .env payne-leadership
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-pnpm install
-
-# Step 4: Start the development server with Turbopack for fast refresh.
-pnpm dev
-
-# Step 5: Build for production.
-pnpm build
-
-# Step 6: Start production server.
-pnpm start
+# Open http://localhost:3000
 ```
 
-**Edit a file directly in GitHub**
+### Manual Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Install dependencies
+pnpm install
 
-**Use GitHub Codespaces**
+# Set up environment variables
+cp .env.example .env
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Start development server
+pnpm dev
+```
 
-## What technologies are used for this project?
+## 🔧 Environment Setup
 
-This project is built with:
+Create a `.env` file in the root directory:
 
-- Next.js 15 (with Turbopack)
-- TypeScript
-- React 18
-- shadcn/ui
-- Tailwind CSS
-- Radix UI
-- Lucide React Icons
+```env
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
+NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef123456
+```
 
-## Features
+### Firebase Setup
 
-- Modern, responsive design
-- Fast development with Turbopack
-- Type-safe with TypeScript
-- Beautiful UI components with shadcn/ui
-- Optimized images with Next.js Image component
-- Smooth animations and transitions
-- SEO optimized
+1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Enable Authentication (Email/Password)
+3. Create Firestore database
+4. Set up Storage bucket
+5. Copy configuration to your `.env` file
 
-## How can I deploy this project?
+## 📁 Project Structure
 
-Simply open [Lovable](https://lovable.dev/projects/9007a8ca-ef92-4da1-8860-81c06b4b9618) and click on Share -> Publish.
+```
+├── app/                    # Next.js App Router
+│   ├── admin/             # Admin dashboard pages
+│   ├── api/               # API routes
+│   └── (auth)/            # Authentication pages
+├── components/            # React components
+│   ├── admin/            # Admin-specific components
+│   └── ui/               # Base UI components
+├── lib/                  # Utilities and services
+│   ├── services/         # Business logic services
+│   ├── stores/           # Zustand state stores
+│   └── utils/            # Helper functions
+├── shared/               # Shared code
+│   └── types/            # TypeScript definitions
+└── hooks/                # Custom React hooks
+```
 
-## Can I connect a custom domain to my Lovable project?
+## 🎯 Key Features
 
-Yes, you can!
+### Admin Dashboard
+- **Real-time Analytics** - Live data with demo mode toggle
+- **Lead Management** - Comprehensive lead tracking and insights
+- **Resource Center** - File management with download analytics
+- **Calendar System** - Event scheduling and management
+- **Testimonials** - Client feedback management
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Demo Mode
+Toggle between real data and simulated data for presentations and testing.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Responsive Design
+Optimized for all devices with modern UI/UX patterns.
+
+## 🔐 Authentication
+
+- **Firebase Authentication** with email/password
+- **Role-based access** control
+- **Persistent sessions** with Zustand
+- **Secure API endpoints**
+
+## 📊 Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Run linting
+pnpm lint
+```
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel --prod
+```
+
+### Docker Production
+
+```bash
+# Build production image
+docker build -t payne-leadership .
+
+# Run production container
+docker run -p 3000:3000 --env-file .env payne-leadership
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is proprietary software. All rights reserved.
+
+## 🆘 Support
+
+- Create an issue in the repository
+- Check the documentation
+- Contact the development team
+
+---
+
+**Built with ❤️ using Next.js, TypeScript, and Firebase** 

@@ -55,6 +55,7 @@ export default function CalendarPage() {
   const [showDebug, setShowDebug] = useState(false);
   const [showCalendlyBooking, setShowCalendlyBooking] = useState(false);
   const [selectedEventType, setSelectedEventType] = useState<any>(null);
+  const [syncStatus, setSyncStatus] = useState<'disconnected' | 'syncing' | 'success' | 'error'>('disconnected');
 
   const { user } = useUserStore();
   const calendarService = CalendarService.getInstance();
@@ -114,41 +115,50 @@ export default function CalendarPage() {
 
   const syncCalendlyEvents = async () => {
     try {
-      setIsSyncing(true);
-      const { data: calendlyEvents, error } = await calendlyService.syncCalendlyEvents();
+      setSyncStatus('syncing');
+      const result = await calendlyService.syncCalendlyEvents();
       
-      if (error) {
-        console.error('Error syncing Calendly events:', error);
-        if (error.includes('Not authenticated')) {
-          setCalendlyAuthStatus('disconnected');
-        }
+      if (result.error) {
+        console.error('Sync error:', result.error);
+        setSyncStatus('error');
         return;
       }
 
-      // Merge Calendly events with existing events
-      const existingEventIds = new Set(events.map(e => e.id));
-      const newCalendlyEvents = calendlyEvents.filter(e => !existingEventIds.has(e.id));
+      console.log('🔄 Synced events:', result.data);
       
-      if (newCalendlyEvents.length > 0) {
-        // Save new Calendly events to database
-        for (const event of newCalendlyEvents) {
-          await calendarService.createEvent(event);
+      // Save synced events to the database
+      let syncedCount = 0;
+      for (const eventData of result.data) {
+        try {
+          if (!user) continue;
+          
+          const response = await calendarService.createEvent({
+            ...eventData,
+            createdBy: user.id,
+          });
+          
+          if (!response.error) {
+            syncedCount++;
+            console.log('✅ Saved event:', eventData.title);
+          } else {
+            console.error('❌ Failed to save event:', eventData.title, response.error);
+          }
+        } catch (error) {
+          console.error('❌ Error saving event:', error);
         }
-        
-        // Reload all events
-        await loadEvents();
-        
-        // Update sync stats
-        setSyncStats({ synced: newCalendlyEvents.length, total: calendlyEvents.length });
-        setLastSyncTime(new Date());
-      } else {
-        setSyncStats({ synced: 0, total: calendlyEvents.length });
-        setLastSyncTime(new Date());
       }
+      
+      setSyncStats({ synced: syncedCount, total: result.data.length });
+      setLastSyncTime(new Date());
+      setSyncStatus('success');
+      
+      // Reload events to show the new ones
+      await loadEvents();
+      
+      console.log(`🎉 Sync complete! ${syncedCount} events synced.`);
     } catch (error) {
-      console.error('Error syncing Calendly events:', error);
-    } finally {
-      setIsSyncing(false);
+      console.error('Sync error:', error);
+      setSyncStatus('error');
     }
   };
 
@@ -926,7 +936,7 @@ export default function CalendarPage() {
 
       {/* Calendly Booking Modal */}
       <Dialog open={showCalendlyBooking} onOpenChange={setShowCalendlyBooking}>
-        <DialogContent className="sm:max-w-[600px] h-[600px]">
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] h-[90vh] max-h-[800px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" />
@@ -937,9 +947,9 @@ export default function CalendarPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 relative">
             {selectedEventType && (
-              <div className="h-full">
+              <div className="h-full w-full">
                 <iframe
                   src={`${selectedEventType.scheduling_url}?embed_domain=${encodeURIComponent(window.location.origin)}`}
                   width="100%"
@@ -947,6 +957,7 @@ export default function CalendarPage() {
                   frameBorder="0"
                   title="Calendly Booking"
                   className="rounded-md"
+                  style={{ minHeight: '600px' }}
                 />
               </div>
             )}

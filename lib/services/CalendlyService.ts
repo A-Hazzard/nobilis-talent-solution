@@ -57,8 +57,36 @@ export interface CalendlyEvent {
 }
 
 export interface CalendlyScheduledEvent {
-  event: CalendlyEvent;
-  invitee: {
+  // Event data at root level (actual API response structure)
+  uri: string;
+  name: string;
+  status: string;
+  start_time: string;
+  end_time: string;
+  event_type: string; // URI to event type
+  location: {
+    type: string;
+    location: string | null;
+  };
+  invitees_counter: {
+    active: number;
+    limit: number;
+    total: number;
+  };
+  created_at: string;
+  updated_at: string;
+  calendar_event?: {
+    external_id: string;
+    kind: string;
+  };
+  event_guests: any[];
+  event_memberships: any[];
+  meeting_notes_html: string | null;
+  meeting_notes_plain: string | null;
+  
+  // Legacy structure for backward compatibility
+  event?: CalendlyEvent;
+  invitee?: {
     uri: string;
     name: string;
     email: string;
@@ -70,7 +98,7 @@ export interface CalendlyScheduledEvent {
     cancel_reason?: string;
     canceled_at?: string;
   };
-  tracking: {
+  tracking?: {
     utm_campaign?: string;
     utm_source?: string;
     utm_medium?: string;
@@ -273,12 +301,12 @@ export class CalendlyService {
       
       console.log('📅 Total events found after pagination:', allEvents.length);
       console.log('📋 Event details:', allEvents.map((e: CalendlyScheduledEvent) => ({
-        name: e.event.name,
-        start_time: e.event.start_time,
-        status: e.event.status,
-        canceled: e.event.canceled,
-        uri: e.event.uri,
-        event_type: e.event.event_type?.name
+        name: e.event?.name || 'Unknown Event',
+        start_time: e.event?.start_time || 'No start time',
+        status: e.event?.status || 'Unknown status',
+        canceled: e.event?.canceled || false,
+        uri: e.event?.uri || 'No URI',
+        event_type: e.event?.event_type?.name || 'Unknown type'
       })));
       
       return { data: allEvents };
@@ -356,29 +384,25 @@ export class CalendlyService {
   }
 
   /**
-   * Convert Calendly event to internal CalendarEvent format
+   * Convert a Calendly event to our internal CalendarEvent format
    */
   convertCalendlyEventToCalendarEvent(calendlyEvent: CalendlyScheduledEvent): CalendarEvent {
-    const startDate = new Date(calendlyEvent.event.start_time);
-    const endDate = new Date(calendlyEvent.event.end_time);
+    const startDate = new Date(calendlyEvent.start_time);
+    const endDate = new Date(calendlyEvent.end_time);
 
     return {
-      id: calendlyEvent.event.uri.split('/').pop() || '',
-      title: calendlyEvent.event.name,
+      id: calendlyEvent.uri,
+      title: calendlyEvent.name,
       date: startDate.toISOString().split('T')[0],
-      time: startDate.toTimeString().split(' ')[0].substring(0, 5),
-      endTime: endDate.toTimeString().split(' ')[0].substring(0, 5),
-      location: calendlyEvent.event.location?.location || 'Online',
-      attendees: 1, // Calendly events are typically 1:1
-      type: this.mapEventTypeToInternal(calendlyEvent.event.event_type.name),
-      description: calendlyEvent.event.event_type.description_plain || '',
-      createdBy: 'calendly-sync',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      calendlyUri: calendlyEvent.event.uri,
-      inviteeEmail: calendlyEvent.invitee.email,
-      inviteeName: calendlyEvent.invitee.name,
-      status: calendlyEvent.event.canceled ? 'canceled' : 'confirmed',
+      time: `${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()}`,
+      location: calendlyEvent.location?.type || 'Online',
+      attendees: calendlyEvent.invitees_counter?.total || 1,
+      type: this.mapEventTypeToInternal(calendlyEvent.event_type),
+      createdBy: 'calendly',
+      createdAt: new Date(calendlyEvent.created_at),
+      updatedAt: new Date(calendlyEvent.updated_at),
+      calendlyUri: calendlyEvent.uri,
+      status: calendlyEvent.status === 'active' ? 'confirmed' : 'canceled'
     };
   }
 
@@ -408,64 +432,51 @@ export class CalendlyService {
   }
 
   /**
-   * Sync Calendly events to internal calendar
+   * Sync Calendly events to the local calendar
    */
-  async syncCalendlyEvents(): Promise<{ data: CalendarEvent[]; error?: string }> {
+  async syncCalendlyEvents(): Promise<{ data: any[]; error?: string }> {
     try {
-      console.log('🔍 Starting Calendly sync...');
+      const events = await this.getScheduledEvents();
       
-      // First, let's get the user's info to understand what we're working with
-      const userResponse = await fetch(`${this.baseUrl}/users/me`, {
-        headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        console.log('👤 Calendly user info:', userData);
+      if (events.error) {
+        return { data: [], error: events.error };
       }
 
-      // Get events without status filter first to see what's available
-      const { data: allEvents, error: allEventsError } = await this.getScheduledEvents({
-        count: 100,
-        // Remove status filter to get all events
-      });
+      console.log('🔄 Syncing Calendly events:', events.data.length);
+      
+      const syncedEvents = [];
+      
+      for (const calendlyEvent of events.data) {
+        try {
+          // The event data is at the root level, not nested under 'event'
+          if (!calendlyEvent.name) {
+            console.warn('⚠️ Skipping event with missing name:', calendlyEvent);
+            continue;
+          }
 
-      if (allEventsError) {
-        console.error('❌ Error fetching all events:', allEventsError);
-        return { data: [], error: allEventsError };
+          const eventData = {
+            title: calendlyEvent.name || 'Calendly Event',
+            date: calendlyEvent.start_time ? new Date(calendlyEvent.start_time).toISOString().split('T')[0] : '',
+            time: calendlyEvent.start_time ? new Date(calendlyEvent.start_time).toLocaleTimeString() : '',
+            location: calendlyEvent.location?.type || 'Online',
+            attendees: calendlyEvent.invitees_counter?.total || 1,
+            type: 'meeting' as const,
+            calendlyId: calendlyEvent.uri,
+            calendlyData: calendlyEvent
+          };
+
+          console.log('📅 Processing event:', eventData.title, 'at', eventData.date, eventData.time);
+          syncedEvents.push(eventData);
+        } catch (eventError) {
+          console.error('❌ Error processing individual event:', eventError);
+          continue;
+        }
       }
-
-      console.log('📅 Raw Calendly events found:', allEvents.length);
-      console.log('📋 Event details:', allEvents.map(e => ({
-        name: e.event.name,
-        start_time: e.event.start_time,
-        status: e.event.status,
-        canceled: e.event.canceled,
-        uri: e.event.uri
-      })));
-
-      // Filter for active events (not canceled)
-      const activeEvents = allEvents.filter(event => !event.event.canceled);
-      console.log('✅ Active events (not canceled):', activeEvents.length);
-
-      const convertedEvents = activeEvents.map(event => {
-        const converted = this.convertCalendlyEventToCalendarEvent(event);
-        console.log('🔄 Converting event:', {
-          original: event.event.name,
-          converted: converted.title,
-          date: converted.date,
-          time: converted.time
-        });
-        return converted;
-      });
-
-      console.log('🎉 Sync complete. Converted events:', convertedEvents.length);
-      return { data: convertedEvents };
+      
+      console.log('✅ Successfully synced events:', syncedEvents.length);
+      return { data: syncedEvents };
     } catch (error) {
-      console.error('❌ Error syncing Calendly events:', error);
+      console.error('Error syncing Calendly events:', error);
       return { data: [], error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }

@@ -87,18 +87,55 @@ NODE_ENV=development
 ```
 ├── app/                    # Next.js App Router
 │   ├── admin/             # Admin dashboard pages
+│   │   ├── analytics/     # Analytics dashboard
+│   │   ├── calendar/      # Calendar management
+│   │   ├── leads/         # Lead management
+│   │   ├── resources/     # Resource library
+│   │   ├── settings/      # Admin settings
+│   │   └── testimonials/  # Testimonials management
 │   ├── api/               # API routes
-│   └── (auth)/            # Authentication pages
+│   ├── auth/              # Authentication pages
+│   ├── login/             # Login page
+│   ├── signup/            # Signup page
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Home page
+│   ├── providers.tsx      # Context providers
+│   └── globals.css        # Global styles
 ├── components/            # React components
 │   ├── admin/            # Admin-specific components
-│   └── ui/               # Base UI components
+│   ├── ui/               # Base UI components (shadcn/ui)
+│   ├── AboutSection.tsx  # About section component
+│   ├── ContactSection.tsx # Contact form component
+│   ├── Footer.tsx        # Footer component
+│   ├── HeroSection.tsx   # Hero section component
+│   ├── Navigation.tsx    # Navigation component
+│   ├── ServicesSection.tsx # Services section
+│   ├── TestimonialsSection.tsx # Testimonials section
+│   ├── ScrollToTop.tsx   # Scroll to top button
+│   └── StickyCallButton.tsx # Sticky call button
 ├── lib/                  # Utilities and services
 │   ├── services/         # Business logic services
 │   ├── stores/           # Zustand state stores
-│   └── utils/            # Helper functions
+│   ├── utils/            # Helper functions
+│   ├── firebase/         # Firebase configuration
+│   ├── hooks/            # Custom hooks
+│   ├── types/            # TypeScript definitions
+│   ├── helpers/          # Helper functions
+│   └── contexts/         # React contexts
 ├── shared/               # Shared code
-│   └── types/            # TypeScript definitions
-└── hooks/                # Custom React hooks
+│   └── types/            # Shared TypeScript definitions
+├── hooks/                # Custom React hooks
+├── types/                # Application types (currently empty)
+├── database/             # Database related files (currently empty)
+├── public/               # Static assets
+├── .cursor/              # Cursor IDE configuration
+├── Dockerfile            # Docker configuration
+├── next.config.js        # Next.js configuration
+├── tailwind.config.ts    # Tailwind CSS configuration
+├── tsconfig.json         # TypeScript configuration
+├── eslint.config.js      # ESLint configuration
+├── package.json          # Dependencies and scripts
+└── README.md             # Project documentation
 ```
 
 ## 🎯 Key Features

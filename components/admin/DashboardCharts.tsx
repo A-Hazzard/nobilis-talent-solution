@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AnalyticsService } from '@/lib/services/AnalyticsService';
+import { FakeDataService } from '@/lib/services/FakeDataService';
+import { useDashboardStore } from '@/lib/stores/dashboardStore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import {
@@ -52,6 +54,9 @@ export default function DashboardCharts() {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const { isFakeDataEnabled } = useDashboardStore();
+  const fakeDataService = FakeDataService.getInstance();
 
   useEffect(() => {
     const fetchChartData = async () => {
@@ -59,31 +64,38 @@ export default function DashboardCharts() {
         setIsLoading(true);
         setError(null);
 
-        const analyticsService = new AnalyticsService();
-        const { total, error: leadsError } = await analyticsService.getLeadsAnalytics();
+        if (isFakeDataEnabled) {
+          // Use fake data
+          const fakeChartData = fakeDataService.generateFakeDashboardChartData();
+          setChartData(fakeChartData);
+        } else {
+          // Use real data
+          const analyticsService = new AnalyticsService();
+          const { total, error: leadsError } = await analyticsService.getLeadsAnalytics();
 
-        if (leadsError) {
-          throw new Error(leadsError);
+          if (leadsError) {
+            throw new Error(leadsError);
+          }
+
+          // Generate monthly data based on total leads (mock data for now)
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+          const monthlyData = months.map(() => Math.floor(Math.random() * Math.max(total / 6, 1)) + 1);
+
+          setChartData({
+            leadsByMonth: {
+              labels: months,
+              data: monthlyData,
+            },
+            leadsByStatus: {
+              labels: ['Total Leads'],
+              data: [total],
+            },
+            leadsBySource: {
+              labels: ['Users'],
+              data: [total],
+            },
+          });
         }
-
-        // Generate monthly data based on total leads (mock data for now)
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        const monthlyData = months.map(() => Math.floor(Math.random() * Math.max(total / 6, 1)) + 1);
-
-        setChartData({
-          leadsByMonth: {
-            labels: months,
-            data: monthlyData,
-          },
-          leadsByStatus: {
-            labels: ['Total Leads'],
-            data: [total],
-          },
-          leadsBySource: {
-            labels: ['Users'],
-            data: [total],
-          },
-        });
       } catch (err) {
         console.error('Error fetching chart data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load chart data');
@@ -93,7 +105,7 @@ export default function DashboardCharts() {
     };
 
     fetchChartData();
-  }, []);
+  }, [isFakeDataEnabled]);
 
   if (isLoading) {
     return (

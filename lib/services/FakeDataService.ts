@@ -111,6 +111,41 @@ export class FakeDataService {
   }
 
   /**
+   * Generate fake chart data for dashboard charts
+   */
+  generateFakeDashboardChartData() {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const totalLeads = this.getRandomNumber(150, 500);
+    
+    return {
+      leadsByMonth: {
+        labels: months,
+        data: months.map(() => this.getRandomNumber(15, 80)),
+      },
+      leadsByStatus: {
+        labels: ['New', 'Contacted', 'Qualified', 'Converted', 'Lost'],
+        data: [
+          this.getRandomNumber(20, 60),
+          this.getRandomNumber(15, 45),
+          this.getRandomNumber(10, 35),
+          this.getRandomNumber(5, 25),
+          this.getRandomNumber(5, 20),
+        ],
+      },
+      leadsBySource: {
+        labels: ['Website', 'LinkedIn', 'Referral', 'Email Campaign', 'Social Media'],
+        data: [
+          this.getRandomNumber(30, 80),
+          this.getRandomNumber(20, 60),
+          this.getRandomNumber(15, 45),
+          this.getRandomNumber(10, 35),
+          this.getRandomNumber(5, 25),
+        ],
+      },
+    };
+  }
+
+  /**
    * Generate fake recent activity
    */
   generateFakeRecentActivity() {

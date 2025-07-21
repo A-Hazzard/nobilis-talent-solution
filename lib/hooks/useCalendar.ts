@@ -29,6 +29,8 @@ export interface CalendarState {
   showInstructions: boolean;
   showCalendlyBooking: boolean;
   selectedEventType: any;
+  connectionAttempts: number;
+  maxConnectionAttempts: number;
 }
 
 export interface CalendarActions {
@@ -46,6 +48,7 @@ export interface CalendarActions {
   openCalendlyBooking: () => Promise<void>;
   closeCalendlyBooking: () => void;
   toggleInstructions: () => void;
+  checkCalendlyConnection: () => Promise<void>;
 }
 
 /**
@@ -75,9 +78,47 @@ export function useCalendar(): [CalendarState, CalendarActions] {
   const [showInstructions, setShowInstructions] = useState(false);
   const [showCalendlyBooking, setShowCalendlyBooking] = useState(false);
   const [selectedEventType, setSelectedEventType] = useState<any>(null);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [maxConnectionAttempts] = useState(2);
 
   const calendarService = CalendarService.getInstance();
   const calendlyService = CalendlyService.getInstance();
+
+  /**
+   * Check Calendly connection status
+   */
+  const checkCalendlyConnection = useCallback(async () => {
+    try {
+      console.log('🔍 Checking Calendly connection...');
+      
+      // Check if we have a stored token
+      const storedToken = localStorage.getItem('calendly_access_token');
+      if (storedToken) {
+        console.log('📝 Found stored token, testing connection...');
+        calendlyService.setAccessToken(storedToken);
+        
+        // Test the connection by getting user info
+        const userInfo = await calendlyService.getUserInfo();
+        if (userInfo.data && !userInfo.error) {
+          console.log('✅ Calendly connection successful!');
+          setCalendlyAuthStatus('connected');
+          setConnectionAttempts(0);
+          return;
+        } else {
+          console.log('❌ Stored token is invalid, removing...');
+          // Token is invalid, remove it
+          localStorage.removeItem('calendly_access_token');
+          setCalendlyAuthStatus('disconnected');
+        }
+      } else {
+        console.log('📝 No stored token found');
+        setCalendlyAuthStatus('disconnected');
+      }
+    } catch (error) {
+      console.error('❌ Error checking Calendly connection:', error);
+      setCalendlyAuthStatus('error');
+    }
+  }, [calendlyService]);
 
   const loadEvents = useCallback(async () => {
     try {
@@ -88,14 +129,20 @@ export function useCalendar(): [CalendarState, CalendarActions] {
       
       let allEvents = [...localEvents];
       
+      // Only try to load Calendly events if we're connected
       if (calendlyAuthStatus === 'connected') {
-        const result = await calendlyService.getScheduledEvents();
-        
-        if (!result.error && result.data) {
-          const convertedEvents = result.data.map(event => 
-            calendlyService.convertCalendlyEventToCalendarEvent(event)
-          );
-          allEvents = [...localEvents, ...convertedEvents];
+        try {
+          const result = await calendlyService.getScheduledEvents();
+          
+          if (!result.error && result.data) {
+            const convertedEvents = result.data.map(event => 
+              calendlyService.convertCalendlyEventToCalendarEvent(event)
+            );
+            allEvents = [...localEvents, ...convertedEvents];
+          }
+        } catch (error) {
+          console.error('Error loading Calendly events:', error);
+          // Don't fail the entire load if Calendly fails
         }
       }
       
@@ -199,8 +246,8 @@ export function useCalendar(): [CalendarState, CalendarActions] {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!form.startTime || !form.endTime) {
-      setFormError('Please select both start and end times');
+    if (!form.title || !form.date || !form.startTime || !form.endTime) {
+      setFormError('Please fill in all required fields');
       return;
     }
 
@@ -210,74 +257,43 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     }
 
     try {
-      if (editingEvent) {
-        if (editingEvent.calendlyUri) {
-          setFormError('Cannot edit Calendly events. Please edit them directly in Calendly.');
-          return;
-        }
+      const eventData = {
+        title: form.title,
+        date: form.date,
+        time: `${form.startTime} - ${form.endTime}`,
+        location: form.location,
+        attendees: form.attendees,
+        type: form.type,
+      };
 
+      if (editingEvent) {
         await calendarService.updateEvent({
           id: editingEvent.id,
-          title: form.title,
-          date: form.date,
-          time: `${form.startTime} - ${form.endTime}`,
-          location: form.location,
-          attendees: form.attendees,
-          type: form.type,
+          ...eventData,
         });
       } else {
-        const newEvent: Omit<CalendarEvent, 'id'> = {
-          title: form.title,
-          date: form.date,
-          time: `${form.startTime} - ${form.endTime}`,
-          location: form.location,
-          attendees: form.attendees,
-          type: form.type,
-          status: 'confirmed',
+        await calendarService.createEvent({
+          ...eventData,
           createdBy: 'local',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+        });
+      }
 
-        await calendarService.createEvent(newEvent);
-      }
-      
-      await loadEvents();
-      
-      if (calendlyAuthStatus === 'connected') {
-        await syncCalendlyEvents();
-      }
-      
       handleCloseModal();
+      loadEvents();
     } catch (error) {
       console.error('Error saving event:', error);
-      setFormError('Failed to save event');
+      setFormError('Failed to save event. Please try again.');
     }
-  }, [form, editingEvent, calendlyAuthStatus, calendarService, loadEvents, syncCalendlyEvents, handleCloseModal]);
+  }, [form, editingEvent, calendarService, handleCloseModal, loadEvents]);
 
   const handleDeleteEvent = useCallback(async (eventId: string) => {
     try {
-      const event = events.find(e => e.id === eventId);
-      if (!event) return;
-
-      if (event.calendlyUri) {
-        if (calendlyAuthStatus !== 'connected') return;
-
-        const deleteResult = await calendlyService.cancelEvent(event.calendlyUri);
-        if (deleteResult.error) return;
-      } else {
-        await calendarService.deleteEvent(eventId);
-      }
-
-      await loadEvents();
-      
-      if (calendlyAuthStatus === 'connected') {
-        await syncCalendlyEvents();
-      }
+      await calendarService.deleteEvent(eventId);
+      loadEvents();
     } catch (error) {
       console.error('Error deleting event:', error);
     }
-  }, [events, calendlyAuthStatus, calendarService, calendlyService, loadEvents, syncCalendlyEvents]);
+  }, [calendarService, loadEvents]);
 
   const handleFormChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -347,9 +363,55 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     setShowInstructions(prev => !prev);
   }, []);
 
+  // Initial load and connection check
   useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+    const initializeCalendar = async () => {
+      try {
+        setIsLoading(true);
+        
+        // First check Calendly connection
+        await checkCalendlyConnection();
+        
+        // Then load events
+        await loadEvents();
+      } catch (error) {
+        console.error('Error initializing calendar:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeCalendar();
+  }, []);
+
+  // Retry connection logic
+  useEffect(() => {
+    if (calendlyAuthStatus === 'disconnected' && connectionAttempts < maxConnectionAttempts) {
+      const retryConnection = async () => {
+        setConnectionAttempts(prev => prev + 1);
+        setCalendlyAuthStatus('connecting');
+        
+        try {
+          await checkCalendlyConnection();
+        } catch (error) {
+          console.error('Connection retry failed:', error);
+          setCalendlyAuthStatus('error');
+        }
+      };
+
+      const timeoutId = setTimeout(retryConnection, 2000 * connectionAttempts); // Exponential backoff
+      return () => clearTimeout(timeoutId);
+    }
+  }, [calendlyAuthStatus, connectionAttempts, maxConnectionAttempts, checkCalendlyConnection]);
+
+  // Auto-sync when connection is established
+  useEffect(() => {
+    if (calendlyAuthStatus === 'connected' && syncStatus === 'disconnected') {
+      console.log('🔄 Auto-syncing Calendly events after successful connection...');
+      // Auto-sync when we first connect
+      syncCalendlyEvents();
+    }
+  }, [calendlyAuthStatus, syncStatus, syncCalendlyEvents]);
 
   const state: CalendarState = {
     events,
@@ -366,6 +428,8 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     showInstructions,
     showCalendlyBooking,
     selectedEventType,
+    connectionAttempts,
+    maxConnectionAttempts,
   };
 
   const actions: CalendarActions = {
@@ -383,6 +447,7 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     openCalendlyBooking,
     closeCalendlyBooking,
     toggleInstructions,
+    checkCalendlyConnection,
   };
 
   return [state, actions];

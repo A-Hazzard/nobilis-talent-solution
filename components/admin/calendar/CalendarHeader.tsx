@@ -9,6 +9,8 @@ interface CalendarHeaderProps {
   onOpenCalendlyBooking: () => void;
   onAddEvent: () => void;
   onToggleInstructions: () => void;
+  connectionAttempts: number;
+  maxConnectionAttempts: number;
 }
 
 /**
@@ -22,7 +24,13 @@ export default function CalendarHeader({
   onOpenCalendlyBooking,
   onAddEvent,
   onToggleInstructions,
+  connectionAttempts,
+  maxConnectionAttempts,
 }: CalendarHeaderProps) {
+  // Show connect button only after max attempts or if disconnected
+  const shouldShowConnectButton = calendlyAuthStatus === 'disconnected' || 
+    (calendlyAuthStatus === 'error' && connectionAttempts >= maxConnectionAttempts);
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -48,25 +56,18 @@ export default function CalendarHeader({
           </Button>
         )}
         
-        {calendlyAuthStatus === 'disconnected' && (
+        {shouldShowConnectButton && (
           <Button 
             variant="outline" 
             onClick={onConnectCalendly}
-            className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+            className={`${
+              calendlyAuthStatus === 'error' 
+                ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' 
+                : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+            }`}
           >
             <Link className="h-4 w-4 mr-2" />
-            Connect Calendly
-          </Button>
-        )}
-        
-        {calendlyAuthStatus === 'error' && (
-          <Button 
-            variant="outline" 
-            onClick={onConnectCalendly}
-            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-          >
-            <Link className="h-4 w-4 mr-2" />
-            Retry Connection
+            {calendlyAuthStatus === 'error' ? 'Retry Connection' : 'Connect Calendly'}
           </Button>
         )}
         

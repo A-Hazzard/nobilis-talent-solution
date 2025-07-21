@@ -81,7 +81,7 @@ export default function DashboardStats() {
     return (
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <Card key={i}>
+          <Card key={`loading-skeleton-${i}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Loading...</CardTitle>
               <div className="h-4 w-4 bg-gray-200 rounded animate-pulse" />
@@ -106,7 +106,7 @@ export default function DashboardStats() {
         </Alert>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="opacity-50">
+            <Card key={`error-skeleton-${i}`} className="opacity-50">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">N/A</CardTitle>
                 <div className="h-4 w-4 text-muted-foreground" />
@@ -133,7 +133,7 @@ export default function DashboardStats() {
         </Alert>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="opacity-50">
+            <Card key={`no-data-skeleton-${i}`} className="opacity-50">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">No Data</CardTitle>
                 <div className="h-4 w-4 text-muted-foreground" />

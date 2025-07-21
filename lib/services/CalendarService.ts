@@ -27,15 +27,21 @@ export interface CalendarServiceResponse<T> {
   error?: CalendarServiceError;
 }
 
+/**
+ * Service class for managing calendar events with Firebase integration
+ * Implements singleton pattern for consistent state management
+ */
 export class CalendarService {
   private static instance: CalendarService;
   private events: CalendarEvent[] = [];
-  private collectionName = 'calendar-events';
+  private readonly collectionName = 'calendar-events';
 
-  private constructor() {
-    // No need to load events in constructor since we'll fetch from Firebase
-  }
+  private constructor() {}
 
+  /**
+   * Get singleton instance of CalendarService
+   * @returns CalendarService instance
+   */
   static getInstance(): CalendarService {
     if (!CalendarService.instance) {
       CalendarService.instance = new CalendarService();
@@ -44,11 +50,12 @@ export class CalendarService {
   }
 
   /**
-   * Create a new calendar event
+   * Create a new calendar event in Firebase
+   * @param eventData - Event data to create
+   * @returns Promise with created event or error
    */
   async createEvent(eventData: CreateEventData): Promise<CalendarServiceResponse<CalendarEvent>> {
     try {
-      // Validate event data
       const validation = this.validateEventData(eventData);
       if (!validation.isValid) {
         return {
@@ -65,7 +72,6 @@ export class CalendarService {
         updatedAt: new Date(),
       };
 
-      // Add to Firebase
       const docRef = await addDoc(collection(db, this.collectionName), newEvent);
       
       const createdEvent: CalendarEvent = {
@@ -73,9 +79,7 @@ export class CalendarService {
         ...newEvent,
       };
 
-      // Add to local cache
       this.events.push(createdEvent);
-
       return { data: createdEvent };
     } catch (error) {
       console.error('Error creating event:', error);
@@ -89,7 +93,9 @@ export class CalendarService {
   }
 
   /**
-   * Update an existing calendar event
+   * Update an existing calendar event in Firebase
+   * @param eventData - Event data with ID to update
+   * @returns Promise with updated event or error
    */
   async updateEvent(eventData: UpdateEventData): Promise<CalendarServiceResponse<CalendarEvent>> {
     try {
@@ -105,7 +111,6 @@ export class CalendarService {
         };
       }
 
-      // Validate update data if provided
       if (Object.keys(updateData).length > 0) {
         const validation = this.validateEventData(updateData);
         if (!validation.isValid) {
@@ -118,14 +123,12 @@ export class CalendarService {
         }
       }
 
-      // Update in Firebase
       const eventRef = doc(db, this.collectionName, id);
       await updateDoc(eventRef, {
         ...updateData,
         updatedAt: new Date(),
       });
 
-      // Update local cache
       this.events[eventIndex] = {
         ...this.events[eventIndex],
         ...updateData,
@@ -145,7 +148,9 @@ export class CalendarService {
   }
 
   /**
-   * Delete a calendar event
+   * Delete a calendar event from Firebase
+   * @param eventId - ID of event to delete
+   * @returns Promise with success or error
    */
   async deleteEvent(eventId: string): Promise<CalendarServiceResponse<void>> {
     try {
@@ -160,11 +165,8 @@ export class CalendarService {
         };
       }
 
-      // Delete from Firebase
       const eventRef = doc(db, this.collectionName, eventId);
       await deleteDoc(eventRef);
-
-      // Remove from local cache
       this.events.splice(eventIndex, 1);
 
       return {};
@@ -180,11 +182,11 @@ export class CalendarService {
   }
 
   /**
-   * Get all calendar events
+   * Get all calendar events from Firebase
+   * @returns Promise with all events or error
    */
   async getEvents(): Promise<CalendarServiceResponse<CalendarEvent[]>> {
     try {
-      // Fetch from Firebase
       const eventsRef = collection(db, this.collectionName);
       const q = query(eventsRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
@@ -200,9 +202,7 @@ export class CalendarService {
         } as CalendarEvent);
       });
 
-      // Update local cache
       this.events = firebaseEvents;
-
       return { data: firebaseEvents };
     } catch (error) {
       console.error('Error getting events:', error);
@@ -216,7 +216,9 @@ export class CalendarService {
   }
 
   /**
-   * Get events by date
+   * Get events for a specific date
+   * @param date - Date string in YYYY-MM-DD format
+   * @returns Promise with events for the date or error
    */
   async getEventsByDate(date: string): Promise<CalendarServiceResponse<CalendarEvent[]>> {
     try {
@@ -248,7 +250,9 @@ export class CalendarService {
   }
 
   /**
-   * Get upcoming events
+   * Get upcoming events sorted by date
+   * @param limit - Maximum number of events to return
+   * @returns Promise with upcoming events or error
    */
   async getUpcomingEvents(limit: number = 5): Promise<CalendarServiceResponse<CalendarEvent[]>> {
     try {
@@ -286,6 +290,8 @@ export class CalendarService {
 
   /**
    * Get events by type
+   * @param type - Event type to filter by
+   * @returns Promise with filtered events or error
    */
   async getEventsByType(type: CalendarEvent['type']): Promise<CalendarServiceResponse<CalendarEvent[]>> {
     try {
@@ -317,7 +323,9 @@ export class CalendarService {
   }
 
   /**
-   * Validate event data
+   * Validate event data before creation or update
+   * @param data - Event data to validate
+   * @returns Validation result with success status and error message
    */
   private validateEventData(data: Partial<CreateEventData>): { isValid: boolean; error?: string } {
     if (data.title && !data.title.trim()) {
@@ -349,6 +357,8 @@ export class CalendarService {
 
   /**
    * Check if date string is valid
+   * @param dateString - Date string to validate
+   * @returns True if date is valid
    */
   private isValidDate(dateString: string): boolean {
     const date = new Date(dateString);

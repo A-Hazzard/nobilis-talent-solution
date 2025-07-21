@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
 interface ResourcesHeaderProps {
-  isAddDialogOpen: boolean;
   setIsAddDialogOpen: (open: boolean) => void;
 }
 
@@ -10,7 +9,7 @@ interface ResourcesHeaderProps {
  * Header component for resources page
  * Contains title, description, and add resource button
  */
-export function ResourcesHeader({ isAddDialogOpen, setIsAddDialogOpen }: ResourcesHeaderProps) {
+export function ResourcesHeader({ setIsAddDialogOpen }: ResourcesHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div>

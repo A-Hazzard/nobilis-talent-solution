@@ -11,10 +11,10 @@ export class AnalyticsService {
   /**
    * Get comprehensive dashboard analytics
    */
-  async getDashboardAnalytics(period: 'week' | 'month' | 'year' = 'month'): Promise<{ data: Analytics; error?: string }> {
+  async getDashboardAnalytics(): Promise<{ data: Analytics; error?: string }> {
     try {
       // Get data from all services
-      const [leadsStats, testimonialsStats, resourcesStats] = await Promise.all([
+      const [leadsStats, , resourcesStats] = await Promise.all([
         this.leadsService.getStats(),
         this.testimonialsService.getStats(),
         this.resourcesService.getStats(),

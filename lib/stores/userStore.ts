@@ -26,7 +26,7 @@ interface UserState {
 
 export const useUserStore = create<UserState>()(
   persist(
-    (set, get) => {
+    (set) => {
       const authService = AuthService.getInstance();
 
       return {
@@ -95,7 +95,7 @@ export const useUserStore = create<UserState>()(
             }
             
             return { error: null };
-          } catch (error) {
+          } catch {
             set({ isLoading: false });
             return { 
               error: { 
@@ -141,7 +141,7 @@ export const useUserStore = create<UserState>()(
             }
             
             return { error: null };
-          } catch (error) {
+          } catch {
             set({ isLoading: false });
             return { 
               error: { 
@@ -171,7 +171,7 @@ export const useUserStore = create<UserState>()(
             });
             
             return { error: null };
-          } catch (error) {
+          } catch {
             set({ isLoading: false });
             return { 
               error: { 

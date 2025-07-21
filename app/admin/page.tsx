@@ -5,10 +5,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Users, 
   FileText, 
-  Star, 
   TrendingUp, 
-  DollarSign, 
-  Download,
   Calendar,
   Target,
   Plus
@@ -24,9 +21,8 @@ import Link from 'next/link';
  * Uses custom hook for state management and displays business metrics
  */
 export default function AdminDashboard() {
-  const [state, actions] = useDashboard();
-  const { analytics, isLoading, period, recentActivity, performanceMetrics, upcomingEvents } = state;
-  const { setPeriod, getStats } = actions;
+  const [state] = useDashboard();
+  const { isLoading, period, recentActivity, performanceMetrics, upcomingEvents } = state;
 
   if (isLoading) {
     return (

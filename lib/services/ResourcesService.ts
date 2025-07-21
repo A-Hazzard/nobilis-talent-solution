@@ -17,8 +17,7 @@ import {
   ref, 
   uploadBytes, 
   getDownloadURL, 
-  deleteObject,
-  StorageReference
+  deleteObject
 } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
 import type { Resource } from '@/shared/types/entities';

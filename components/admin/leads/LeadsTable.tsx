@@ -24,8 +24,6 @@ interface LeadsTableProps {
   onEdit: (lead: Lead) => void;
   onDelete: (id: string) => void;
   formatDate: (date: Date) => string;
-  getFieldError: (fieldName: string) => string | undefined;
-  isFieldValid: (fieldName: string) => boolean;
 }
 
 /**
@@ -37,8 +35,6 @@ export function LeadsTable({
   onEdit,
   onDelete,
   formatDate,
-  getFieldError,
-  isFieldValid,
 }: LeadsTableProps) {
   return (
     <Card>

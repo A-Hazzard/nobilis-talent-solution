@@ -27,24 +27,19 @@ export default function ResourcesPage() {
     isEditDialogOpen,
     isPreviewDialogOpen,
     previewResource,
-    previewFile,
-    editingResource,
     selectedFile,
     isUploading,
     formData,
   } = state;
 
   const {
-    loadResources,
     handleFileSelect,
     handleFileRemove,
     openPreviewDialog,
-    openFilePreview,
     handleAddResource,
     handleEditResource,
     handleDeleteResource,
     openEditDialog,
-    resetForm,
     setSearchTerm,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
@@ -89,7 +84,6 @@ export default function ResourcesPage() {
     <div className="space-y-6">
       {/* Header */}
       <ResourcesHeader 
-        isAddDialogOpen={isAddDialogOpen}
         setIsAddDialogOpen={setIsAddDialogOpen}
       />
 

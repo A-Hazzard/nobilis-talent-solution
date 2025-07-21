@@ -115,7 +115,6 @@ export class FakeDataService {
    */
   generateFakeDashboardChartData() {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const totalLeads = this.getRandomNumber(150, 500);
     
     return {
       leadsByMonth: {

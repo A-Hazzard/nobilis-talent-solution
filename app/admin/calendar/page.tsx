@@ -5,11 +5,10 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+
 import { Button } from '@/components/ui/button';
 import { CheckCircle, AlertCircle, CalendarIcon } from 'lucide-react';
 import { useCalendar } from '@/lib/hooks/useCalendar';
-import { useUserStore } from '@/lib/stores/userStore';
 import { CalendlyService } from '@/lib/services/CalendlyService';
 import CalendarHeader from '@/components/admin/calendar/CalendarHeader';
 import CalendarGrid from '@/components/admin/calendar/CalendarGrid';
@@ -23,7 +22,6 @@ import CalendlyModal from '@/components/admin/calendar/CalendlyModal';
  */
 export default function CalendarPage() {
   const searchParams = useSearchParams();
-  const { user } = useUserStore();
   const calendlyService = CalendlyService.getInstance();
   
   const [state, actions] = useCalendar();
@@ -71,6 +69,7 @@ export default function CalendarPage() {
     const error = searchParams.get('error');
 
     if (success && token) {
+      console.log('🎉 OAuth callback successful, setting up Calendly connection...');
       // Store the token and update connection status
       localStorage.setItem('calendly_access_token', token);
       calendlyService.setAccessToken(token);
@@ -79,9 +78,12 @@ export default function CalendarPage() {
       window.history.replaceState({}, document.title, window.location.pathname);
       
       // Update connection status and sync events
-      checkCalendlyConnection().then(() => {
-        // Auto-sync after successful connection
-        syncCalendlyEvents();
+      checkCalendlyConnection().then((connectionStatus) => {
+        if (connectionStatus === 'connected') {
+          console.log('🔄 Auto-syncing Calendly events after OAuth callback...');
+          // Auto-sync after successful connection
+          syncCalendlyEvents();
+        }
       });
     } else if (error) {
       console.error('Calendly OAuth error:', error);

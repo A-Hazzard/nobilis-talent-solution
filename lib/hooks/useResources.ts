@@ -180,7 +180,7 @@ export function useResources(): [ResourcesState, ResourcesActions] {
           }
         }, 100);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to add resource");
     } finally {
       setState(prev => ({ ...prev, isUploading: false }));
@@ -229,7 +229,7 @@ export function useResources(): [ResourcesState, ResourcesActions] {
           }
         }, 100);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to update resource");
     } finally {
       setState(prev => ({ ...prev, isUploading: false }));
@@ -247,7 +247,7 @@ export function useResources(): [ResourcesState, ResourcesActions] {
         toast.success("Resource deleted successfully");
         await loadResources();
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete resource");
     }
   }, [resourcesService, loadResources]);

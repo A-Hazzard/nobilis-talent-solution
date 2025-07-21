@@ -11,9 +11,6 @@ import {
   orderBy, 
   limit, 
   startAfter,
-  QueryDocumentSnapshot,
-  DocumentData,
-  Timestamp,
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -37,7 +34,6 @@ export class LeadsService {
       const { page = 1, limit: pageLimit = 10, search } = options;
       
       // Build query for users collection
-      let q = collection(db, this.collectionName);
       const constraints = [];
       
       // Only get users (not admins) - assuming role field exists

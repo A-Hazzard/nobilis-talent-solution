@@ -141,7 +141,7 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
           }
         }, 100);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to add testimonial");
     } finally {
       setState(prev => ({ ...prev, isSubmitting: false }));
@@ -195,7 +195,7 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
           }
         }, 100);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to update testimonial");
     } finally {
       setState(prev => ({ ...prev, isSubmitting: false }));
@@ -213,7 +213,7 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
         toast.success("Testimonial deleted successfully");
         await loadTestimonials();
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete testimonial");
     }
   }, [testimonialsService, loadTestimonials]);

@@ -5,7 +5,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AuthGuard from '@/components/admin/AuthGuard';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface ResponsiveAdminLayoutProps {
   children: React.ReactNode;

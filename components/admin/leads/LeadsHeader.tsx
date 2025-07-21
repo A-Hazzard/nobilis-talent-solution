@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
 interface LeadsHeaderProps {
-  isAddDialogOpen: boolean;
   setIsAddDialogOpen: (open: boolean) => void;
 }
 
@@ -10,7 +9,7 @@ interface LeadsHeaderProps {
  * Header component for leads page
  * Contains title, description, and add lead button
  */
-export function LeadsHeader({ isAddDialogOpen, setIsAddDialogOpen }: LeadsHeaderProps) {
+export function LeadsHeader({ setIsAddDialogOpen }: LeadsHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div>

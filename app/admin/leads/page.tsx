@@ -21,12 +21,9 @@ export default function LeadsPage() {
     leads,
     isLoading,
     searchTerm,
-    currentPage,
-    totalLeads,
     error,
     isAddDialogOpen,
     isEditDialogOpen,
-    editingLead,
     isSubmitting,
     showPassword,
     showConfirmPassword,
@@ -36,22 +33,17 @@ export default function LeadsPage() {
   } = state;
 
   const {
-    loadLeads,
     handleAddLead,
     handleEditLead,
     handleDeleteLead,
     openEditDialog,
-    resetForm,
     handleInputChange,
     setSearchTerm,
-    setCurrentPage,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
     setShowPassword,
     setShowConfirmPassword,
     formatDate,
-    getFieldError,
-    isFieldValid,
   } = actions;
 
   if (isLoading) {
@@ -87,7 +79,6 @@ export default function LeadsPage() {
     <div className="space-y-6">
       {/* Header */}
       <LeadsHeader 
-        isAddDialogOpen={isAddDialogOpen}
         setIsAddDialogOpen={setIsAddDialogOpen}
       />
 
@@ -133,8 +124,6 @@ export default function LeadsPage() {
           onEdit={openEditDialog}
           onDelete={handleDeleteLead}
           formatDate={formatDate}
-          getFieldError={getFieldError}
-          isFieldValid={isFieldValid}
         />
       )}
 

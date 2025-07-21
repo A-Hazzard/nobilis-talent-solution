@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import type { LoginRequest, LoginResponse } from '@/shared/types/api';
 import { AuthService } from '@/lib/services/AuthService';
 import type { User } from '@/shared/types/entities';

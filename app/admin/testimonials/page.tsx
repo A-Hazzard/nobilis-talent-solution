@@ -24,18 +24,15 @@ export default function TestimonialsPage() {
     error,
     isAddDialogOpen,
     isEditDialogOpen,
-    editingTestimonial,
     formData,
     isSubmitting,
   } = state;
 
   const {
-    loadTestimonials,
     handleAddTestimonial,
     handleEditTestimonial,
     handleDeleteTestimonial,
     openEditDialog,
-    resetForm,
     setSearchTerm,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
@@ -78,7 +75,6 @@ export default function TestimonialsPage() {
     <div className="space-y-6">
       {/* Header */}
       <TestimonialsHeader 
-        isAddDialogOpen={isAddDialogOpen}
         setIsAddDialogOpen={setIsAddDialogOpen}
       />
 

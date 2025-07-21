@@ -11,9 +11,6 @@ import {
   orderBy,
   limit,
   QueryConstraint,
-  DocumentData,
-  QueryDocumentSnapshot,
-  DocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { FirebaseDocument, FirebaseQueryOptions } from '@/shared/types/firebase';

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Lead } from '@/shared/types/entities';
 import { LeadsService } from '@/lib/services/LeadsService';
 import { toast } from 'sonner';
-import { validateSignupForm, validatePassword } from '@/lib/utils/validation';
+import { validatePassword } from '@/lib/utils/validation';
 
 export interface LeadFormData {
   firstName: string;
@@ -142,7 +142,7 @@ export function useLeads(): [LeadsState, LeadsActions] {
     setState(prev => ({ ...prev, isSubmitting: true, error: null }));
 
     try {
-      const { id, error } = await leadsService.create(formData);
+      const { error } = await leadsService.create(formData);
       
       if (error) {
         setState(prev => ({ ...prev, error }));
@@ -210,7 +210,7 @@ export function useLeads(): [LeadsState, LeadsActions] {
           }
         }, 100);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to update lead");
     } finally {
       setState(prev => ({ ...prev, isSubmitting: false }));
@@ -228,7 +228,7 @@ export function useLeads(): [LeadsState, LeadsActions] {
         toast.success("Lead deleted successfully");
         await loadLeads();
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete lead");
     }
   }, [leadsService, loadLeads]);

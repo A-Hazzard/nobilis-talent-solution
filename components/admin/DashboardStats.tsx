@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, TrendingUp, FileText, Calendar, Target, DollarSign, Download } from 'lucide-react';
+import { Users, TrendingUp, Target, DollarSign } from 'lucide-react';
 import { AnalyticsService } from '@/lib/services/AnalyticsService';
 import { FakeDataService } from '@/lib/services/FakeDataService';
 import { useDashboardStore } from '@/lib/stores/dashboardStore';

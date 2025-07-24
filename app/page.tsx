@@ -12,6 +12,9 @@ import ScrollToTop from '@/components/ScrollToTop';
 import { useScrollAnimations, useParallax } from '@/lib/hooks/useScrollAnimations';
 import { useEffect } from 'react';
 
+// Force dynamic rendering to prevent pre-rendering issues
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   useScrollAnimations();
   useParallax();

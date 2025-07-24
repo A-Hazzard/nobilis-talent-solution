@@ -16,6 +16,9 @@ import UpcomingEvents from '@/components/admin/calendar/UpcomingEvents';
 import EventForm from '@/components/admin/calendar/EventForm';
 import CalendlyModal from '@/components/admin/calendar/CalendlyModal';
 
+// Force dynamic rendering to prevent pre-rendering issues
+export const dynamic = 'force-dynamic';
+
 /**
  * Calendar page component for managing events and Calendly integration
  * Uses custom hook for state management and focused components for UI

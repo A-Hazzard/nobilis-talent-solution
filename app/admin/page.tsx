@@ -16,6 +16,9 @@ import DashboardCharts from '@/components/admin/DashboardCharts';
 import FakeDataToggle from '@/components/admin/FakeDataToggle';
 import Link from 'next/link';
 
+// Force dynamic rendering to prevent pre-rendering issues
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin dashboard page component
  * Uses custom hook for state management and displays business metrics

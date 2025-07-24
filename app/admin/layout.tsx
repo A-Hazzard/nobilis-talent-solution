@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   description: 'Admin dashboard for managing leads, resources, and analytics',
 };
 
+// Force dynamic rendering to prevent pre-rendering issues for all admin pages
+export const dynamic = 'force-dynamic';
+
 export default function AdminLayout({
   children,
 }: {

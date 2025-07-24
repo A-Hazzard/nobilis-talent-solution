@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Link, CalendarIcon, Plus, Info } from 'lucide-react';
 

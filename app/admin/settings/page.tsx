@@ -24,6 +24,9 @@ import {
   Save,
 } from 'lucide-react';
 
+// Force dynamic rendering to prevent pre-rendering issues
+export const dynamic = 'force-dynamic';
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
     profile: {

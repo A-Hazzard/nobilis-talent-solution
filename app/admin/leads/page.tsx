@@ -11,6 +11,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
+// Force dynamic rendering to prevent pre-rendering issues
+export const dynamic = 'force-dynamic';
+
 /**
  * Leads admin page component
  * Uses custom hook for state management and displays leads in a table

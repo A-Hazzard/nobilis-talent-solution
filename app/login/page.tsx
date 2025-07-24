@@ -12,6 +12,9 @@ import { Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { validateLoginForm } from '@/lib/utils/validation';
 
+// Force dynamic rendering to prevent pre-rendering issues
+export const dynamic = 'force-dynamic';
+
 export default function LoginPage() {
   const router = useRouter();
   const { signIn, user, isAuthenticated, isLoading: authLoading } = useAuth();

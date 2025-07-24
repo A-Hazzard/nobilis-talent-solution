@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, X, Eye, EyeOff, UserPlus, AlertCircle } from 'lucide-react';
-import { User, Mail, Lock, Building, UserCheck, Phone } from 'lucide-react';
+import { Check, X, Eye, EyeOff, User, Mail, Lock, Building, UserCheck, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { validateSignupForm, validatePassword } from '@/lib/utils/validation';
 

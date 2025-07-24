@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   description: 'Transform your leadership potential with expert executive coaching and leadership development programs.',
 }
 
+// Force dynamic rendering to prevent pre-rendering issues for all pages
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: {

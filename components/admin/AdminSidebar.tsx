@@ -9,7 +9,6 @@ import {
   Users,
   FileText,
   Calendar,
-  Settings,
   Star,
 } from 'lucide-react';
 
@@ -38,11 +37,6 @@ const sidebarItems = [
     title: 'Calendar',
     href: '/admin/calendar',
     icon: Calendar,
-  },
-  {
-    title: 'Settings',
-    href: '/admin/settings',
-    icon: Settings,
   },
 ];
 

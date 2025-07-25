@@ -9,8 +9,6 @@ export interface DashboardState {
   isLoading: boolean;
   period: 'week' | 'month' | 'year';
   recentActivity: any[];
-  performanceMetrics: any[];
-  upcomingEvents: any[];
   error: string | null;
 }
 
@@ -37,8 +35,6 @@ export function useDashboard(): [DashboardState, DashboardActions] {
     isLoading: true,
     period: 'month',
     recentActivity: [],
-    performanceMetrics: [],
-    upcomingEvents: [],
     error: null,
   });
 
@@ -53,15 +49,11 @@ export function useDashboard(): [DashboardState, DashboardActions] {
         // Use fake data
         const fakeAnalytics = fakeDataService.generateFakeAnalytics();
         const fakeRecentActivity = fakeDataService.generateFakeRecentActivity();
-        const fakePerformanceMetrics = fakeDataService.generateFakePerformanceMetrics();
-        const fakeUpcomingEvents = fakeDataService.generateFakeUpcomingEvents();
         
         setState(prev => ({
           ...prev,
           analytics: fakeAnalytics,
           recentActivity: fakeRecentActivity,
-          performanceMetrics: fakePerformanceMetrics,
-          upcomingEvents: fakeUpcomingEvents,
         }));
       } else {
         // Use real data
@@ -71,8 +63,6 @@ export function useDashboard(): [DashboardState, DashboardActions] {
             ...prev,
             analytics: response.data as Analytics,
             recentActivity: [],
-            performanceMetrics: [],
-            upcomingEvents: [],
           }));
         } else {
           console.error('Failed to load analytics:', response.error);
@@ -91,15 +81,13 @@ export function useDashboard(): [DashboardState, DashboardActions] {
               leadSources: [],
             },
             recentActivity: [],
-            performanceMetrics: [],
-            upcomingEvents: [],
           }));
         }
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
-      setState(prev => ({
-        ...prev,
+      setState(prev => ({ 
+        ...prev, 
         error: 'Failed to load dashboard data',
         analytics: {
           totalLeads: 0,
@@ -112,65 +100,59 @@ export function useDashboard(): [DashboardState, DashboardActions] {
           topResources: [],
           leadSources: [],
         },
+        recentActivity: [],
       }));
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [isFakeDataEnabled, state.period, fakeDataService]);
+  }, [isFakeDataEnabled, state.period]);
 
-  const setPeriod = useCallback((period: 'week' | 'month' | 'year') => {
-    setState(prev => ({ ...prev, period }));
+  const setPeriod = useCallback((newPeriod: 'week' | 'month' | 'year') => {
+    setState(prev => ({ ...prev, period: newPeriod }));
   }, []);
 
   const getStats = useCallback(() => {
-    const { analytics } = state;
+    if (!state.analytics) return [];
+
     return [
       {
         title: 'Total Leads',
-        value: analytics?.totalLeads || 0,
-        change: analytics?.leadsThisMonth || 0,
-        icon: 'Users',
+        value: state.analytics.totalLeads,
+        change: state.analytics.leadsThisMonth,
+        icon: 'users',
         color: 'text-blue-600',
-        bgColor: 'bg-blue-50',
+        bgColor: 'bg-blue-100',
       },
       {
         title: 'Conversion Rate',
-        value: `${analytics?.conversionRate || 0}%`,
+        value: `${state.analytics.conversionRate}%`,
         change: '+2.5%',
-        icon: 'Target',
+        icon: 'trending-up',
         color: 'text-green-600',
-        bgColor: 'bg-green-50',
+        bgColor: 'bg-green-100',
       },
       {
         title: 'Total Revenue',
-        value: `$${(analytics?.totalRevenue || 0).toLocaleString()}`,
-        change: `$${(analytics?.revenueThisMonth || 0).toLocaleString()}`,
-        icon: 'DollarSign',
+        value: `$${state.analytics.totalRevenue.toLocaleString()}`,
+        change: `$${state.analytics.revenueThisMonth.toLocaleString()}`,
+        icon: 'dollar-sign',
         color: 'text-purple-600',
-        bgColor: 'bg-purple-50',
+        bgColor: 'bg-purple-100',
       },
       {
-        title: 'Resource Downloads',
-        value: analytics?.resourceDownloads || 0,
-        change: '+15%',
-        icon: 'Download',
+        title: 'Active Users',
+        value: state.analytics.activeUsers,
+        change: '+12',
+        icon: 'users',
         color: 'text-orange-600',
-        bgColor: 'bg-orange-50',
+        bgColor: 'bg-orange-100',
       },
     ];
   }, [state.analytics]);
 
-  // Separate effect for initial load
   useEffect(() => {
     loadDashboardData();
-  }, []); // Only run on mount
-
-  // Separate effect for period changes
-  useEffect(() => {
-    if (state.period) {
-      loadDashboardData();
-    }
-  }, [state.period]); // Only depend on period
+  }, [loadDashboardData]);
 
   const actions: DashboardActions = {
     loadDashboardData,

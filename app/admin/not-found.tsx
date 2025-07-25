@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Home, ArrowLeft, Settings, LayoutDashboard } from 'lucide-react'
+import { Home, ArrowLeft, LayoutDashboard } from 'lucide-react'
 
 export default function AdminNotFound() {
   return (
@@ -65,12 +65,6 @@ export default function AdminNotFound() {
                 <Link href="/admin/resources">
                   <Button variant="ghost" className="w-full justify-start text-sm">
                     📚 Resources
-                  </Button>
-                </Link>
-                <Link href="/admin/settings">
-                  <Button variant="ghost" className="w-full justify-start text-sm">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
                   </Button>
                 </Link>
               </div>

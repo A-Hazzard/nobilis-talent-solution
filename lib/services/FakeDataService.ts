@@ -161,32 +161,6 @@ export class FakeDataService {
   }
 
   /**
-   * Generate fake performance metrics
-   */
-  generateFakePerformanceMetrics() {
-    return [
-      { metric: 'Conversion Rate', value: '+2.1%', positive: true },
-      { metric: 'Response Time', value: '-0.5h', positive: true },
-      { metric: 'Lead Quality', value: '+5%', positive: true },
-      { metric: 'Customer Satisfaction', value: '+3.2%', positive: true },
-    ];
-  }
-
-  /**
-   * Generate fake upcoming events
-   */
-  generateFakeUpcomingEvents() {
-    const events = [
-      { event: 'Client Meeting', time: 'Tomorrow, 2:00 PM' },
-      { event: 'Team Workshop', time: 'Wednesday, 10:00 AM' },
-      { event: 'Strategy Session', time: 'Friday, 3:00 PM' },
-      { event: 'Follow-up Call', time: 'Next Monday, 11:00 AM' },
-    ];
-
-    return events.slice(0, 3);
-  }
-
-  /**
    * Helper method to generate random numbers within a range
    */
   private getRandomNumber(min: number, max: number): number {

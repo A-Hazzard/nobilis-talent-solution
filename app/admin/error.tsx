@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Home, ArrowLeft, RefreshCw, Shield } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Shield } from 'lucide-react'
 
 interface ErrorProps {
   error: Error & { digest?: string }
@@ -43,13 +43,6 @@ export default function AdminError({ error, reset }: ErrorProps) {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reload Dashboard
               </Button>
-              
-              <Link href="/admin">
-                <Button variant="outline" className="w-full" size="lg">
-                  <Home className="w-4 h-4 mr-2" />
-                  Go to Admin Home
-                </Button>
-              </Link>
             </div>
             
             <div className="pt-4 border-t border-gray-200">

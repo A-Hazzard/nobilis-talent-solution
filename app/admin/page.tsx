@@ -7,6 +7,7 @@ import { TrendingUp } from 'lucide-react';
 import { useDashboard } from '@/lib/hooks/useDashboard';
 import DashboardStats from '@/components/admin/DashboardStats';
 import DashboardCharts from '@/components/admin/DashboardCharts';
+import FakeDataToggle from '@/components/admin/FakeDataToggle';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -15,8 +16,9 @@ export default function AdminDashboard() {
   const [state, actions] = useDashboard();
 
   useEffect(() => {
+    // Load dashboard data on mount
     actions.loadDashboardData();
-  }, [actions]);
+  }, []); // Empty dependency array - only run on mount
 
   const { isLoading, period, recentActivity } = state;
 
@@ -64,11 +66,14 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Demo Data Toggle */}
+      <FakeDataToggle />
+
       {/* Stats Cards */}
-      <DashboardStats />
+      <DashboardStats period={period} />
 
       {/* Charts */}
-      <DashboardCharts />
+      <DashboardCharts period={period} />
 
       {/* Recent Activity */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1">

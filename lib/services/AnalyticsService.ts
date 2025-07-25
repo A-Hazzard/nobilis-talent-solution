@@ -11,7 +11,7 @@ export class AnalyticsService {
   /**
    * Get comprehensive dashboard analytics
    */
-  async getDashboardAnalytics(): Promise<{ data: Analytics; error?: string }> {
+  async getDashboardAnalytics(period: 'week' | 'month' | 'year' = 'month'): Promise<{ data: Analytics; error?: string }> {
     try {
       // Get data from all services
       const [leadsStats, , resourcesStats] = await Promise.all([
@@ -23,12 +23,17 @@ export class AnalyticsService {
       // Calculate conversion rate (no longer calculated since leads don't have status)
       const conversionRate = 0;
 
-      // Calculate monthly leads (mock calculation - in real app would filter by date)
-      const leadsThisMonth = Math.round(leadsStats.total * 0.3); // 30% of total for demo
+      // Calculate period-specific leads (mock calculation - in real app would filter by date)
+      let leadsThisPeriod = Math.round(leadsStats.total * 0.3); // 30% of total for demo
+      if (period === 'week') {
+        leadsThisPeriod = Math.round(leadsStats.total * 0.075); // 7.5% of total for weekly
+      } else if (period === 'year') {
+        leadsThisPeriod = Math.round(leadsStats.total * 0.9); // 90% of total for yearly
+      }
 
       // Calculate revenue (mock calculation)
       const totalRevenue = 0; // No conversion tracking
-      const revenueThisMonth = 0;
+      const revenueThisPeriod = 0;
 
       // Get top resources
       const { resources } = await this.resourcesService.getAll({ limit: 5 });
@@ -46,10 +51,10 @@ export class AnalyticsService {
 
       const analytics: Analytics = {
         totalLeads: leadsStats.total,
-        leadsThisMonth,
+        leadsThisMonth: leadsThisPeriod, // Using period-specific leads
         conversionRate,
         totalRevenue,
-        revenueThisMonth,
+        revenueThisMonth: revenueThisPeriod, // Using period-specific revenue
         activeUsers: leadsStats.total, // Using total leads as active users
         resourceDownloads: resourcesStats.totalDownloads,
         topResources,

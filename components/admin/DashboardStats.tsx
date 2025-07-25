@@ -19,7 +19,11 @@ type StatsData = {
   resourceDownloads: number;
 };
 
-export default function DashboardStats() {
+interface DashboardStatsProps {
+  period?: 'week' | 'month' | 'year';
+}
+
+export default function DashboardStats({ period = 'month' }: DashboardStatsProps) {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,16 +49,22 @@ export default function DashboardStats() {
             resourceDownloads: fakeStats.resourceDownloads,
           });
         } else {
-          // Use real data
+          // Use real data with period
           const analyticsService = new AnalyticsService();
-          const { data, error: analyticsError } = await analyticsService.getDashboardAnalytics();
+          const { data, error: analyticsError } = await analyticsService.getDashboardAnalytics(period);
 
           if (analyticsError) {
             throw new Error(analyticsError);
           }
 
-          // Calculate additional stats
-          const newLeads = data.leadsThisMonth;
+          // Calculate additional stats based on period
+          let newLeads = data.leadsThisMonth;
+          if (period === 'week') {
+            newLeads = Math.floor(data.leadsThisMonth / 4); // Approximate weekly leads
+          } else if (period === 'year') {
+            newLeads = data.leadsThisMonth * 12; // Approximate yearly leads
+          }
+          
           const avgResponseTime = 2.5; // Mock data - would come from actual response time tracking
 
           setStats({
@@ -75,7 +85,7 @@ export default function DashboardStats() {
     };
 
     fetchStats();
-  }, [isFakeDataEnabled]);
+  }, [isFakeDataEnabled, period]);
 
   if (isLoading) {
     return (
@@ -149,6 +159,19 @@ export default function DashboardStats() {
     );
   }
 
+  const getPeriodDescription = () => {
+    switch (period) {
+      case 'week':
+        return 'This week';
+      case 'month':
+        return 'This month';
+      case 'year':
+        return 'This year';
+      default:
+        return 'This month';
+    }
+  };
+
   const statCards = [
     {
       title: 'Total Leads',
@@ -161,7 +184,7 @@ export default function DashboardStats() {
     {
       title: 'New Leads',
       value: stats.newLeads,
-      description: 'This month',
+      description: getPeriodDescription(),
       icon: TrendingUp,
       trend: stats.newLeads > 0 ? '+5%' : '0%',
       trendUp: stats.newLeads > 0,

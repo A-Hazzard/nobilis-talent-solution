@@ -150,6 +150,7 @@ export function useDashboard(): [DashboardState, DashboardActions] {
     ];
   }, [state.analytics]);
 
+  // Reload data when period changes or fake data is toggled
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);

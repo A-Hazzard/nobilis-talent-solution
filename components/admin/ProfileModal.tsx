@@ -186,15 +186,21 @@ export default function ProfileModal({ isOpen, onClose, user }: ProfileModalProp
                 </div>
 
                 {/* Account Info */}
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <Label className="text-sm font-medium">Member Since</Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
-                    </p>
+                {user.createdAt && (
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <Label className="text-sm font-medium">Member Since</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {new Date(user.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {user.lastLoginAt && (
                   <div className="flex items-center gap-3">
@@ -202,7 +208,13 @@ export default function ProfileModal({ isOpen, onClose, user }: ProfileModalProp
                     <div className="flex-1">
                       <Label className="text-sm font-medium">Last Login</Label>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {new Date(user.lastLoginAt).toLocaleDateString()}
+                        {new Date(user.lastLoginAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </p>
                     </div>
                   </div>

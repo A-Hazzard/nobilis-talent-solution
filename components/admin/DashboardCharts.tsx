@@ -50,7 +50,11 @@ type ChartData = {
   };
 };
 
-export default function DashboardCharts() {
+interface DashboardChartsProps {
+  period?: 'week' | 'month' | 'year';
+}
+
+export default function DashboardCharts({ period = 'month' }: DashboardChartsProps) {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +73,7 @@ export default function DashboardCharts() {
           const fakeChartData = fakeDataService.generateFakeDashboardChartData();
           setChartData(fakeChartData);
         } else {
-          // Use real data
+          // Use real data with period
           const analyticsService = new AnalyticsService();
           const { total, error: leadsError } = await analyticsService.getLeadsAnalytics();
 
@@ -77,14 +81,26 @@ export default function DashboardCharts() {
             throw new Error(leadsError);
           }
 
-          // Generate monthly data based on total leads (mock data for now)
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-          const monthlyData = months.map(() => Math.floor(Math.random() * Math.max(total / 6, 1)) + 1);
+          // Generate period-specific data based on total leads (mock data for now)
+          let labels: string[];
+          let data: number[];
+          
+          if (period === 'week') {
+            labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            data = labels.map(() => Math.floor(Math.random() * Math.max(total / 7, 1)) + 1);
+          } else if (period === 'year') {
+            labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            data = labels.map(() => Math.floor(Math.random() * Math.max(total / 12, 1)) + 1);
+          } else {
+            // Default to monthly
+            labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            data = labels.map(() => Math.floor(Math.random() * Math.max(total / 6, 1)) + 1);
+          }
 
           setChartData({
             leadsByMonth: {
-              labels: months,
-              data: monthlyData,
+              labels,
+              data,
             },
             leadsByStatus: {
               labels: ['Total Leads'],
@@ -105,7 +121,7 @@ export default function DashboardCharts() {
     };
 
     fetchChartData();
-  }, [isFakeDataEnabled]);
+  }, [isFakeDataEnabled, period]);
 
   if (isLoading) {
     return (

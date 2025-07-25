@@ -22,6 +22,7 @@ export interface UserProfile {
   isActive: boolean;
   displayName: string;
   createdAt: Date;
+  lastLoginAt?: Date;
   updatedAt: Date;
 }
 

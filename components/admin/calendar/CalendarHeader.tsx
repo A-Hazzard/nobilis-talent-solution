@@ -1,18 +1,15 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Link, CalendarIcon, Plus, Info } from 'lucide-react';
+import { RefreshCw, CalendarIcon, Plus, Info } from 'lucide-react';
 
 interface CalendarHeaderProps {
   calendlyAuthStatus: 'connected' | 'disconnected' | 'error' | 'connecting';
   syncStatus: 'disconnected' | 'syncing' | 'success' | 'error';
   onSyncCalendly: () => void;
-  onConnectCalendly: () => void;
   onOpenCalendlyBooking: () => void;
   onAddEvent: () => void;
   onToggleInstructions: () => void;
-  connectionAttempts: number;
-  maxConnectionAttempts: number;
 }
 
 /**
@@ -22,17 +19,10 @@ export default function CalendarHeader({
   calendlyAuthStatus,
   syncStatus,
   onSyncCalendly,
-  onConnectCalendly,
   onOpenCalendlyBooking,
   onAddEvent,
   onToggleInstructions,
-  connectionAttempts,
-  maxConnectionAttempts,
 }: CalendarHeaderProps) {
-  // Show connect button only after max attempts or if disconnected
-  const shouldShowConnectButton = calendlyAuthStatus === 'disconnected' || 
-    (calendlyAuthStatus === 'error' && connectionAttempts >= maxConnectionAttempts);
-
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -55,21 +45,6 @@ export default function CalendarHeader({
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
             {syncStatus === 'syncing' ? 'Syncing...' : 'Sync Calendly'}
-          </Button>
-        )}
-        
-        {shouldShowConnectButton && (
-          <Button 
-            variant="outline" 
-            onClick={onConnectCalendly}
-            className={`${
-              calendlyAuthStatus === 'error' 
-                ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' 
-                : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-            }`}
-          >
-            <Link className="h-4 w-4 mr-2" />
-            {calendlyAuthStatus === 'error' ? 'Retry Connection' : 'Connect Calendly'}
           </Button>
         )}
         

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -26,6 +26,7 @@ export const dynamic = 'force-dynamic';
 export default function CalendarPage() {
   const searchParams = useSearchParams();
   const calendlyService = CalendlyService.getInstance();
+  const [isClient, setIsClient] = useState(false);
   
   const [state, actions] = useCalendar();
   const {
@@ -65,8 +66,15 @@ export default function CalendarPage() {
     checkCalendlyConnection,
   } = actions;
 
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Handle OAuth callback
   useEffect(() => {
+    if (!isClient) return; // Don't run on server side
+    
     const success = searchParams.get('success');
     const token = searchParams.get('token');
     const error = searchParams.get('error');
@@ -93,7 +101,19 @@ export default function CalendarPage() {
       // Clear URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [searchParams, calendlyService, syncCalendlyEvents, checkCalendlyConnection]);
+  }, [searchParams, calendlyService, syncCalendlyEvents, checkCalendlyConnection, isClient]);
+
+  // Don't render anything until we're on the client side
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <CalendarIcon className="h-12 w-12 mx-auto mb-4 animate-spin" />
+          <p>Initializing calendar...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -112,13 +132,30 @@ export default function CalendarPage() {
         calendlyAuthStatus={calendlyAuthStatus}
         syncStatus={syncStatus}
         onSyncCalendly={syncCalendlyEvents}
-        onConnectCalendly={connectCalendly}
         onOpenCalendlyBooking={openCalendlyBooking}
         onAddEvent={() => handleOpenModal()}
         onToggleInstructions={toggleInstructions}
-        connectionAttempts={connectionAttempts}
-        maxConnectionAttempts={maxConnectionAttempts}
       />
+
+      {/* Temporary debug button for testing Calendly connection */}
+      {calendlyAuthStatus === 'disconnected' && (
+        <Alert className="bg-yellow-50 border-yellow-200">
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-yellow-800">
+            <div className="flex items-center justify-between">
+              <span>Calendly not connected. Click to connect manually:</span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={connectCalendly}
+                className="ml-4"
+              >
+                Connect Calendly
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {showInstructions && (
         <Card className="bg-blue-50 border-blue-200">
@@ -164,6 +201,7 @@ export default function CalendarPage() {
               <div>
                 <h5 className="font-semibold mb-2">🔄 Keeping Everything Updated:</h5>
                 <ul className="space-y-1 text-sm">
+                  <li>• Calendly connects automatically when you load this page</li>
                   <li>• Click "Sync Calendly" to get the latest bookings from your website</li>
                   <li>• Your own events are always safe and won't disappear</li>
                   <li>• Click "Book with Calendly" to let people schedule with you</li>
@@ -210,13 +248,7 @@ export default function CalendarPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Failed to connect to Calendly after {maxConnectionAttempts} attempts. 
-            <Button 
-              variant="link" 
-              className="p-0 h-auto text-red-600 underline ml-2"
-              onClick={connectCalendly}
-            >
-              Try connecting manually
-            </Button>
+            The system will continue trying to connect automatically.
           </AlertDescription>
         </Alert>
       )}

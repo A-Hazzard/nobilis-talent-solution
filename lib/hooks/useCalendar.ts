@@ -80,9 +80,16 @@ export function useCalendar(): [CalendarState, CalendarActions] {
   const [selectedEventType, setSelectedEventType] = useState<any>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [maxConnectionAttempts] = useState(2);
+  const [isClient, setIsClient] = useState(false);
 
   const calendarService = CalendarService.getInstance();
   const calendlyService = CalendlyService.getInstance();
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+    console.log('🌐 useCalendar hook initialized on client side');
+  }, []);
 
   /**
    * Check Calendly connection status
@@ -90,22 +97,31 @@ export function useCalendar(): [CalendarState, CalendarActions] {
   const checkCalendlyConnection = useCallback(async () => {
     try {
       console.log('🔍 Checking Calendly connection...');
+      console.log('🌐 Current environment:', typeof window !== 'undefined' ? 'client' : 'server');
       
       // Check if we have a stored token
       const storedToken = localStorage.getItem('calendly_access_token');
+      console.log('📝 Stored token found:', !!storedToken);
+      
       if (storedToken) {
         console.log('📝 Found stored token, testing connection...');
+        console.log('🔑 Token length:', storedToken.length);
         calendlyService.setAccessToken(storedToken);
         
         // Test the connection by getting user info
+        console.log('👤 Testing connection with getUserInfo...');
         const userInfo = await calendlyService.getUserInfo();
+        console.log('👤 User info response:', userInfo);
+        
         if (userInfo.data && !userInfo.error) {
           console.log('✅ Calendly connection successful!');
+          console.log('👤 User data:', userInfo.data);
           setCalendlyAuthStatus('connected');
           setConnectionAttempts(0);
           return 'connected';
         } else {
           console.log('❌ Stored token is invalid, removing...');
+          console.log('❌ Error details:', userInfo.error);
           // Token is invalid, remove it
           localStorage.removeItem('calendly_access_token');
           setCalendlyAuthStatus('disconnected');
@@ -206,10 +222,12 @@ export function useCalendar(): [CalendarState, CalendarActions] {
 
   const connectCalendly = useCallback(() => {
     try {
+      console.log('🔄 Initiating Calendly connection...');
       const authUrl = calendlyService.getAuthorizationUrl();
+      console.log('🔗 Authorization URL:', authUrl);
       window.location.href = authUrl;
     } catch (error) {
-      console.error('Error getting authorization URL:', error);
+      console.error('❌ Error getting authorization URL:', error);
       setCalendlyAuthStatus('error');
     }
   }, [calendlyService]);
@@ -385,35 +403,48 @@ export function useCalendar(): [CalendarState, CalendarActions] {
 
   // Initial load and connection check
   useEffect(() => {
+    if (!isClient) return; // Don't run on server side
+    
     const initializeCalendar = async () => {
       try {
+        console.log('🚀 Starting calendar initialization...');
         setIsLoading(true);
         
         // First check Calendly connection and wait for it to complete
+        console.log('🔍 Checking Calendly connection during initialization...');
         const connectionStatus = await checkCalendlyConnection();
+        console.log(`🔍 Connection status: ${connectionStatus}`);
         
         // Then load events with the connection status (this will include Calendly events if connected)
+        console.log('📅 Loading events with connection status...');
         await loadEvents(connectionStatus);
         
         // If we're connected, auto-sync to get the latest events
         if (connectionStatus === 'connected') {
           console.log('🔄 Auto-syncing Calendly events after initialization...');
           await syncCalendlyEvents();
+        } else {
+          console.log('📝 Skipping auto-sync - not connected to Calendly');
         }
+        
+        console.log('✅ Calendar initialization complete');
       } catch (error) {
-        console.error('Error initializing calendar:', error);
+        console.error('❌ Error initializing calendar:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeCalendar();
-  }, []);
+  }, [isClient]); // Only depend on isClient to ensure it runs once when client is ready
 
   // Retry connection logic
   useEffect(() => {
+    if (!isClient) return; // Don't run on server side
+    
     if (calendlyAuthStatus === 'disconnected' && connectionAttempts < maxConnectionAttempts) {
       const retryConnection = async () => {
+        console.log(`🔄 Retry attempt ${connectionAttempts + 1}/${maxConnectionAttempts}...`);
         setConnectionAttempts(prev => prev + 1);
         setCalendlyAuthStatus('connecting');
         
@@ -425,7 +456,7 @@ export function useCalendar(): [CalendarState, CalendarActions] {
             await syncCalendlyEvents();
           }
         } catch (error) {
-          console.error('Connection retry failed:', error);
+          console.error('❌ Connection retry failed:', error);
           setCalendlyAuthStatus('error');
         }
       };
@@ -433,16 +464,18 @@ export function useCalendar(): [CalendarState, CalendarActions] {
       const timeoutId = setTimeout(retryConnection, 2000 * connectionAttempts); // Exponential backoff
       return () => clearTimeout(timeoutId);
     }
-  }, [calendlyAuthStatus, connectionAttempts, maxConnectionAttempts, checkCalendlyConnection, syncCalendlyEvents]);
+  }, [calendlyAuthStatus, connectionAttempts, maxConnectionAttempts, checkCalendlyConnection, syncCalendlyEvents, isClient]);
 
   // Auto-sync when connection is established (separate from initialization)
   useEffect(() => {
+    if (!isClient) return; // Don't run on server side
+    
     if (calendlyAuthStatus === 'connected' && syncStatus === 'disconnected' && !isLoading) {
       console.log('🔄 Auto-syncing Calendly events after successful connection...');
       // Auto-sync when we first connect (but not during initial load)
       syncCalendlyEvents();
     }
-  }, [calendlyAuthStatus, syncStatus, syncCalendlyEvents, isLoading]);
+  }, [calendlyAuthStatus, syncStatus, syncCalendlyEvents, isLoading, isClient]);
 
   const state: CalendarState = {
     events,

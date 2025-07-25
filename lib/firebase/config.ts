@@ -12,19 +12,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Debug: Check if config is loaded
-console.log('Firebase config check:', {
-  apiKey: firebaseConfig.apiKey ? 'Set' : 'Missing',
-  authDomain: firebaseConfig.authDomain ? 'Set' : 'Missing',
-  projectId: firebaseConfig.projectId ? 'Set' : 'Missing',
-  storageBucket: firebaseConfig.storageBucket ? 'Set' : 'Missing',
-  messagingSenderId: firebaseConfig.messagingSenderId ? 'Set' : 'Missing',
-  appId: firebaseConfig.appId ? 'Set' : 'Missing',
-});
-
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-console.log('Firebase app initialized:', app.name);
 
 // Initialize Firebase services
 export const auth = getAuth(app);

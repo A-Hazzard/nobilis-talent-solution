@@ -1,3 +1,5 @@
+'use client';
+
 import { ArrowRight, Calendar, Users, TrendingUp, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';

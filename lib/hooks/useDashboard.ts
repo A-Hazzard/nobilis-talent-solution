@@ -4,6 +4,10 @@ import { analyticsApi } from '@/lib/helpers/api';
 import { FakeDataService } from '@/lib/services/FakeDataService';
 import { useDashboardStore } from '@/lib/stores/dashboardStore';
 
+import { formatTimeAgo } from '@/lib/utils/auditUtils';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+
 export interface DashboardState {
   analytics: Analytics | null;
   isLoading: boolean;
@@ -82,6 +86,27 @@ export function useDashboard(): [DashboardState, DashboardActions] {
             },
             recentActivity: [],
           }));
+        }
+
+        // Fetch real recent activity from Firestore
+        try {
+          const q = query(collection(db, 'adminLogs'), orderBy('timestamp', 'desc'), limit(10));
+          const snapshot = await getDocs(q);
+          const recentActivity = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              action: data.action,
+              entity: data.entity,
+              entityId: data.entityId,
+              entityTitle: data.details?.title || data.entityId || '',
+              time: formatTimeAgo(new Date(data.timestamp)),
+              userEmail: data.userEmail,
+              timestamp: data.timestamp,
+            };
+          });
+          setState(prev => ({ ...prev, recentActivity }));
+        } catch {
+          setState(prev => ({ ...prev, recentActivity: [] }));
         }
       }
     } catch (error) {

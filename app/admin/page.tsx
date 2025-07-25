@@ -1,26 +1,32 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useDashboard } from '@/lib/hooks/useDashboard';
 import DashboardStats from '@/components/admin/DashboardStats';
 import DashboardCharts from '@/components/admin/DashboardCharts';
 import FakeDataToggle from '@/components/admin/FakeDataToggle';
+import { 
+  getEntityIcon, 
+  getActionIcon, 
+  getActionBadgeColors, 
+  getEntityTypeBadgeColors,
+  getActivityDescription 
+} from '@/lib/utils/auditUtils';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
 
-export default function AdminDashboard() {
-  const [state, actions] = useDashboard();
+export default function AdminDashboardPage() {
+  const [dashboard, actions] = useDashboard();
 
   useEffect(() => {
     // Load dashboard data on mount
     actions.loadDashboardData();
   }, []); // Empty dependency array - only run on mount
 
-  const { isLoading, period, recentActivity } = state;
+  const { isLoading, period, recentActivity } = dashboard;
 
   if (isLoading) {
     return (
@@ -34,7 +40,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -75,29 +81,55 @@ export default function AdminDashboard() {
       {/* Charts */}
       <DashboardCharts period={period} />
 
-      {/* Recent Activity */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {recentActivity.length > 0 ? (
-              recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between text-sm">
-                  <span>{activity.action}</span>
-                  <span className="text-muted-foreground">{activity.time}</span>
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                No recent activity
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      {/* Recent Activity Section */}
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+        <div className="bg-white rounded-lg shadow p-4">
+          {recentActivity.length === 0 ? (
+            <p className="text-gray-500">No recent activity found.</p>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {recentActivity.map((activity, idx) => {
+                const entityIcon = getEntityIcon(activity.entity);
+                const actionIcon = getActionIcon(activity.action);
+                
+                return (
+                  <li key={idx} className="py-3 flex items-center gap-3">
+                    {/* Entity Icon */}
+                    <div className={`flex-shrink-0 p-2 rounded-lg ${entityIcon.bgColor}`}>
+                      <entityIcon.Icon className={`h-4 w-4 ${entityIcon.color}`} />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {/* Action Badge */}
+                        <Badge className={`flex items-center gap-1 text-xs ${getActionBadgeColors(activity.action)}`}>
+                          <actionIcon.Icon className="h-3 w-3" />
+                          {activity.action.toUpperCase()}
+                        </Badge>
+                        
+                        {/* Entity Type Badge */}
+                        <Badge className={`flex items-center gap-1 text-xs ${getEntityTypeBadgeColors(activity.entity)}`}>
+                          <entityIcon.Icon className="h-3 w-3" />
+                          {activity.entity.toUpperCase()}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-sm font-medium text-gray-900">
+                        {activity.entityTitle || activity.entityId || getActivityDescription(activity)}
+                      </p>
+                      
+                      <p className="text-xs text-gray-500">
+                        {activity.time}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </section>
     </div>
   );
 } 

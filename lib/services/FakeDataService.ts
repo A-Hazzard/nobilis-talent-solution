@@ -149,15 +149,99 @@ export class FakeDataService {
    */
   generateFakeRecentActivity() {
     const activities = [
-      { action: 'New lead received', time: '2 min ago' },
-      { action: 'Resource downloaded', time: '1 hour ago' },
-      { action: 'Meeting scheduled', time: '3 hours ago' },
-      { action: 'Payment received', time: '5 hours ago' },
-      { action: 'Testimonial submitted', time: '1 day ago' },
-      { action: 'Follow-up email sent', time: '2 days ago' },
+      { 
+        action: 'create', 
+        entity: 'lead', 
+        entityId: 'lead-001', 
+        entityTitle: 'John Smith - Marketing Director',
+        time: '2 min ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 120000
+      },
+      { 
+        action: 'update', 
+        entity: 'resource', 
+        entityId: 'resource-005', 
+        entityTitle: 'Leadership Fundamentals Guide',
+        time: '1 hour ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 3600000
+      },
+      { 
+        action: 'create', 
+        entity: 'testimonial', 
+        entityId: 'testimonial-003', 
+        entityTitle: 'Sarah Johnson - CEO',
+        time: '3 hours ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 10800000
+      },
+      { 
+        action: 'login', 
+        entity: 'auth', 
+        entityId: 'session-001', 
+        entityTitle: 'Admin Login',
+        time: '5 hours ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 18000000
+      },
+      { 
+        action: 'delete', 
+        entity: 'blog', 
+        entityId: 'blog-012', 
+        entityTitle: 'Old Blog Post',
+        time: '1 day ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 86400000
+      },
+      { 
+        action: 'update', 
+        entity: 'calendar', 
+        entityId: 'event-008', 
+        entityTitle: 'Team Meeting',
+        time: '2 days ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 172800000
+      },
+      { 
+        action: 'create', 
+        entity: 'resource', 
+        entityId: 'resource-006', 
+        entityTitle: 'Conflict Resolution Handbook',
+        time: '3 days ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 259200000
+      },
+      { 
+        action: 'update', 
+        entity: 'lead', 
+        entityId: 'lead-002', 
+        entityTitle: 'Maria Garcia - HR Manager',
+        time: '4 days ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 345600000
+      },
+      { 
+        action: 'create', 
+        entity: 'blog', 
+        entityId: 'blog-013', 
+        entityTitle: 'Effective Leadership Strategies',
+        time: '5 days ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 432000000
+      },
+      { 
+        action: 'delete', 
+        entity: 'testimonial', 
+        entityId: 'testimonial-004', 
+        entityTitle: 'Outdated Testimonial',
+        time: '1 week ago',
+        userEmail: 'admin@example.com',
+        timestamp: Date.now() - 604800000
+      },
     ];
 
-    return activities.slice(0, 3);
+    return activities;
   }
 
   /**

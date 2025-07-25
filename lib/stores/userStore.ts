@@ -27,8 +27,6 @@ interface UserState {
 export const useUserStore = create<UserState>()(
   persist(
     (set) => {
-      const authService = AuthService.getInstance();
-
       return {
         // Initial state
         user: null,
@@ -66,6 +64,7 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true });
           
           try {
+            const authService = AuthService.getInstance();
             const { user, error } = await authService.signInWithEmail(email, password);
             
             if (error) {
@@ -137,6 +136,7 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true });
           
           try {
+            const authService = AuthService.getInstance();
             const { user, error } = await authService.signUpWithEmail(email, password, firstName, lastName, organization, phone);
             
             if (error) {
@@ -186,6 +186,7 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true });
           
           try {
+            const authService = AuthService.getInstance();
             const { error } = await authService.signOut();
             
             if (error) {
@@ -213,6 +214,7 @@ export const useUserStore = create<UserState>()(
         },
         
         initializeAuth: () => {
+          const authService = AuthService.getInstance();
           const unsubscribe = authService.onAuthStateChanged((firebaseUser) => {
             if (firebaseUser) {
               // Handle async user profile fetching properly

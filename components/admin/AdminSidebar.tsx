@@ -11,6 +11,7 @@ import {
   Calendar,
   Star,
   PenTool,
+  Activity,
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -43,6 +44,11 @@ const sidebarItems = [
     title: 'Calendar',
     href: '/admin/calendar',
     icon: Calendar,
+  },
+  {
+    title: 'Audit',
+    href: '/admin/audit',
+    icon: Activity,
   },
 ];
 

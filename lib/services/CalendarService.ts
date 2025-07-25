@@ -1,6 +1,7 @@
 import type { CalendarEvent } from '@/shared/types/entities';
 import { db } from '@/lib/firebase/config';
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 export interface CreateEventData {
   title: string;
@@ -80,6 +81,17 @@ export class CalendarService {
       };
 
       this.events.push(createdEvent);
+      
+      // Log audit action
+      await logAdminAction({
+        userId: eventData.createdBy || 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'create',
+        entity: 'calendar',
+        entityId: docRef.id,
+        details: { title: eventData.title, date: eventData.date },
+        timestamp: Date.now(),
+      });
+      
       return { data: createdEvent };
     } catch (error) {
       console.error('Error creating event:', error);
@@ -135,6 +147,16 @@ export class CalendarService {
         updatedAt: new Date(),
       };
 
+      // Log audit action
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'update',
+        entity: 'calendar',
+        entityId: id,
+        details: { updates: updateData },
+        timestamp: Date.now(),
+      });
+
       return { data: this.events[eventIndex] };
     } catch (error) {
       console.error('Error updating event:', error);
@@ -168,6 +190,15 @@ export class CalendarService {
       const eventRef = doc(db, this.collectionName, eventId);
       await deleteDoc(eventRef);
       this.events.splice(eventIndex, 1);
+
+      // Log audit action
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'delete',
+        entity: 'calendar',
+        entityId: eventId,
+        timestamp: Date.now(),
+      });
 
       return {};
     } catch (error) {

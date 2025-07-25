@@ -10,6 +10,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 import type { FirebaseUser as AppUser, FirebaseAuthError } from '@/shared/types/firebase';
 import { validateSignupForm, validateLoginForm } from '@/lib/utils/validation';
+import { logAdminLogin } from '@/lib/utils/auditUtils';
 
 export interface UserProfile {
   uid: string;
@@ -58,6 +59,11 @@ export class AuthService {
       
       // Update last login time
       await this.updateLastLogin(userCredential.user.uid);
+      
+      // Log admin login for audit
+      if (userCredential.user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1') {
+        await logAdminLogin();
+      }
       
       return { user, error: null };
     } catch (error: any) {

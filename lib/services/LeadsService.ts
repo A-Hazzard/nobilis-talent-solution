@@ -1,22 +1,23 @@
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
   startAfter,
-  serverTimestamp
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import type { Lead } from '@/shared/types/entities';
 import { AuthService } from '@/lib/services/AuthService';
 import { validateSignupForm } from '@/lib/utils/validation';
-import type { Lead } from '@/shared/types/entities';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 export class LeadsService {
   private collectionName = 'users';
@@ -175,6 +176,17 @@ export class LeadsService {
 
       const docRef = await addDoc(collection(db, this.collectionName), userDocData);
       
+      // Audit log
+      await logAdminAction({
+        userId: user.uid,
+        userEmail: leadData.email,
+        action: 'create',
+        entity: 'lead',
+        entityId: docRef.id,
+        details: { firstName: leadData.firstName, lastName: leadData.lastName },
+        timestamp: Date.now(),
+      });
+      
       return { id: docRef.id };
     } catch (error) {
       console.error('Error creating lead:', error);
@@ -212,6 +224,16 @@ export class LeadsService {
       const docRef = doc(db, this.collectionName, id);
       await updateDoc(docRef, updateData);
       
+      // Audit log
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'update',
+        entity: 'lead',
+        entityId: id,
+        details: { updates },
+        timestamp: Date.now(),
+      });
+      
       return {};
     } catch (error) {
       console.error('Error updating lead:', error);
@@ -226,6 +248,15 @@ export class LeadsService {
     try {
       const docRef = doc(db, this.collectionName, id);
       await deleteDoc(docRef);
+      
+      // Audit log
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'delete',
+        entity: 'lead',
+        entityId: id,
+        timestamp: Date.now(),
+      });
       
       return {};
     } catch (error) {

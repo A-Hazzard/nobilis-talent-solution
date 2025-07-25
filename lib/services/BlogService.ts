@@ -20,6 +20,7 @@ import {
 } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
 import type { BlogPost } from '@/shared/types/entities';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 export class BlogService {
   private collectionName = 'blogPosts';
@@ -244,6 +245,16 @@ export class BlogService {
 
       const docRef = await addDoc(collection(db, this.collectionName), docData);
       
+      // Log audit action
+      await logAdminAction({
+        userId: postData.author || 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'create',
+        entity: 'blog',
+        entityId: docRef.id,
+        details: { title: postData.title, category: postData.category },
+        timestamp: Date.now(),
+      });
+      
       return { id: docRef.id };
     } catch (error) {
       console.error('Error creating blog post:', error);
@@ -256,6 +267,12 @@ export class BlogService {
    */
   async update(id: string, updates: Partial<Omit<BlogPost, 'id' | 'createdAt' | 'viewCount'>>, featuredImage?: File): Promise<{ error?: string }> {
     try {
+      // Get current blog post for audit logging
+      const currentPost = await this.getById(id);
+      if (!currentPost.post) {
+        return { error: 'Blog post not found' };
+      }
+
       let featuredImageUrl = updates.featuredImage;
 
       // Handle featured image upload if provided
@@ -269,7 +286,7 @@ export class BlogService {
 
       // Create new slug if title changed
       let slug = updates.slug;
-      if (updates.title && updates.title !== (await this.getById(id)).post?.title) {
+      if (updates.title && updates.title !== currentPost.post.title) {
         slug = this.createSlug(updates.title);
       }
 
@@ -309,6 +326,16 @@ export class BlogService {
       const docRef = doc(db, this.collectionName, id);
       await updateDoc(docRef, updateData);
       
+      // Log audit action
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'update',
+        entity: 'blog',
+        entityId: id,
+        details: { updates },
+        timestamp: Date.now(),
+      });
+      
       return {};
     } catch (error) {
       console.error('Error updating blog post:', error);
@@ -321,9 +348,13 @@ export class BlogService {
    */
   async delete(id: string): Promise<{ error?: string }> {
     try {
-      // Get the blog post first to delete the featured image
+      // Get the blog post first to delete the featured image and for audit logging
       const { post } = await this.getById(id);
-      if (post?.featuredImage) {
+      if (!post) {
+        return { error: 'Blog post not found' };
+      }
+
+      if (post.featuredImage) {
         try {
           const imageRef = ref(storage, post.featuredImage);
           await deleteObject(imageRef);
@@ -335,6 +366,15 @@ export class BlogService {
       // Delete the document
       const docRef = doc(db, this.collectionName, id);
       await deleteDoc(docRef);
+      
+      // Log audit action
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'delete',
+        entity: 'blog',
+        entityId: id,
+        timestamp: Date.now(),
+      });
       
       return {};
     } catch (error) {

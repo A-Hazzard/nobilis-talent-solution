@@ -1,25 +1,26 @@
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  limit, 
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  limit,
   serverTimestamp,
-  increment
+  increment,
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  deleteObject
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
 } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
 import type { Resource } from '@/shared/types/entities';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 export class ResourcesService {
   private collectionName = 'resources';
@@ -56,9 +57,9 @@ export class ResourcesService {
     // Check file size
     const maxSize = this.maxFileSizes[expectedType];
     if (file.size > maxSize) {
-      return { 
-        valid: false, 
-        error: `File size must be less than ${this.formatFileSize(maxSize)}` 
+      return {
+        valid: false,
+        error: `File size must be less than ${this.formatFileSize(maxSize)}`
       };
     }
 
@@ -66,11 +67,11 @@ export class ResourcesService {
     const fileName = file.name.toLowerCase();
     const acceptedExtensions = this.acceptedFileTypes[expectedType];
     const hasValidExtension = acceptedExtensions.some(ext => fileName.endsWith(ext));
-    
+
     if (!hasValidExtension) {
-      return { 
-        valid: false, 
-        error: `File type not supported for ${expectedType}. Accepted extensions: ${acceptedExtensions.join(', ')}` 
+      return {
+        valid: false,
+        error: `File type not supported for ${expectedType}. Accepted extensions: ${acceptedExtensions.join(', ')}`
       };
     }
 
@@ -94,7 +95,7 @@ export class ResourcesService {
   private getStoragePath(file: File, type: Resource['type']): string {
     const timestamp = Date.now();
     const fileName = `${timestamp}_${file.name}`;
-    
+
     // Organize files by type in Firebase Storage
     switch (type) {
       case 'pdf':
@@ -127,53 +128,53 @@ export class ResourcesService {
   } = {}): Promise<{ resources: Resource[]; error?: string }> {
     try {
       const { category, type, isPublic, limit: pageLimit, search } = options;
-      
+
       // Build query - avoid composite indexes by using minimal constraints
       const constraints = [];
-      
+
       // Prioritize isPublic filter as it's most important for content page
       if (isPublic !== undefined) {
         constraints.push(where('isPublic', '==', isPublic));
       }
-      
+
       // Don't use orderBy in Firestore query to avoid composite index issues
       // We'll sort in memory instead
-      
+
       if (pageLimit) {
         constraints.push(limit(pageLimit));
       }
-      
+
       const q = query(collection(db, this.collectionName), ...constraints);
       const snapshot = await getDocs(q);
-      
+
       let resources: Resource[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
       })) as Resource[];
-      
+
       // Apply additional filters in memory to avoid composite index issues
       if (category) {
         resources = resources.filter(resource => resource.category === category);
       }
-      
+
       if (type) {
         resources = resources.filter(resource => resource.type === type);
       }
-      
+
       // Apply search filter if provided
       if (search) {
         const searchLower = search.toLowerCase();
-        resources = resources.filter(resource => 
+        resources = resources.filter(resource =>
           resource.title.toLowerCase().includes(searchLower) ||
           resource.description.toLowerCase().includes(searchLower)
         );
       }
-      
+
       // Always sort by createdAt in memory
       resources.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      
+
       return { resources };
     } catch (error) {
       console.error('Error fetching resources:', error);
@@ -188,18 +189,18 @@ export class ResourcesService {
     try {
       const docRef = doc(db, this.collectionName, id);
       const docSnap = await getDoc(docRef);
-      
+
       if (!docSnap.exists()) {
         return { resource: null, error: 'Resource not found' };
       }
-      
+
       const resource = {
         id: docSnap.id,
         ...docSnap.data(),
         createdAt: docSnap.data().createdAt?.toDate() || new Date(),
         updatedAt: docSnap.data().updatedAt?.toDate() || new Date(),
       } as Resource;
-      
+
       return { resource };
     } catch (error) {
       console.error('Error fetching resource:', error);
@@ -215,7 +216,7 @@ export class ResourcesService {
       const storageRef = ref(storage, path);
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
-      
+
       return { url: downloadURL };
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -228,59 +229,64 @@ export class ResourcesService {
    */
   async create(resourceData: Omit<Resource, 'id' | 'createdAt' | 'updatedAt' | 'downloadCount'>, file?: File): Promise<{ id: string; error?: string }> {
     try {
-      let fileUrl = resourceData.fileUrl;
-      let thumbnailUrl = resourceData.thumbnailUrl;
-      let fileSize = resourceData.fileSize;
+      // Validate required fields
+      if (!resourceData.title || !resourceData.description) {
+        return { id: '', error: 'Title and description are required' };
+      }
 
       // Handle file upload if provided
+      let fileUrl = resourceData.fileUrl;
+      let fileSize = resourceData.fileSize;
+      let thumbnailUrl = resourceData.thumbnailUrl;
+
       if (file) {
         // Validate file
         const validation = this.validateFile(file, resourceData.type);
         if (!validation.valid) {
-          return { id: '', error: validation.error };
+          return { id: '', error: validation.error || 'Invalid file' };
         }
 
-        const filePath = this.getStoragePath(file, resourceData.type);
-        
-        const uploadResult = await this.uploadFile(file, filePath);
+        // Upload file
+        const storagePath = this.getStoragePath(file, resourceData.type);
+        const uploadResult = await this.uploadFile(file, storagePath);
         if (uploadResult.error) {
           return { id: '', error: uploadResult.error };
         }
-        
+
         fileUrl = uploadResult.url;
         fileSize = file.size;
       }
 
-      // Handle YouTube links for video type
-      if (resourceData.type === 'video' && resourceData.fileUrl?.includes('youtube.com')) {
-        fileUrl = resourceData.fileUrl;
-        // Extract YouTube video ID for thumbnail
-        const videoId = this.extractYouTubeVideoId(resourceData.fileUrl);
-        if (videoId) {
-          thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-        }
-      }
-
-      // Prepare document data, filtering out undefined values
-      const docData: any = {
+      // Create resource document
+      const docData = {
         title: resourceData.title,
         description: resourceData.description,
         type: resourceData.type,
         category: resourceData.category,
+        fileUrl,
+        thumbnailUrl,
+        fileSize,
+        downloadCount: 0,
         isPublic: resourceData.isPublic,
         createdBy: resourceData.createdBy,
-        downloadCount: 0,
+        tags: resourceData.tags || [],
+        featured: resourceData.featured || false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
-      // Only add fields that have values
-      if (fileUrl) docData.fileUrl = fileUrl;
-      if (thumbnailUrl) docData.thumbnailUrl = thumbnailUrl;
-      if (fileSize) docData.fileSize = fileSize;
-
       const docRef = await addDoc(collection(db, this.collectionName), docData);
-      
+
+      // Log audit action
+      await logAdminAction({
+        userId: resourceData.createdBy || 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'create',
+        entity: 'resource',
+        entityId: docRef.id,
+        details: { title: resourceData.title, category: resourceData.category },
+        timestamp: Date.now(),
+      });
+
       return { id: docRef.id };
     } catch (error) {
       console.error('Error creating resource:', error);
@@ -293,39 +299,46 @@ export class ResourcesService {
    */
   async update(id: string, updates: Partial<Omit<Resource, 'id' | 'createdAt'>>, file?: File): Promise<{ error?: string }> {
     try {
-      let fileUrl = updates.fileUrl;
-      let thumbnailUrl = updates.thumbnailUrl;
-      let fileSize = updates.fileSize;
+      // Get current resource for audit logging
+      const currentResource = await this.getById(id);
+      if (!currentResource.resource) {
+        return { error: 'Resource not found' };
+      }
 
       // Handle file upload if provided
+      let fileUrl = updates.fileUrl;
+      let fileSize = updates.fileSize;
+      let thumbnailUrl = updates.thumbnailUrl;
+
       if (file) {
         // Validate file
-        const validation = this.validateFile(file, updates.type || 'pdf');
+        const validation = this.validateFile(file, updates.type || currentResource.resource.type);
         if (!validation.valid) {
-          return { error: validation.error };
+          return { error: validation.error || 'Invalid file' };
         }
 
-        const filePath = this.getStoragePath(file, updates.type || 'pdf');
-        
-        const uploadResult = await this.uploadFile(file, filePath);
+        // Upload new file
+        const storagePath = this.getStoragePath(file, updates.type || currentResource.resource.type);
+        const uploadResult = await this.uploadFile(file, storagePath);
         if (uploadResult.error) {
           return { error: uploadResult.error };
         }
-        
+
         fileUrl = uploadResult.url;
         fileSize = file.size;
-      }
 
-      // Handle YouTube links
-      if (updates.type === 'video' && updates.fileUrl?.includes('youtube.com')) {
-        fileUrl = updates.fileUrl;
-        const videoId = this.extractYouTubeVideoId(updates.fileUrl);
-        if (videoId) {
-          thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+        // Delete old file if it exists
+        if (currentResource.resource.fileUrl && currentResource.resource.fileUrl !== fileUrl) {
+          try {
+            const oldFileRef = ref(storage, currentResource.resource.fileUrl);
+            await deleteObject(oldFileRef);
+          } catch (deleteError) {
+            console.warn('Could not delete old file:', deleteError);
+          }
         }
       }
 
-      // Prepare update data, filtering out undefined values
+      // Prepare update data
       const updateData: any = {
         updatedAt: serverTimestamp(),
       };
@@ -335,15 +348,26 @@ export class ResourcesService {
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.type !== undefined) updateData.type = updates.type;
       if (updates.category !== undefined) updateData.category = updates.category;
-      if (updates.isPublic !== undefined) updateData.isPublic = updates.isPublic;
-      if (updates.createdBy !== undefined) updateData.createdBy = updates.createdBy;
       if (fileUrl) updateData.fileUrl = fileUrl;
       if (thumbnailUrl) updateData.thumbnailUrl = thumbnailUrl;
-      if (fileSize) updateData.fileSize = fileSize;
+      if (fileSize !== undefined) updateData.fileSize = fileSize;
+      if (updates.isPublic !== undefined) updateData.isPublic = updates.isPublic;
+      if (updates.tags !== undefined) updateData.tags = updates.tags;
+      if (updates.featured !== undefined) updateData.featured = updates.featured;
 
       const docRef = doc(db, this.collectionName, id);
       await updateDoc(docRef, updateData);
-      
+
+      // Log audit action
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'update',
+        entity: 'resource',
+        entityId: id,
+        details: { updates },
+        timestamp: Date.now(),
+      });
+
       return {};
     } catch (error) {
       console.error('Error updating resource:', error);
@@ -356,24 +380,45 @@ export class ResourcesService {
    */
   async delete(id: string): Promise<{ error?: string }> {
     try {
-      // Get the resource first to delete the file
-      const { resource } = await this.getById(id);
-      if (resource) {
-        // Delete file from storage if it's not a YouTube link
-        if (resource.fileUrl && !resource.fileUrl.includes('youtube.com')) {
-          try {
-            const fileRef = ref(storage, resource.fileUrl);
-            await deleteObject(fileRef);
-          } catch (fileError) {
-            console.warn('Could not delete file from storage:', fileError);
-          }
+      // Get resource info before deletion for audit logging
+      const currentResource = await this.getById(id);
+      if (!currentResource.resource) {
+        return { error: 'Resource not found' };
+      }
+
+      // Delete file from storage if it exists
+      if (currentResource.resource.fileUrl) {
+        try {
+          const fileRef = ref(storage, currentResource.resource.fileUrl);
+          await deleteObject(fileRef);
+        } catch (deleteError) {
+          console.warn('Could not delete file from storage:', deleteError);
         }
       }
 
-      // Delete the document
+      // Delete thumbnail if it exists
+      if (currentResource.resource.thumbnailUrl) {
+        try {
+          const thumbnailRef = ref(storage, currentResource.resource.thumbnailUrl);
+          await deleteObject(thumbnailRef);
+        } catch (deleteError) {
+          console.warn('Could not delete thumbnail from storage:', deleteError);
+        }
+      }
+
+      // Delete document
       const docRef = doc(db, this.collectionName, id);
       await deleteDoc(docRef);
-      
+
+      // Log audit action
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'delete',
+        entity: 'resource',
+        entityId: id,
+        timestamp: Date.now(),
+      });
+
       return {};
     } catch (error) {
       console.error('Error deleting resource:', error);
@@ -390,7 +435,7 @@ export class ResourcesService {
       await updateDoc(docRef, {
         downloadCount: increment(1),
       });
-      
+
       return {};
     } catch (error) {
       console.error('Error incrementing download count:', error);
@@ -411,20 +456,20 @@ export class ResourcesService {
   async getStats(): Promise<{ total: number; totalDownloads: number; byCategory: Record<string, number>; error?: string }> {
     try {
       const snapshot = await getDocs(collection(db, this.collectionName));
-      
+
       let total = 0;
       let totalDownloads = 0;
       const byCategory: Record<string, number> = {};
-      
+
       snapshot.docs.forEach(doc => {
         const data = doc.data();
         total++;
         totalDownloads += data.downloadCount || 0;
-        
+
         const category = data.category || 'other';
         byCategory[category] = (byCategory[category] || 0) + 1;
       });
-      
+
       return { total, totalDownloads, byCategory };
     } catch (error) {
       console.error('Error fetching resource stats:', error);

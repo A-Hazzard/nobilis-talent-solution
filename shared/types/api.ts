@@ -3,6 +3,7 @@
  */
 
 import type { User, Lead, Resource, Testimonial, Analytics } from './entities';
+import type { AuditLog } from './audit';
 
 // Authentication
 export type LoginRequest = {
@@ -201,4 +202,22 @@ export type ApiResponse<T = any> = {
   data?: T;
   error?: string;
   message?: string;
+};
+
+export type CreateAuditLogRequest = Omit<AuditLog, 'id' | 'createdAt'>;
+
+export type AuditLogsResponse = {
+  logs: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export type RecentActivityResponse = {
+  activities: Array<{
+    action: string;
+    time: string;
+    entityType: string;
+    entityTitle?: string;
+  }>;
 }; 

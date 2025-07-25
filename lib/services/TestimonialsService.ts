@@ -1,18 +1,19 @@
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  limit as firestoreLimit, 
-  serverTimestamp
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  limit,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Testimonial } from '@/shared/types/entities';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 export class TestimonialsService {
   private static instance: TestimonialsService;
@@ -52,7 +53,7 @@ export class TestimonialsService {
       // We'll sort in memory instead
       
       if (pageLimit) {
-        q = query(q, firestoreLimit(pageLimit * 2)); // Get more to account for sorting
+        q = query(q, limit(pageLimit * 2)); // Get more to account for sorting
       }
       const snapshot = await getDocs(q);
       
@@ -119,20 +120,36 @@ export class TestimonialsService {
    */
   async create(testimonialData: Omit<Testimonial, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ id: string; error?: string }> {
     try {
-      // Prepare document data, filtering out undefined values
-      const docData: any = {
+      // Validate required fields
+      if (!testimonialData.clientName || !testimonialData.company || !testimonialData.content) {
+        return { id: '', error: 'Client name, company, and content are required' };
+      }
+
+      if (testimonialData.rating < 1 || testimonialData.rating > 5) {
+        return { id: '', error: 'Rating must be between 1 and 5' };
+      }
+
+      const docData = {
+        clientName: testimonialData.clientName,
+        company: testimonialData.company,
+        content: testimonialData.content,
+        rating: testimonialData.rating,
+        isPublic: testimonialData.isPublic,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
-      // Only add fields that have values
-      if (testimonialData.clientName !== undefined) docData.clientName = testimonialData.clientName;
-      if (testimonialData.company !== undefined) docData.company = testimonialData.company;
-      if (testimonialData.content !== undefined) docData.content = testimonialData.content;
-      if (testimonialData.rating !== undefined) docData.rating = testimonialData.rating;
-      if (testimonialData.isPublic !== undefined) docData.isPublic = testimonialData.isPublic;
-
       const docRef = await addDoc(collection(db, this.collectionName), docData);
+      
+      // Audit log
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'create',
+        entity: 'testimonial',
+        entityId: docRef.id,
+        details: { clientName: testimonialData.clientName, company: testimonialData.company },
+        timestamp: Date.now(),
+      });
       
       return { id: docRef.id };
     } catch (error) {
@@ -146,7 +163,17 @@ export class TestimonialsService {
    */
   async update(id: string, updates: Partial<Omit<Testimonial, 'id' | 'createdAt'>>): Promise<{ error?: string }> {
     try {
-      // Prepare update data, filtering out undefined values
+      // Get current testimonial for audit logging
+      const currentTestimonial = await this.getById(id);
+      if (!currentTestimonial.testimonial) {
+        return { error: 'Testimonial not found' };
+      }
+
+      // Validate rating if provided
+      if (updates.rating !== undefined && (updates.rating < 1 || updates.rating > 5)) {
+        return { error: 'Rating must be between 1 and 5' };
+      }
+
       const updateData: any = {
         updatedAt: serverTimestamp(),
       };
@@ -161,6 +188,16 @@ export class TestimonialsService {
       const docRef = doc(db, this.collectionName, id);
       await updateDoc(docRef, updateData);
       
+      // Audit log
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'update',
+        entity: 'testimonial',
+        entityId: id,
+        details: { updates },
+        timestamp: Date.now(),
+      });
+      
       return {};
     } catch (error) {
       console.error('Error updating testimonial:', error);
@@ -173,8 +210,23 @@ export class TestimonialsService {
    */
   async delete(id: string): Promise<{ error?: string }> {
     try {
+      // Get testimonial info before deletion for audit logging
+      const currentTestimonial = await this.getById(id);
+      if (!currentTestimonial.testimonial) {
+        return { error: 'Testimonial not found' };
+      }
+
       const docRef = doc(db, this.collectionName, id);
       await deleteDoc(docRef);
+      
+      // Audit log
+      await logAdminAction({
+        userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        action: 'delete',
+        entity: 'testimonial',
+        entityId: id,
+        timestamp: Date.now(),
+      });
       
       return {};
     } catch (error) {
@@ -186,13 +238,12 @@ export class TestimonialsService {
   /**
    * Get public testimonials for display
    */
-  async getPublicTestimonials(limit?: number): Promise<{ testimonials: Testimonial[]; error?: string }> {
+  async getPublicTestimonials(pageLimit?: number): Promise<{ testimonials: Testimonial[]; error?: string }> {
     try {
-      // Build query with only the isPublic filter first, then sort in memory
       let q = query(collection(db, this.collectionName), where('isPublic', '==', true));
       
-      if (limit) {
-        q = query(q, firestoreLimit(limit * 2)); // Get more than needed to account for sorting
+      if (pageLimit) {
+        q = query(q, limit(pageLimit * 2)); // Get more than needed to account for sorting
       }
       const snapshot = await getDocs(q);
       
@@ -207,8 +258,8 @@ export class TestimonialsService {
       testimonials.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
       // Apply limit after sorting
-      if (limit) {
-        testimonials = testimonials.slice(0, limit);
+      if (pageLimit) {
+        testimonials = testimonials.slice(0, pageLimit);
       }
       
       return { testimonials };
@@ -221,13 +272,12 @@ export class TestimonialsService {
   /**
    * Get testimonials to show on homepage
    */
-  async getHomepageTestimonials(limit?: number): Promise<{ testimonials: Testimonial[]; error?: string }> {
+  async getHomepageTestimonials(pageLimit?: number): Promise<{ testimonials: Testimonial[]; error?: string }> {
     try {
-      // Build query for homepage testimonials (only public ones)
       let q = query(collection(db, this.collectionName), where('isPublic', '==', true));
       
-      if (limit) {
-        q = query(q, firestoreLimit(limit * 2)); // Get more than needed to account for sorting
+      if (pageLimit) {
+        q = query(q, limit(pageLimit * 2)); // Get more than needed to account for sorting
       }
       const snapshot = await getDocs(q);
       
@@ -242,8 +292,8 @@ export class TestimonialsService {
       testimonials.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
       // Apply limit after sorting
-      if (limit) {
-        testimonials = testimonials.slice(0, limit);
+      if (pageLimit) {
+        testimonials = testimonials.slice(0, pageLimit);
       }
       
       return { testimonials };

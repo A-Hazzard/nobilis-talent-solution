@@ -15,6 +15,9 @@ export type FilterParams = {
   category?: string;
   dateFrom?: string;
   dateTo?: string;
+  entityType?: string;
+  action?: string;
+  userId?: string;
 };
 
 export type TableColumn<T> = {

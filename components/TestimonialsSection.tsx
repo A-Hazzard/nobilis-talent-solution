@@ -1,59 +1,124 @@
-'use client';
-
-import { useState } from 'react';
-import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Star, ChevronLeft, ChevronRight, Quote, User } from 'lucide-react';
+import { TestimonialUtils } from '@/lib/utils/testimonialUtils';
+import type { Testimonial } from '@/shared/types/entities';
 
 const TestimonialsSection = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const testimonials = [
-    {
-      id: 1,
-      quote: "Kareem's coaching approach is transformational. He helped me develop the confidence and skills to lead our team through a major restructuring. Our employee engagement scores increased by 60%.",
-      author: "Michael Thompson",
-      title: "VP of Operations",
-      company: "Global Manufacturing Inc.",
-      rating: 5,
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-    },
-    {
-      id: 2,
-      quote: "Working with Kareem was a game-changer for our leadership team. His practical strategies and insights helped us improve communication and drive better results across all departments.",
-      author: "Lisa Rodriguez",
-      title: "CEO",
-      company: "TechStart Solutions", 
-      rating: 5,
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-    },
-    {
-      id: 3,
-      quote: "The leadership development program exceeded our expectations. Kareem's ability to connect with our team and provide actionable feedback was remarkable. Our productivity metrics speak for themselves.",
-      author: "David Chen",
-      title: "Director of Human Resources", 
-      company: "Financial Services Corp",
-      rating: 5,
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-    },
-    {
-      id: 4,
-      quote: "Kareem's coaching helped me become a more effective leader and communicator. The tools and frameworks he provided are something I use daily in my role.",
-      author: "Jennifer Williams", 
-      title: "Senior Manager",
-      company: "Healthcare Innovations",
-      rating: 5,
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    }
-  ];
+  // Load testimonials on component mount
+  useEffect(() => {
+    const loadTestimonials = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const { TestimonialsService } = await import('@/lib/services/TestimonialsService');
+        const service = TestimonialsService.getInstance();
+        const response = await service.getHomepageTestimonials(10);
+        
+        if (response.error) {
+          setError(response.error);
+        } else {
+          // Sort testimonials by date (newest first)
+          const sortedTestimonials = TestimonialUtils.sortByDate(response.testimonials);
+          setTestimonials(sortedTestimonials);
+        }
+      } catch (error) {
+        console.error('Error loading testimonials:', error);
+        setError('Failed to load testimonials');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTestimonials();
+  }, []);
 
   const nextTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    if (testimonials.length > 0) {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }
   };
 
   const prevTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    if (testimonials.length > 0) {
+      setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    }
   };
 
-  const current = testimonials[currentTestimonial];
+  // Get current testimonial or fallback
+  const current = testimonials.length > 0 ? testimonials[currentTestimonial] : null;
+
+  // Get display statistics
+  const displayStats = TestimonialUtils.getDisplayStats(testimonials);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <section id="testimonials" className="py-20 lg:py-32 gradient-subtle">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-16 animate-fade-up">
+            <h2 className="text-section text-accent mb-6">
+              What Leaders Are Saying
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Loading testimonials...
+            </p>
+          </div>
+          <div className="max-w-5xl mx-auto">
+            <div className="card-feature text-center p-8">
+              <div className="animate-pulse">
+                <div className="h-16 w-16 bg-gray-200 rounded-full mx-auto mb-8"></div>
+                <div className="h-8 bg-gray-200 rounded mb-4"></div>
+                <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <section id="testimonials" className="py-20 lg:py-32 gradient-subtle">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-16 animate-fade-up">
+            <h2 className="text-section text-accent mb-6">
+              What Leaders Are Saying
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Unable to load testimonials at this time.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show empty state
+  if (testimonials.length === 0) {
+    return (
+      <section id="testimonials" className="py-20 lg:py-32 gradient-subtle">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-16 animate-fade-up">
+            <h2 className="text-section text-accent mb-6">
+              What Leaders Are Saying
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              No testimonials available at this time.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="testimonials" className="py-20 lg:py-32 gradient-subtle">
@@ -75,24 +140,23 @@ const TestimonialsSection = () => {
             <Quote className="w-16 h-16 text-primary/20 mx-auto mb-8" />
             
             <blockquote className="text-2xl lg:text-3xl font-medium text-accent mb-8 leading-relaxed">
-              "{current.quote}"
+              "{current?.content}"
             </blockquote>
 
             <div className="flex items-center justify-center mb-6">
-              <img
-                src={current.image}
-                alt={current.author}
-                className="w-16 h-16 rounded-full mr-4 shadow-medium"
-              />
+              <div className="w-16 h-16 rounded-full mr-4 shadow-medium bg-primary/10 flex items-center justify-center">
+                <User className="w-8 h-8 text-primary" />
+              </div>
               <div className="text-left">
-                <div className="font-semibold text-accent text-lg">{current.author}</div>
-                <div className="text-muted-foreground">{current.title}</div>
-                <div className="text-primary font-medium text-sm">{current.company}</div>
+                              <div className="font-semibold text-accent text-lg">
+                {TestimonialUtils.formatClientName(current?.clientName || '')}
+              </div>
+              <div className="text-primary font-medium text-sm">{current?.company}</div>
               </div>
             </div>
 
             <div className="flex justify-center mb-8">
-              {[...Array(current.rating)].map((_, i) => (
+              {[...Array(current?.rating || 0)].map((_, i) => (
                 <Star key={i} className="w-6 h-6 text-secondary fill-current" />
               ))}
             </div>
@@ -130,22 +194,12 @@ const TestimonialsSection = () => {
 
         {/* Stats Grid */}
         <div className="grid md:grid-cols-4 gap-8 animate-fade-up">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-primary mb-2">500+</div>
-            <div className="text-muted-foreground">Leaders Coached</div>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-primary mb-2">98%</div>
-            <div className="text-muted-foreground">Success Rate</div>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-primary mb-2">150+</div>
-            <div className="text-muted-foreground">Companies Served</div>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-primary mb-2">5</div>
-            <div className="text-muted-foreground">Years Experience</div>
-          </div>
+          {displayStats.map((stat, index) => (
+            <div key={index} className="text-center">
+              <div className="text-4xl font-bold text-primary mb-2">{stat.value}</div>
+              <div className="text-muted-foreground">{stat.label}</div>
+            </div>
+          ))}
         </div>
 
         {/* CTA Section */}

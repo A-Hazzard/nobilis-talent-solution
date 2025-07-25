@@ -8,7 +8,6 @@ import {
   deleteDoc, 
   query, 
   where, 
-  orderBy, 
   limit, 
   serverTimestamp,
   increment
@@ -29,6 +28,10 @@ export class ResourcesService {
   private readonly acceptedFileTypes = {
     pdf: ['.pdf'],
     docx: ['.docx', '.doc'],
+    article: ['.pdf', '.docx', '.doc', '.txt', '.md'],
+    whitepaper: ['.pdf', '.docx', '.doc'],
+    template: ['.pdf', '.docx', '.doc', '.xlsx', '.xls'],
+    toolkit: ['.pdf', '.docx', '.doc', '.zip', '.rar'],
     image: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'],
     video: ['.mp4', '.mov', '.avi', '.webm', '.mkv'],
     audio: ['.mp3', '.wav', '.ogg', '.m4a', '.aac']
@@ -37,6 +40,10 @@ export class ResourcesService {
   private readonly maxFileSizes = {
     pdf: 10 * 1024 * 1024, // 10MB
     docx: 10 * 1024 * 1024, // 10MB
+    article: 10 * 1024 * 1024, // 10MB
+    whitepaper: 10 * 1024 * 1024, // 10MB
+    template: 10 * 1024 * 1024, // 10MB
+    toolkit: 50 * 1024 * 1024, // 50MB
     image: 5 * 1024 * 1024, // 5MB
     video: 100 * 1024 * 1024, // 100MB
     audio: 20 * 1024 * 1024 // 20MB
@@ -91,8 +98,11 @@ export class ResourcesService {
     // Organize files by type in Firebase Storage
     switch (type) {
       case 'pdf':
-        return `resources/documents/${fileName}`;
       case 'docx':
+      case 'article':
+      case 'whitepaper':
+      case 'template':
+      case 'toolkit':
         return `resources/documents/${fileName}`;
       case 'image':
         return `resources/images/${fileName}`;
@@ -118,22 +128,16 @@ export class ResourcesService {
     try {
       const { category, type, isPublic, limit: pageLimit, search } = options;
       
-      // Build query
+      // Build query - avoid composite indexes by using minimal constraints
       const constraints = [];
       
-      if (category) {
-        constraints.push(where('category', '==', category));
-      }
-      
-      if (type) {
-        constraints.push(where('type', '==', type));
-      }
-      
+      // Prioritize isPublic filter as it's most important for content page
       if (isPublic !== undefined) {
         constraints.push(where('isPublic', '==', isPublic));
       }
       
-      constraints.push(orderBy('createdAt', 'desc'));
+      // Don't use orderBy in Firestore query to avoid composite index issues
+      // We'll sort in memory instead
       
       if (pageLimit) {
         constraints.push(limit(pageLimit));
@@ -149,6 +153,15 @@ export class ResourcesService {
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
       })) as Resource[];
       
+      // Apply additional filters in memory to avoid composite index issues
+      if (category) {
+        resources = resources.filter(resource => resource.category === category);
+      }
+      
+      if (type) {
+        resources = resources.filter(resource => resource.type === type);
+      }
+      
       // Apply search filter if provided
       if (search) {
         const searchLower = search.toLowerCase();
@@ -157,6 +170,9 @@ export class ResourcesService {
           resource.description.toLowerCase().includes(searchLower)
         );
       }
+      
+      // Always sort by createdAt in memory
+      resources.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       
       return { resources };
     } catch (error) {

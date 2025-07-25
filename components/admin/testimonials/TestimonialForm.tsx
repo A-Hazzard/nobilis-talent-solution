@@ -46,7 +46,7 @@ export function TestimonialForm({
 }: TestimonialFormProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[95vw] max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Edit Testimonial' : 'Add New Testimonial'}</DialogTitle>
           <DialogDescription>
@@ -54,38 +54,38 @@ export function TestimonialForm({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="clientName" className="text-right">Client Name</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+            <Label htmlFor="clientName" className="text-sm sm:text-base sm:text-right">Client Name</Label>
             <Input
               id="clientName"
               value={formData.clientName}
               onChange={(e) => setFormData({ clientName: e.target.value })}
-              className="col-span-3"
+              className="col-span-1 sm:col-span-3 text-sm sm:text-base"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="company" className="text-right">Company</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+            <Label htmlFor="company" className="text-sm sm:text-base sm:text-right">Company</Label>
             <Input
               id="company"
               value={formData.company}
               onChange={(e) => setFormData({ company: e.target.value })}
-              className="col-span-3"
+              className="col-span-1 sm:col-span-3 text-sm sm:text-base"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="content" className="text-right">Content</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+            <Label htmlFor="content" className="text-sm sm:text-base sm:text-right">Content</Label>
             <Textarea
               id="content"
               value={formData.content}
               onChange={(e) => setFormData({ content: e.target.value })}
-              className="col-span-3"
+              className="col-span-1 sm:col-span-3 text-sm sm:text-base"
               rows={4}
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="rating" className="text-right">Rating</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+            <Label htmlFor="rating" className="text-sm sm:text-base sm:text-right">Rating</Label>
             <Select value={formData.rating.toString()} onValueChange={(value) => setFormData({ rating: parseInt(value) })}>
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="col-span-1 sm:col-span-3 text-sm sm:text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -97,10 +97,10 @@ export function TestimonialForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="isPublic" className="text-right">Status</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+            <Label htmlFor="isPublic" className="text-sm sm:text-base sm:text-right">Status</Label>
             <Select value={formData.isPublic.toString()} onValueChange={(value) => setFormData({ isPublic: value === 'true' })}>
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="col-span-1 sm:col-span-3 text-sm sm:text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -109,9 +109,10 @@ export function TestimonialForm({
               </SelectContent>
             </Select>
           </div>
+
         </div>
         <DialogFooter>
-          <Button type="submit" onClick={onSubmit} disabled={isSubmitting}>
+          <Button type="submit" onClick={onSubmit} disabled={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting ? (isEdit ? 'Updating...' : 'Adding...') : (isEdit ? 'Update Testimonial' : 'Add Testimonial')}
           </Button>
         </DialogFooter>

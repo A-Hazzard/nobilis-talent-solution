@@ -5,7 +5,7 @@ import type { Analytics } from '@/shared/types/entities';
 
 export class AnalyticsService {
   private leadsService = new LeadsService();
-  private testimonialsService = new TestimonialsService();
+  private testimonialsService = TestimonialsService.getInstance();
   private resourcesService = new ResourcesService();
 
   /**

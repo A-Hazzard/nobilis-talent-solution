@@ -62,7 +62,7 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
     isSubmitting: false,
   });
 
-  const testimonialsService = new TestimonialsService();
+  const testimonialsService = TestimonialsService.getInstance();
 
   const loadTestimonials = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -218,6 +218,8 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
     }
   }, [testimonialsService, loadTestimonials]);
 
+
+
   const openEditDialog = useCallback((testimonial: Testimonial) => {
     setState(prev => ({
       ...prev,
@@ -278,6 +280,8 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
       text: 'Draft'
     };
   }, []);
+
+
 
   const renderStars = useCallback((rating: number) => {
     return Array.from({ length: 5 }, (_, i) => i < rating ? 1 : 0);

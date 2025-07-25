@@ -8,15 +8,27 @@ import {
   deleteDoc, 
   query, 
   where, 
-  orderBy, 
-  limit, 
+  limit as firestoreLimit, 
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Testimonial } from '@/shared/types/entities';
 
 export class TestimonialsService {
+  private static instance: TestimonialsService;
   private collectionName = 'testimonials';
+
+  private constructor() {}
+
+  /**
+   * Get singleton instance of TestimonialsService
+   */
+  static getInstance(): TestimonialsService {
+    if (!TestimonialsService.instance) {
+      TestimonialsService.instance = new TestimonialsService();
+    }
+    return TestimonialsService.instance;
+  }
 
   /**
    * Get all testimonials with filtering
@@ -29,20 +41,19 @@ export class TestimonialsService {
     try {
       const { isPublic, limit: pageLimit, search } = options;
       
-      // Build query
-      const constraints = [];
+      // Build query - avoid composite index by not combining filter and orderBy
+      let q = query(collection(db, this.collectionName));
       
       if (isPublic !== undefined) {
-        constraints.push(where('isPublic', '==', isPublic));
+        q = query(q, where('isPublic', '==', isPublic));
       }
       
-      constraints.push(orderBy('createdAt', 'desc'));
+      // Don't add orderBy here to avoid composite index requirement
+      // We'll sort in memory instead
       
       if (pageLimit) {
-        constraints.push(limit(pageLimit));
+        q = query(q, firestoreLimit(pageLimit * 2)); // Get more to account for sorting
       }
-      
-      const q = query(collection(db, this.collectionName), ...constraints);
       const snapshot = await getDocs(q);
       
       let testimonials: Testimonial[] = snapshot.docs.map(doc => ({
@@ -52,6 +63,9 @@ export class TestimonialsService {
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
       })) as Testimonial[];
       
+      // Sort by creation date (newest first) in memory
+      testimonials.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
       // Apply search filter if provided
       if (search) {
         const searchLower = search.toLowerCase();
@@ -60,6 +74,11 @@ export class TestimonialsService {
           testimonial.company.toLowerCase().includes(searchLower) ||
           testimonial.content.toLowerCase().includes(searchLower)
         );
+      }
+      
+      // Apply limit after sorting and filtering
+      if (pageLimit) {
+        testimonials = testimonials.slice(0, pageLimit);
       }
       
       return { testimonials };
@@ -168,7 +187,70 @@ export class TestimonialsService {
    * Get public testimonials for display
    */
   async getPublicTestimonials(limit?: number): Promise<{ testimonials: Testimonial[]; error?: string }> {
-    return this.getAll({ isPublic: true, limit });
+    try {
+      // Build query with only the isPublic filter first, then sort in memory
+      let q = query(collection(db, this.collectionName), where('isPublic', '==', true));
+      
+      if (limit) {
+        q = query(q, firestoreLimit(limit * 2)); // Get more than needed to account for sorting
+      }
+      const snapshot = await getDocs(q);
+      
+      let testimonials: Testimonial[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      })) as Testimonial[];
+      
+      // Sort by creation date (newest first) in memory
+      testimonials.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      // Apply limit after sorting
+      if (limit) {
+        testimonials = testimonials.slice(0, limit);
+      }
+      
+      return { testimonials };
+    } catch (error) {
+      console.error('Error fetching public testimonials:', error);
+      return { testimonials: [], error: 'Failed to fetch public testimonials' };
+    }
+  }
+
+  /**
+   * Get testimonials to show on homepage
+   */
+  async getHomepageTestimonials(limit?: number): Promise<{ testimonials: Testimonial[]; error?: string }> {
+    try {
+      // Build query for homepage testimonials (only public ones)
+      let q = query(collection(db, this.collectionName), where('isPublic', '==', true));
+      
+      if (limit) {
+        q = query(q, firestoreLimit(limit * 2)); // Get more than needed to account for sorting
+      }
+      const snapshot = await getDocs(q);
+      
+      let testimonials: Testimonial[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      })) as Testimonial[];
+      
+      // Sort by creation date (newest first) in memory
+      testimonials.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      // Apply limit after sorting
+      if (limit) {
+        testimonials = testimonials.slice(0, limit);
+      }
+      
+      return { testimonials };
+    } catch (error) {
+      console.error('Error fetching homepage testimonials:', error);
+      return { testimonials: [], error: 'Failed to fetch homepage testimonials' };
+    }
   }
 
   /**

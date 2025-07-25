@@ -53,8 +53,8 @@ export type Resource = {
   id: string;
   title: string;
   description: string;
-  type: 'pdf' | 'docx' | 'image' | 'video' | 'audio';
-  category: 'leadership' | 'team-building' | 'communication' | 'strategy' | 'other';
+  type: 'pdf' | 'docx' | 'image' | 'video' | 'audio' | 'article' | 'whitepaper' | 'template' | 'toolkit';
+  category: 'videos' | 'articles' | 'pdfs' | 'whitepapers' | 'leadership' | 'team-building' | 'communication' | 'strategy' | 'other';
   fileUrl: string;
   thumbnailUrl?: string;
   duration?: number; // for videos in seconds
@@ -64,6 +64,36 @@ export type Resource = {
   createdAt: Date;
   updatedAt: Date;
   createdBy: string; // user ID
+  tags?: string[]; // Additional tags for better categorization
+  featured?: boolean; // Whether this resource should be featured
+};
+
+export type BlogPost = {
+  id: string;
+  title: string;
+  slug: string; // URL-friendly version of title
+  content: string; // Rich text content
+  excerpt: string; // Short description for preview
+  featuredImage?: string; // URL to featured image
+  author: string; // user ID
+  authorName: string; // Display name of author
+  category: string;
+  tags: string[];
+  status: 'draft' | 'published' | 'archived';
+  publishedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  viewCount: number;
+  readTime?: number; // Estimated reading time in minutes
+  seoTitle?: string;
+  seoDescription?: string;
+  // Resources and references
+  resources?: string[]; // Array of resource IDs from the database
+  references?: Array<{
+    title: string;
+    url: string;
+    description?: string;
+  }>; // External references/links
 };
 
 export type Testimonial = {
@@ -72,7 +102,7 @@ export type Testimonial = {
   company: string;
   content: string;
   rating: number; // 1-5 stars
-  isPublic: boolean;
+  isPublic: boolean; // Whether to show on main homepage
   createdAt: Date;
   updatedAt: Date;
 };

@@ -10,6 +10,7 @@ import {
   FileText,
   Calendar,
   Star,
+  PenTool,
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -27,6 +28,11 @@ const sidebarItems = [
     title: 'Resources',
     href: '/admin/resources',
     icon: FileText,
+  },
+  {
+    title: 'Blog',
+    href: '/admin/blog',
+    icon: PenTool,
   },
   {
     title: 'Testimonials',

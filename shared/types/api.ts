@@ -91,8 +91,112 @@ export type FileUploadResponse = {
   size: number;
 };
 
-// Generic API Response
-export type ApiResponse<T> = {
+// Resource API Types
+export type GetResourcesRequest = {
+  category?: string;
+  type?: string;
+  search?: string;
+  limit?: number;
+  featured?: boolean;
+};
+
+export type GetResourcesResponse = {
+  resources: Array<{
+    id: string;
+    title: string;
+    description: string;
+    type: string;
+    category: string;
+    fileUrl: string;
+    thumbnailUrl?: string;
+    downloadCount: number;
+    createdAt: string;
+    tags?: string[];
+    featured?: boolean;
+  }>;
+  total: number;
+  error?: string;
+};
+
+export type DownloadResourceRequest = {
+  resourceId: string;
+};
+
+export type DownloadResourceResponse = {
+  success: boolean;
+  downloadUrl?: string;
+  error?: string;
+};
+
+// Blog API Types
+export type GetBlogPostsRequest = {
+  category?: string;
+  tag?: string;
+  search?: string;
+  limit?: number;
+  status?: 'published' | 'draft' | 'archived';
+};
+
+export type GetBlogPostsResponse = {
+  posts: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string;
+    featuredImage?: string;
+    authorName: string;
+    category: string;
+    tags: string[];
+    publishedAt: string;
+    viewCount: number;
+    readTime?: number;
+  }>;
+  total: number;
+  error?: string;
+};
+
+export type GetBlogPostRequest = {
+  slug: string;
+};
+
+export type GetBlogPostResponse = {
+  post?: {
+    id: string;
+    title: string;
+    slug: string;
+    content: string;
+    excerpt: string;
+    featuredImage?: string;
+    authorName: string;
+    category: string;
+    tags: string[];
+    publishedAt: string;
+    viewCount: number;
+    readTime?: number;
+    seoTitle?: string;
+    seoDescription?: string;
+  };
+  error?: string;
+};
+
+
+
+export type CreateBlogPostRequest = {
+  title: string;
+  content: string;
+  excerpt: string;
+  category: string;
+  tags: string[];
+  status: 'draft' | 'published';
+  featuredImage?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+};
+
+export type UpdateBlogPostRequest = Partial<CreateBlogPostRequest>;
+
+// Common API Response
+export type ApiResponse<T = any> = {
   success: boolean;
   data?: T;
   error?: string;

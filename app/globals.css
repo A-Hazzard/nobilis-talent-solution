@@ -345,11 +345,432 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
   }
   50% {
-    box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
   }
 }
 
- 
+@keyframes card-hover {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    transform: translateY(-8px) scale(1.02);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Resources page specific animations */
+.resource-card {
+  animation: fade-in-up 0.6s ease-out;
+}
+
+.resource-card:hover {
+  animation: card-hover 0.3s ease-out forwards;
+}
+
+.featured-card {
+  animation: fade-in-up 0.6s ease-out;
+  animation-delay: 0.1s;
+}
+
+.featured-card:hover {
+  animation: card-hover 0.3s ease-out forwards;
+}
+
+.search-container {
+  animation: slide-in-left 0.6s ease-out;
+}
+
+.stats-container {
+  animation: slide-in-right 0.6s ease-out;
+  animation-delay: 0.2s;
+}
+
+.hero-stagger > * {
+  animation: fade-in-up 0.8s ease-out;
+}
+
+.hero-stagger > *:nth-child(1) { animation-delay: 0.1s; }
+.hero-stagger > *:nth-child(2) { animation-delay: 0.3s; }
+.hero-stagger > *:nth-child(3) { animation-delay: 0.5s; }
+.hero-stagger > *:nth-child(4) { animation-delay: 0.7s; }
+
+/* Shimmer loading effect */
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient text animations */
+.gradient-text {
+  background: linear-gradient(135deg, hsl(176 84% 47%), hsl(264 83% 70%));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 3s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Rich Text Editor Prose Styles */
+@layer components {
+  .prose {
+    @apply text-foreground;
+  }
+  
+  .prose h1 {
+    @apply text-3xl font-bold text-foreground mb-4 mt-6;
+  }
+  
+  .prose h2 {
+    @apply text-2xl font-bold text-foreground mb-3 mt-5;
+  }
+  
+  .prose h3 {
+    @apply text-xl font-semibold text-foreground mb-2 mt-4;
+  }
+  
+  .prose p {
+    @apply text-foreground mb-4 leading-relaxed;
+  }
+  
+  .prose ul {
+    @apply list-disc list-inside mb-4 space-y-1;
+  }
+  
+  .prose ol {
+    @apply list-decimal list-inside mb-4 space-y-1;
+  }
+  
+  .prose li {
+    @apply text-foreground;
+  }
+  
+  .prose strong {
+    @apply font-bold text-foreground;
+  }
+  
+  .prose em {
+    @apply italic text-foreground;
+  }
+  
+  .prose a {
+    @apply text-blue-600 underline hover:text-blue-800;
+  }
+  
+  .prose blockquote {
+    @apply border-l-4 border-primary pl-4 italic text-muted-foreground;
+  }
+  
+  .prose code {
+    @apply bg-muted px-1 py-0.5 rounded text-sm font-mono;
+  }
+  
+  .prose pre {
+    @apply bg-muted p-4 rounded-lg overflow-x-auto;
+  }
+  
+  .prose img {
+    @apply max-w-full h-auto rounded-lg;
+  }
+  
+  .prose table {
+    @apply w-full border-collapse border border-border;
+  }
+  
+  .prose th,
+  .prose td {
+    @apply border border-border px-4 py-2 text-left;
+  }
+  
+  .prose th {
+    @apply bg-muted font-semibold;
+  }
+  
+  /* TipTap Editor Specific Styles */
+  .ProseMirror {
+    @apply outline-none;
+  }
+  
+  /* Font Size Styles for TipTap - Fixed */
+  .ProseMirror span[style*="font-size"] {
+    font-size: inherit !important;
+  }
+  
+  .ProseMirror [data-font-size="12px"] {
+    font-size: 12px !important;
+  }
+  
+  .ProseMirror [data-font-size="16px"] {
+    font-size: 16px !important;
+  }
+  
+  .ProseMirror [data-font-size="18px"] {
+    font-size: 18px !important;
+  }
+  
+  .ProseMirror [data-font-size="24px"] {
+    font-size: 24px !important;
+  }
+  
+  .ProseMirror [data-font-size="32px"] {
+    font-size: 32px !important;
+  }
+  
+  /* List Styles for TipTap - Fixed */
+  .ProseMirror ul {
+    list-style-type: disc !important;
+    padding-left: 2rem !important;
+    margin: 0.5rem 0 !important;
+  }
+  
+  .ProseMirror ol {
+    list-style-type: decimal !important;
+    padding-left: 2rem !important;
+    margin: 0.5rem 0 !important;
+  }
+  
+  .ProseMirror li {
+    margin: 0.25rem 0 !important;
+    display: list-item !important;
+  }
+  
+  .ProseMirror li p {
+    margin: 0 !important;
+    display: inline !important;
+  }
+  
+  /* Heading Styles for TipTap */
+  .ProseMirror h1 {
+    font-size: 2rem !important;
+    font-weight: bold !important;
+    margin: 1rem 0 0.5rem 0 !important;
+    line-height: 1.2 !important;
+  }
+  
+  .ProseMirror h2 {
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    margin: 0.75rem 0 0.5rem 0 !important;
+    line-height: 1.3 !important;
+  }
+  
+  .ProseMirror h3 {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    margin: 0.5rem 0 0.25rem 0 !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Text Color Styles - Fixed */
+  .ProseMirror [style*="color"] {
+    color: inherit !important;
+  }
+  
+  /* Highlight Styles - Fixed */
+  .ProseMirror mark {
+    background-color: inherit !important;
+    padding: 0.1rem 0.2rem !important;
+    border-radius: 0.2rem !important;
+  }
+  
+  /* Specific highlight colors */
+  .ProseMirror mark[style*="background-color: #fef3c7"] {
+    background-color: #fef3c7 !important;
+  }
+  
+  .ProseMirror mark[style*="background-color: #dcfce7"] {
+    background-color: #dcfce7 !important;
+  }
+  
+  .ProseMirror mark[style*="background-color: #dbeafe"] {
+    background-color: #dbeafe !important;
+  }
+  
+  .ProseMirror mark[style*="background-color: #fce7f3"] {
+    background-color: #fce7f3 !important;
+  }
+  
+  .ProseMirror mark[style*="background-color: #fed7aa"] {
+    background-color: #fed7aa !important;
+  }
+  
+  .ProseMirror mark[style*="background-color: #e9d5ff"] {
+    background-color: #e9d5ff !important;
+  }
+  
+  /* Override any conflicting styles */
+  .ProseMirror * {
+    box-sizing: border-box;
+  }
+  
+  /* Ensure proper list rendering */
+  .ProseMirror ul li::marker {
+    color: currentColor;
+  }
+  
+  .ProseMirror ol li::marker {
+    color: currentColor;
+  }
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Additional TipTap Editor Fixes */
+.ProseMirror {
+  min-height: 200px;
+  padding: 1rem;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* Fix font size display */
+.ProseMirror span[style*="font-size"] {
+  font-size: inherit !important;
+}
+
+.ProseMirror [style*="font-size: 12px"] {
+  font-size: 12px !important;
+}
+
+.ProseMirror [style*="font-size: 16px"] {
+  font-size: 16px !important;
+}
+
+.ProseMirror [style*="font-size: 18px"] {
+  font-size: 18px !important;
+}
+
+.ProseMirror [style*="font-size: 24px"] {
+  font-size: 24px !important;
+}
+
+.ProseMirror [style*="font-size: 32px"] {
+  font-size: 32px !important;
+}
+
+/* Fix list display */
+.ProseMirror ul {
+  list-style-type: disc !important;
+  padding-left: 2rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal !important;
+  padding-left: 2rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.ProseMirror li {
+  margin: 0.25rem 0 !important;
+  display: list-item !important;
+}
+
+.ProseMirror li p {
+  margin: 0 !important;
+  display: inline !important;
+}
+
+/* Fix highlight colors */
+.ProseMirror mark[style*="background-color: #fef3c7"] {
+  background-color: #fef3c7 !important;
+}
+
+.ProseMirror mark[style*="background-color: #dcfce7"] {
+  background-color: #dcfce7 !important;
+}
+
+.ProseMirror mark[style*="background-color: #dbeafe"] {
+  background-color: #dbeafe !important;
+}
+
+.ProseMirror mark[style*="background-color: #fce7f3"] {
+  background-color: #fce7f3 !important;
+}
+
+.ProseMirror mark[style*="background-color: #fed7aa"] {
+  background-color: #fed7aa !important;
+}
+
+.ProseMirror mark[style*="background-color: #e9d5ff"] {
+  background-color: #e9d5ff !important;
+}

@@ -69,6 +69,7 @@ export default function ContentPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -157,6 +158,62 @@ export default function ContentPage() {
 
 
 
+  // Debounced search effect - only search if 3+ characters or Enter pressed
+  useEffect(() => {
+    // Don't search if less than 3 characters (unless it's empty to show all)
+    if (searchTerm.length > 0 && searchTerm.length < 3) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // Increased delay to 500ms
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Search effect
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm) return; // Only search when debounced term matches current term
+    
+    const performSearch = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [blogResponse, resourcesResponse] = await Promise.all([
+          blogService.getAll({ search: debouncedSearchTerm || undefined }),
+          resourcesService.getAll({ search: debouncedSearchTerm || undefined })
+        ]);
+        
+        if (blogResponse.error) {
+          setError(blogResponse.error);
+        } else {
+          setPosts(blogResponse.posts);
+        }
+        
+        if (resourcesResponse.error) {
+          console.error('Failed to load resources:', resourcesResponse.error);
+        } else {
+          setResources(resourcesResponse.resources);
+        }
+      } catch (_err) {
+        console.error('Failed to search data:', _err);
+        setError('Failed to search data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    performSearch();
+  }, [debouncedSearchTerm]);
+
+  // Handle Enter key press for immediate search
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setDebouncedSearchTerm(searchTerm);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -166,8 +223,8 @@ export default function ContentPage() {
     setError(null);
     try {
       const [blogResponse, resourcesResponse] = await Promise.all([
-        blogService.getAll({ search: searchTerm || undefined }),
-        resourcesService.getAll({ search: searchTerm || undefined })
+        blogService.getAll({}), // Load all posts without search filter
+        resourcesService.getAll({}) // Load all resources without search filter
       ]);
       
       if (blogResponse.error) {
@@ -984,15 +1041,30 @@ export default function ContentPage() {
       {/* Search */}
       <Card>
         <CardContent className="p-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search content..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search content... (type 3+ characters or press Enter)"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                className="pl-10"
+              />
+            </div>
+            <Button 
+              onClick={() => setDebouncedSearchTerm(searchTerm)}
+              disabled={isLoading}
+              className="px-6"
+            >
+              {isLoading ? 'Searching...' : 'Search'}
+            </Button>
           </div>
+          {searchTerm.length > 0 && searchTerm.length < 3 && (
+            <p className="text-sm text-gray-500 mt-2">
+              Type at least 3 characters or press Enter to search
+            </p>
+          )}
         </CardContent>
       </Card>
 

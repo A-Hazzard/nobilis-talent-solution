@@ -40,8 +40,14 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* CTA Button - Desktop */}
-          <div className="hidden md:block">
+          {/* CTA Buttons - Desktop */}
+          <div className="hidden md:block flex items-center space-x-4">
+            <a
+              href="/payment"
+              className="btn-secondary"
+            >
+              Pay
+            </a>
             <a
               href="#contact"
               className="btn-primary"
@@ -75,7 +81,14 @@ const Navigation = () => {
                   {link.label}
                 </a>
               ))}
-              <div className="pt-4">
+              <div className="pt-4 space-y-3">
+                <a
+                  href="/payment"
+                  className="btn-secondary w-full text-center block"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Pay
+                </a>
                 <a
                   href="#contact"
                   className="btn-primary w-full text-center block"

@@ -82,7 +82,6 @@ export default function ContentPage() {
   const [contentType, setContentType] = useState<'blog' | 'resource'>('blog');
   
   // Resource management state
-  const [isAddResourceDialogOpen, setIsAddResourceDialogOpen] = useState(false);
   const [isEditResourceDialogOpen, setIsEditResourceDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
   const [selectedResourceFile, setSelectedResourceFile] = useState<File | null>(null);
@@ -400,7 +399,7 @@ export default function ContentPage() {
         toast.error(response.error);
       } else {
         toast.success("Resource created successfully");
-        setIsAddResourceDialogOpen(false);
+        setIsEditResourceDialogOpen(false);
         resetResourceForm();
         await loadData();
       }
@@ -1182,157 +1181,7 @@ export default function ContentPage() {
               <h2 className="text-2xl font-bold text-gray-900">Resources</h2>
               <p className="text-gray-600">Manage downloadable resources and materials</p>
             </div>
-            <Dialog open={isAddResourceDialogOpen} onOpenChange={setIsAddResourceDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setIsAddResourceDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Resource
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Add New Resource</DialogTitle>
-                  <DialogDescription>
-                    Upload a new resource file or add a video link.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-6 py-4">
-                  {/* Resource Type */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-type" className="text-right">Type *</Label>
-                    <Select value={resourceFormData.type} onValueChange={(value: Resource['type']) => setResourceFormData({ ...resourceFormData, type: value })}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {resourceTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Resource Category */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-category" className="text-right">Category *</Label>
-                    <Select value={resourceFormData.category} onValueChange={(value: Resource['category']) => setResourceFormData({ ...resourceFormData, category: value })}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {resourceCategories.map((category) => (
-                          <SelectItem key={category.value} value={category.value}>
-                            {category.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Title */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-title" className="text-right">Title *</Label>
-                    <Input
-                      id="resource-title"
-                      value={resourceFormData.title}
-                      onChange={(e) => setResourceFormData({ ...resourceFormData, title: e.target.value })}
-                      className="col-span-3"
-                      placeholder="Enter resource title"
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div className="grid grid-cols-4 items-start gap-4">
-                    <Label htmlFor="resource-description" className="text-right pt-2">Description *</Label>
-                    <Textarea
-                      id="resource-description"
-                      value={resourceFormData.description}
-                      onChange={(e) => setResourceFormData({ ...resourceFormData, description: e.target.value })}
-                      className="col-span-3"
-                      rows={3}
-                      placeholder="Enter resource description"
-                    />
-                  </div>
-
-                  {/* File Upload or Video URL */}
-                  {resourceFormData.type === 'video' ? (
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="video-url" className="text-right">Video URL *</Label>
-                      <Input
-                        id="video-url"
-                        value={resourceFormData.description}
-                        onChange={(e) => setResourceFormData({ ...resourceFormData, description: e.target.value })}
-                        className="col-span-3"
-                        placeholder="Enter YouTube or video URL"
-                      />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="resource-file" className="text-right">File *</Label>
-                      <div className="col-span-3">
-                        <Input
-                          id="resource-file"
-                          type="file"
-                          onChange={(e) => setSelectedResourceFile(e.target.files?.[0] || null)}
-                          accept={resourceFormData.type === 'pdf' ? '.pdf' : 
-                                 resourceFormData.type === 'docx' ? '.docx,.doc' :
-                                 resourceFormData.type === 'image' ? '.jpg,.jpeg,.png,.gif,.webp' :
-                                 resourceFormData.type === 'audio' ? '.mp3,.wav,.ogg,.m4a' : '*'}
-                        />
-                        {selectedResourceFile && (
-                          <p className="text-sm text-gray-500 mt-1">
-                            Selected: {selectedResourceFile.name} ({formatFileSize(selectedResourceFile.size)})
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tags */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-tags" className="text-right">Tags</Label>
-                    <Input
-                      id="resource-tags"
-                      value={resourceFormData.tags.join(', ')}
-                      onChange={(e) => setResourceFormData({ 
-                        ...resourceFormData, 
-                        tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-                      })}
-                      className="col-span-3"
-                      placeholder="Add tags (comma separated)"
-                    />
-                  </div>
-
-                  {/* Public/Private */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-public" className="text-right">Visibility</Label>
-                    <Select value={resourceFormData.isPublic ? 'public' : 'private'} onValueChange={(value) => setResourceFormData({ ...resourceFormData, isPublic: value === 'public' })}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="public">Public</SelectItem>
-                        <SelectItem value="private">Private</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddResourceDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    onClick={handleAddResource}
-                    disabled={isUploading}
-                  >
-                    {isUploading ? 'Uploading...' : 'Add Resource'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            {/* Removed Add Resource Button here */}
           </div>
 
           {/* No Data State */}
@@ -1346,7 +1195,7 @@ export default function ContentPage() {
                     {searchTerm ? 'Try adjusting your search terms.' : 'Get started by uploading your first resource.'}
                   </p>
                   {!searchTerm && (
-                    <Button onClick={() => setIsAddResourceDialogOpen(true)}>
+                    <Button onClick={() => setIsAddDialogOpen(true)}>
                       <Plus className="mr-2 h-4 w-4" />
                       Upload Your First Resource
                     </Button>

@@ -31,7 +31,7 @@ const sidebarItems = [
     icon: FileText,
   },
   {
-    title: 'Blog',
+    title: 'Content', // Renamed from 'Blog'
     href: '/admin/blog',
     icon: PenTool,
   },

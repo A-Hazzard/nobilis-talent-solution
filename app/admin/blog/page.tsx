@@ -69,6 +69,7 @@ export default function ContentPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -81,7 +82,6 @@ export default function ContentPage() {
   const [contentType, setContentType] = useState<'blog' | 'resource'>('blog');
   
   // Resource management state
-  const [isAddResourceDialogOpen, setIsAddResourceDialogOpen] = useState(false);
   const [isEditResourceDialogOpen, setIsEditResourceDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
   const [selectedResourceFile, setSelectedResourceFile] = useState<File | null>(null);
@@ -157,6 +157,62 @@ export default function ContentPage() {
 
 
 
+  // Debounced search effect - only search if 3+ characters or Enter pressed
+  useEffect(() => {
+    // Don't search if less than 3 characters (unless it's empty to show all)
+    if (searchTerm.length > 0 && searchTerm.length < 3) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // Increased delay to 500ms
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Search effect
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm) return; // Only search when debounced term matches current term
+    
+    const performSearch = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [blogResponse, resourcesResponse] = await Promise.all([
+          blogService.getAll({ search: debouncedSearchTerm || undefined }),
+          resourcesService.getAll({ search: debouncedSearchTerm || undefined })
+        ]);
+        
+        if (blogResponse.error) {
+          setError(blogResponse.error);
+        } else {
+          setPosts(blogResponse.posts);
+        }
+        
+        if (resourcesResponse.error) {
+          console.error('Failed to load resources:', resourcesResponse.error);
+        } else {
+          setResources(resourcesResponse.resources);
+        }
+      } catch (_err) {
+        console.error('Failed to search data:', _err);
+        setError('Failed to search data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    performSearch();
+  }, [debouncedSearchTerm]);
+
+  // Handle Enter key press for immediate search
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setDebouncedSearchTerm(searchTerm);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -166,8 +222,8 @@ export default function ContentPage() {
     setError(null);
     try {
       const [blogResponse, resourcesResponse] = await Promise.all([
-        blogService.getAll({ search: searchTerm || undefined }),
-        resourcesService.getAll({ search: searchTerm || undefined })
+        blogService.getAll({}), // Load all posts without search filter
+        resourcesService.getAll({}) // Load all resources without search filter
       ]);
       
       if (blogResponse.error) {
@@ -343,7 +399,7 @@ export default function ContentPage() {
         toast.error(response.error);
       } else {
         toast.success("Resource created successfully");
-        setIsAddResourceDialogOpen(false);
+        setIsEditResourceDialogOpen(false);
         resetResourceForm();
         await loadData();
       }
@@ -984,15 +1040,30 @@ export default function ContentPage() {
       {/* Search */}
       <Card>
         <CardContent className="p-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search content..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search content... (type 3+ characters or press Enter)"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                className="pl-10"
+              />
+            </div>
+            <Button 
+              onClick={() => setDebouncedSearchTerm(searchTerm)}
+              disabled={isLoading}
+              className="px-6"
+            >
+              {isLoading ? 'Searching...' : 'Search'}
+            </Button>
           </div>
+          {searchTerm.length > 0 && searchTerm.length < 3 && (
+            <p className="text-sm text-gray-500 mt-2">
+              Type at least 3 characters or press Enter to search
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -1110,157 +1181,7 @@ export default function ContentPage() {
               <h2 className="text-2xl font-bold text-gray-900">Resources</h2>
               <p className="text-gray-600">Manage downloadable resources and materials</p>
             </div>
-            <Dialog open={isAddResourceDialogOpen} onOpenChange={setIsAddResourceDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setIsAddResourceDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Resource
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Add New Resource</DialogTitle>
-                  <DialogDescription>
-                    Upload a new resource file or add a video link.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-6 py-4">
-                  {/* Resource Type */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-type" className="text-right">Type *</Label>
-                    <Select value={resourceFormData.type} onValueChange={(value: Resource['type']) => setResourceFormData({ ...resourceFormData, type: value })}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {resourceTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Resource Category */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-category" className="text-right">Category *</Label>
-                    <Select value={resourceFormData.category} onValueChange={(value: Resource['category']) => setResourceFormData({ ...resourceFormData, category: value })}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {resourceCategories.map((category) => (
-                          <SelectItem key={category.value} value={category.value}>
-                            {category.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Title */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-title" className="text-right">Title *</Label>
-                    <Input
-                      id="resource-title"
-                      value={resourceFormData.title}
-                      onChange={(e) => setResourceFormData({ ...resourceFormData, title: e.target.value })}
-                      className="col-span-3"
-                      placeholder="Enter resource title"
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div className="grid grid-cols-4 items-start gap-4">
-                    <Label htmlFor="resource-description" className="text-right pt-2">Description *</Label>
-                    <Textarea
-                      id="resource-description"
-                      value={resourceFormData.description}
-                      onChange={(e) => setResourceFormData({ ...resourceFormData, description: e.target.value })}
-                      className="col-span-3"
-                      rows={3}
-                      placeholder="Enter resource description"
-                    />
-                  </div>
-
-                  {/* File Upload or Video URL */}
-                  {resourceFormData.type === 'video' ? (
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="video-url" className="text-right">Video URL *</Label>
-                      <Input
-                        id="video-url"
-                        value={resourceFormData.description}
-                        onChange={(e) => setResourceFormData({ ...resourceFormData, description: e.target.value })}
-                        className="col-span-3"
-                        placeholder="Enter YouTube or video URL"
-                      />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="resource-file" className="text-right">File *</Label>
-                      <div className="col-span-3">
-                        <Input
-                          id="resource-file"
-                          type="file"
-                          onChange={(e) => setSelectedResourceFile(e.target.files?.[0] || null)}
-                          accept={resourceFormData.type === 'pdf' ? '.pdf' : 
-                                 resourceFormData.type === 'docx' ? '.docx,.doc' :
-                                 resourceFormData.type === 'image' ? '.jpg,.jpeg,.png,.gif,.webp' :
-                                 resourceFormData.type === 'audio' ? '.mp3,.wav,.ogg,.m4a' : '*'}
-                        />
-                        {selectedResourceFile && (
-                          <p className="text-sm text-gray-500 mt-1">
-                            Selected: {selectedResourceFile.name} ({formatFileSize(selectedResourceFile.size)})
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tags */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-tags" className="text-right">Tags</Label>
-                    <Input
-                      id="resource-tags"
-                      value={resourceFormData.tags.join(', ')}
-                      onChange={(e) => setResourceFormData({ 
-                        ...resourceFormData, 
-                        tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-                      })}
-                      className="col-span-3"
-                      placeholder="Add tags (comma separated)"
-                    />
-                  </div>
-
-                  {/* Public/Private */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource-public" className="text-right">Visibility</Label>
-                    <Select value={resourceFormData.isPublic ? 'public' : 'private'} onValueChange={(value) => setResourceFormData({ ...resourceFormData, isPublic: value === 'public' })}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="public">Public</SelectItem>
-                        <SelectItem value="private">Private</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddResourceDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    onClick={handleAddResource}
-                    disabled={isUploading}
-                  >
-                    {isUploading ? 'Uploading...' : 'Add Resource'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            {/* Removed Add Resource Button here */}
           </div>
 
           {/* No Data State */}
@@ -1274,7 +1195,7 @@ export default function ContentPage() {
                     {searchTerm ? 'Try adjusting your search terms.' : 'Get started by uploading your first resource.'}
                   </p>
                   {!searchTerm && (
-                    <Button onClick={() => setIsAddResourceDialogOpen(true)}>
+                    <Button onClick={() => setIsAddDialogOpen(true)}>
                       <Plus className="mr-2 h-4 w-4" />
                       Upload Your First Resource
                     </Button>

@@ -125,7 +125,7 @@ export default function AuditLogsPage() {
 
       if (state.entityTypeFilter && state.entityTypeFilter !== 'all') {
         params.append('entityType', state.entityTypeFilter);
-      }
+    }
 
       if (state.actionFilter && state.actionFilter !== 'all') {
         params.append('action', state.actionFilter);
@@ -282,10 +282,10 @@ export default function AuditLogsPage() {
                     {/* Entity Icon */}
                     <div className={`flex-shrink-0 p-2 rounded-lg ${entityIcon.bgColor}`}>
                       <entityIcon.Icon className={`h-5 w-5 ${entityIcon.color}`} />
-                    </div>
+                  </div>
                     
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
                         {/* Action Badge with Icon */}
                         <Badge className={`flex items-center gap-1 ${getActionBadgeColors(log.action)}`}>
                           <actionIcon.Icon className="h-3 w-3" />
@@ -298,25 +298,25 @@ export default function AuditLogsPage() {
                           {log.entity.toUpperCase()}
                         </Badge>
                         
-                        <span className="text-sm text-gray-500">
-                          {formatTimeAgo(new Date(log.timestamp))}
-                        </span>
-                      </div>
+                      <span className="text-sm text-gray-500">
+                        {formatTimeAgo(new Date(log.timestamp))}
+                      </span>
+                    </div>
                       
-                      <div className="space-y-1">
-                        <p className="font-medium text-gray-900">
-                          {log.details?.title || log.entityId || 'Untitled'}
-                        </p>
-                        {log.details && typeof log.details === 'string' && (
-                          <p className="text-sm text-gray-600">{log.details}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>By: {log.userEmail}</span>
-                          {log.details?.ipAddress && <span>IP: {log.details.ipAddress}</span>}
-                        </div>
+                    <div className="space-y-1">
+                      <p className="font-medium text-gray-900">
+                        {log.details?.title || log.entityId || 'Untitled'}
+                      </p>
+                      {log.details && typeof log.details === 'string' && (
+                        <p className="text-sm text-gray-600">{log.details}</p>
+                      )}
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span>By: {log.userEmail}</span>
+                        {log.details?.ipAddress && <span>IP: {log.details.ipAddress}</span>}
                       </div>
                     </div>
                   </div>
+                </div>
                 );
               })}
             </div>

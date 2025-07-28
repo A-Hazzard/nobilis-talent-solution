@@ -123,7 +123,7 @@ export default function AdminDashboardPage() {
                         {activity.time}
                       </p>
                     </div>
-                  </li>
+                </li>
                 );
               })}
             </ul>

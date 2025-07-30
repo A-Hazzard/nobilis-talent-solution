@@ -58,7 +58,7 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
             <h1 className="text-lg lg:text-xl font-semibold text-gray-900">
-              Payne Leadership Admin
+              Nobilis Talent Solutions Admin
             </h1>
           </div>
           <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
@@ -81,7 +81,7 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
             <h1 className="text-lg lg:text-xl font-semibold text-gray-900">
-              Payne Leadership Admin
+              Nobilis Talent Solutions Admin
             </h1>
           </div>
 

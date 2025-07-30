@@ -18,13 +18,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Mail, Phone } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Mail, Phone, CreditCard } from 'lucide-react';
 import type { Lead } from '@/shared/types/entities';
 
 interface LeadsTableProps {
   leads: Lead[];
   onEdit: (lead: Lead) => void;
   onDelete: (id: string) => void;
+  onGeneratePaymentLink: (lead: Lead) => void;
   formatDate: (date: Date) => string;
 }
 
@@ -36,6 +37,7 @@ export function LeadsTable({
   leads,
   onEdit,
   onDelete,
+  onGeneratePaymentLink,
   formatDate,
 }: LeadsTableProps) {
   return (
@@ -111,6 +113,10 @@ export function LeadsTable({
                       <DropdownMenuItem onClick={() => onEdit(lead)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onGeneratePaymentLink(lead)}>
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Generate Payment Link
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Mail className="h-4 w-4 mr-2" />

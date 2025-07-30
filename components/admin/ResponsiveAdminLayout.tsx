@@ -16,7 +16,7 @@ export default function ResponsiveAdminLayout({ children }: ResponsiveAdminLayou
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 relative overflow-hidden">
         <AdminHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         
         {/* Mobile sidebar overlay */}
@@ -34,7 +34,6 @@ export default function ResponsiveAdminLayout({ children }: ResponsiveAdminLayou
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}>
             <div className="flex items-center justify-between p-4 border-b border-gray-200 lg:hidden">
-              <h2 className="text-lg font-semibold">Admin Panel</h2>
               <Button
                 variant="ghost"
                 size="sm"
@@ -47,7 +46,7 @@ export default function ResponsiveAdminLayout({ children }: ResponsiveAdminLayou
           </div>
           
           {/* Main content */}
-          <main className="flex-1 p-4 lg:p-6 min-w-0">
+          <main className="flex-1 p-4 lg:p-6 min-w-0 relative">
             {children}
           </main>
         </div>

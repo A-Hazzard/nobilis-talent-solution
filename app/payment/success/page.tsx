@@ -14,19 +14,23 @@ export default function PaymentSuccessPage() {
 
   useEffect(() => {
     if (sessionId) {
+      // Get client and amount from URL parameters
+      const client = searchParams.get('client');
+      const amount = searchParams.get('amount');
+      
       // In a real application, you would verify the session with your backend
-      // For now, we'll simulate the payment details
+      // For now, we'll use the URL parameters or simulate the payment details
       setTimeout(() => {
         setPaymentDetails({
-          amount: '$150.00',
-          service: 'Leadership Consultation',
+          amount: amount ? `$${parseFloat(amount).toFixed(2)}` : '$150.00',
+          service: client ? `Leadership Consultation for ${client}` : 'Leadership Consultation',
           email: 'customer@example.com',
           date: new Date().toLocaleDateString(),
         });
         setIsLoading(false);
       }, 1000);
     }
-  }, [sessionId]);
+  }, [sessionId, searchParams]);
 
   if (isLoading) {
     return (

@@ -39,8 +39,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { optionId } = await request.json();
+    const body = await request.json();
+    const { optionId, customData } = body;
 
+    // Handle custom payments (from pending payments)
+    if (optionId === 'custom' && customData) {
+      const { clientName, clientEmail, amount, description, pendingPaymentId } = customData;
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Leadership Consultation - ${clientName}`,
+                description: description,
+              },
+              unit_amount: Math.round(amount * 100), // Convert to cents
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${request.nextUrl.origin}/payment/success?client=${encodeURIComponent(clientName)}&amount=${amount}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${request.nextUrl.origin}/payment/pending?email=${encodeURIComponent(clientEmail)}`,
+        metadata: {
+          clientName,
+          clientEmail,
+          description,
+          amount: amount.toString(),
+          pendingPaymentId,
+        },
+      });
+
+      return NextResponse.json({ sessionId: session.id });
+    }
+
+    // Handle predefined payment options
     if (!optionId || !paymentOptions[optionId as keyof typeof paymentOptions]) {
       return NextResponse.json(
         { error: 'Invalid payment option' },

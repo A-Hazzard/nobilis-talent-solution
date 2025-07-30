@@ -12,6 +12,7 @@ import {
   Star,
   PenTool,
   Activity,
+  CreditCard,
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -45,10 +46,16 @@ const sidebarItems = [
     href: '/admin/calendar',
     icon: Calendar,
   },
+
   {
     title: 'Audit',
     href: '/admin/audit',
     icon: Activity,
+  },
+  {
+    title: 'Payments',
+    href: '/admin/payments',
+    icon: CreditCard,
   },
 ];
 

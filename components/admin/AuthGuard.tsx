@@ -4,13 +4,14 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
+import { getRedirectPath } from '@/lib/utils/authUtils';
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -20,6 +21,14 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       router.push('/login');
     }
   }, [isLoading, isAuthenticated, router, pathname]);
+
+  // Redirect non-admin users away from admin pages
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user && user.role !== 'admin' && pathname.startsWith('/admin')) {
+      const redirectPath = getRedirectPath(user);
+      router.push(redirectPath);
+    }
+  }, [isLoading, isAuthenticated, user, router, pathname]);
 
   if (isLoading) {
     return (

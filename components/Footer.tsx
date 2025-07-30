@@ -22,7 +22,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="md:col-span-1">
-            <h3 className="text-2xl font-bold mb-4">Kareem Payne</h3>
+            <h3 className="text-2xl font-bold mb-4">Nobilis Talent Solutions</h3>
             <p className="text-white/80 mb-6 leading-relaxed">
               Transforming leaders and organizations through proven coaching methodologies 
               and practical leadership development.
@@ -119,7 +119,7 @@ const Footer = () => {
         <div className="border-t border-white/20 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-white/60 text-sm mb-4 md:mb-0">
-              © 2024 Kareem Payne Leadership Coaching. All rights reserved.
+              © 2024 Nobilis Talent Solutions. All rights reserved.
             </div>
             <div className="flex space-x-6 text-sm">
               <a href="#" className="text-white/60 hover:text-primary transition-smooth">

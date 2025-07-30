@@ -10,18 +10,22 @@ import {
   Eye,
   ArrowLeft,
   BookOpen,
-  Download
+  Download,
+  ExternalLink
 } from 'lucide-react';
-import { BlogPost } from '@/shared/types/entities';
+import { BlogPost, Resource } from '@/shared/types/entities';
 import { BlogService } from '@/lib/services/BlogService';
+import { ResourcesService } from '@/lib/services/ResourcesService';
 import Link from 'next/link';
 
 export default function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const [post, setPost] = useState<BlogPost | null>(null);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [slug, setSlug] = useState<string>('');
 
   const blogService = new BlogService();
+  const resourcesService = new ResourcesService();
 
   useEffect(() => {
     const loadParams = async () => {
@@ -48,6 +52,10 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         setPost(getSamplePost(slug));
       } else {
         setPost(response.post);
+        // Load associated resources if the post has any
+        if (response.post?.resources && response.post.resources.length > 0) {
+          await loadResources(response.post.resources);
+        }
       }
     } catch (error) {
       console.error('Error loading blog post:', error);
@@ -55,6 +63,71 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       setPost(getSamplePost(slug));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadResources = async (resourceIds: string[]) => {
+    try {
+      const loadedResources: Resource[] = [];
+      for (const id of resourceIds) {
+        const response = await resourcesService.getById(id);
+        if (response.resource) {
+          loadedResources.push(response.resource);
+        }
+      }
+      setResources(loadedResources);
+    } catch (error) {
+      console.error('Error loading resources:', error);
+    }
+  };
+
+  const getFileIcon = (type: Resource['type']) => {
+    switch (type) {
+      case 'pdf':
+        return <Download className="w-5 h-5 text-red-600" />;
+      case 'docx':
+        return <Download className="w-5 h-5 text-blue-600" />;
+      case 'article':
+        return <BookOpen className="w-5 h-5 text-green-600" />;
+      case 'whitepaper':
+        return <BookOpen className="w-5 h-5 text-purple-600" />;
+      case 'template':
+        return <Download className="w-5 h-5 text-orange-600" />;
+      case 'toolkit':
+        return <Download className="w-5 h-5 text-indigo-600" />;
+      case 'image':
+        return <Download className="w-5 h-5 text-pink-600" />;
+      case 'video':
+        return <Download className="w-5 h-5 text-red-600" />;
+      case 'audio':
+        return <Download className="w-5 h-5 text-yellow-600" />;
+      default:
+        return <Download className="w-5 h-5 text-gray-600" />;
+    }
+  };
+
+  const getFileColor = (type: Resource['type']) => {
+    switch (type) {
+      case 'pdf':
+        return 'bg-red-100';
+      case 'docx':
+        return 'bg-blue-100';
+      case 'article':
+        return 'bg-green-100';
+      case 'whitepaper':
+        return 'bg-purple-100';
+      case 'template':
+        return 'bg-orange-100';
+      case 'toolkit':
+        return 'bg-indigo-100';
+      case 'image':
+        return 'bg-pink-100';
+      case 'video':
+        return 'bg-red-100';
+      case 'audio':
+        return 'bg-yellow-100';
+      default:
+        return 'bg-gray-100';
     }
   };
 
@@ -91,7 +164,20 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         readTime: 0,
         createdAt: new Date('2025-05-20'),
         updatedAt: new Date('2025-05-20'),
-        publishedAt: new Date('2025-05-20')
+        publishedAt: new Date('2025-05-20'),
+        resources: ['resource-1', 'resource-2'], // Added sample resources
+        references: [
+          {
+            title: 'Reference 1',
+            url: 'https://example.com/reference1',
+            description: 'Description for Reference 1'
+          },
+          {
+            title: 'Reference 2',
+            url: 'https://example.com/reference2',
+            description: 'Description for Reference 2'
+          }
+        ]
       };
     }
     
@@ -112,7 +198,9 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       readTime: 5,
       createdAt: new Date(),
       updatedAt: new Date(),
-      publishedAt: new Date()
+      publishedAt: new Date(),
+      resources: [], // Default to empty resources
+      references: [] // Default to empty references
     };
   };
 
@@ -227,42 +315,75 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-8">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="w-5 h-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Sources & References (0)</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Sources & References ({post.references?.length || 0})
+            </h3>
           </div>
-          <p className="text-gray-600 text-sm">No sources or references available for this article.</p>
+          {post.references && post.references.length > 0 ? (
+            <div className="space-y-3">
+              {post.references.map((reference, index) => (
+                <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <ExternalLink className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <a 
+                      href={reference.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      {reference.title}
+                    </a>
+                    {reference.description && (
+                      <p className="text-sm text-gray-600 mt-1">{reference.description}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 text-sm">No sources or references available for this article.</p>
+          )}
         </div>
 
         {/* Related Resources */}
         <div className="bg-white rounded-lg shadow-sm border p-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Related Resources</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Download className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Leadership Guide PDF</h4>
-                    <p className="text-sm text-gray-600">Download our comprehensive leadership guide</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Team Building Workbook</h4>
-                    <p className="text-sm text-gray-600">Interactive exercises for team development</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Related Resources ({resources.length})
+          </h3>
+          {resources.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {resources.map((resource, index) => (
+                <Card key={index} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getFileColor(resource.type)}`}>
+                        {getFileIcon(resource.type)}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{resource.title}</h4>
+                        <p className="text-sm text-gray-600">{resource.description}</p>
+                      </div>
+                    </div>
+                    {resource.fileUrl && (
+                      <div className="mt-3">
+                        <a 
+                          href={resource.fileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download Resource
+                        </a>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 text-sm">No related resources available for this article.</p>
+          )}
         </div>
 
         

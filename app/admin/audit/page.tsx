@@ -69,6 +69,13 @@ export default function AuditLogsPage() {
       }
 
       const response = await fetch(`/api/audit/logs?${params}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const result = await response.json();
 
       if (result.success) {
@@ -132,6 +139,13 @@ export default function AuditLogsPage() {
       }
 
       const response = await fetch(`/api/audit/logs?${params}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const result = await response.json();
 
       if (result.success) {
@@ -162,6 +176,45 @@ export default function AuditLogsPage() {
     }
   }, [state.searchTerm, state.entityTypeFilter, state.actionFilter, toast]);
 
+  const handleCreateSampleData = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true }));
+      
+      const response = await fetch('/api/audit/test', {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: 'Sample Data Created',
+          description: `Successfully created ${result.count} sample audit logs.`,
+        });
+        
+        // Reload the audit logs to show the new data
+        await loadAuditLogs();
+      } else {
+        throw new Error(result.error || 'Failed to create sample data');
+      }
+    } catch (error) {
+      console.error('Error creating sample data:', error);
+      toast({
+        title: 'Sample Data Creation Failed',
+        description: 'Failed to create sample audit logs. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }));
+    }
+  }, [loadAuditLogs, toast]);
+
   // Load data when filters change
   useEffect(() => {
     loadAuditLogs();
@@ -186,15 +239,26 @@ export default function AuditLogsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Audit Logs</h1>
           <p className="text-gray-600">Track all admin activities and system changes</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleExport}
-          disabled={state.isLoading}
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Export Excel
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleExport}
+            disabled={state.isLoading}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleCreateSampleData}
+            disabled={state.isLoading}
+          >
+            <Activity className="h-4 w-4 mr-2" />
+            Create Sample Data
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

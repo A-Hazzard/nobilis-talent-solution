@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import ResponsiveAdminLayout from '@/components/admin/ResponsiveAdminLayout';
 
 export const metadata: Metadata = {
-  title: 'Admin Dashboard - Payne Leadership',
+  title: 'Admin Dashboard - Nobilis Talent Solutions',
   description: 'Admin dashboard for managing leads, resources, and analytics',
 };
 

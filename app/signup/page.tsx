@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Check, X, Eye, EyeOff, User, Mail, Lock, Building, UserCheck, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { validateSignupForm, validatePassword } from '@/lib/utils/validation';
+import { getRedirectPath } from '@/lib/utils/authUtils';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -49,12 +50,13 @@ export default function SignupPage() {
   // Redirect if user is already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated && user) {
-      console.log('SignupPage: User already authenticated, redirecting to admin...');
+      console.log('SignupPage: User already authenticated, redirecting based on role...');
       console.log('SignupPage: User details:', user);
       console.log('SignupPage: Current pathname:', window.location.pathname);
       
-      console.log('SignupPage: Executing redirect to /admin');
-      router.push('/admin');
+      const redirectPath = getRedirectPath(user);
+      console.log('SignupPage: Executing redirect to', redirectPath);
+      router.push(redirectPath);
     }
   }, [authLoading, isAuthenticated, user, router]);
 

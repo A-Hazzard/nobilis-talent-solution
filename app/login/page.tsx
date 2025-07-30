@@ -11,6 +11,7 @@ import { Check, X, Eye, EyeOff } from 'lucide-react';
 import { Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { validateLoginForm } from '@/lib/utils/validation';
+import { getRedirectPath } from '@/lib/utils/authUtils';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -34,12 +35,13 @@ export default function LoginPage() {
   // Redirect if user is already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated && user) {
-      console.log('LoginPage: User already authenticated, redirecting to admin...');
+      console.log('LoginPage: User already authenticated, redirecting based on role...');
       console.log('LoginPage: User details:', user);
       console.log('LoginPage: Current pathname:', window.location.pathname);
       
-      console.log('LoginPage: Executing redirect to /admin');
-      router.push('/admin');
+      const redirectPath = getRedirectPath(user);
+      console.log('LoginPage: Executing redirect to', redirectPath);
+      router.push(redirectPath);
     }
   }, [authLoading, isAuthenticated, user, router]);
 

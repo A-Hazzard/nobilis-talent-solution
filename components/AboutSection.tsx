@@ -37,7 +37,7 @@ const AboutSection = () => {
               <div className="relative w-full max-w-md mx-auto">
                 <Image
                   src="/assets/kareem-profile.jpg"
-                alt="Kareem Payne - Leadership Coach"
+                alt="Nobilis Talent Solutions - Leadership Coach"
                   width={400}
                   height={500}
                   className="rounded-3xl shadow-strong hover-float"
@@ -64,7 +64,7 @@ const AboutSection = () => {
           {/* Right side - Content */}
           <div data-animate>
             <h2 className="text-section text-accent mb-6">
-              Meet Kareem Payne
+              Meet Nobilis Talent Solutions
             </h2>
             
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">

@@ -7,7 +7,7 @@ import { Toaster } from 'sonner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Payne Leadership - Executive Coaching & Leadership Development',
+  title: 'Nobilis Talent Solutions - Executive Coaching & Leadership Development',
   description: 'Transform your leadership potential with expert executive coaching and leadership development programs.',
 }
 

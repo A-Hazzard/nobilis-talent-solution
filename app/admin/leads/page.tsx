@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Users } from 'lucide-react';
 import { useLeads } from '@/lib/hooks/useLeads';
@@ -7,9 +8,11 @@ import { LeadsHeader } from '@/components/admin/leads/LeadsHeader';
 import { LeadsSearch } from '@/components/admin/leads/LeadsSearch';
 import { LeadsTable } from '@/components/admin/leads/LeadsTable';
 import { LeadForm } from '@/components/admin/leads/LeadForm';
+import { PaymentLinkModal } from '@/components/admin/leads/PaymentLinkModal';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import type { Lead } from '@/shared/types/entities';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -20,6 +23,9 @@ export const dynamic = 'force-dynamic';
  */
 export default function LeadsPage() {
   const [state, actions] = useLeads();
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  
   const {
     leads,
     isLoading,
@@ -48,6 +54,11 @@ export default function LeadsPage() {
     setShowConfirmPassword,
     formatDate,
   } = actions;
+
+  const handleGeneratePaymentLink = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsPaymentModalOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -126,6 +137,7 @@ export default function LeadsPage() {
           leads={leads}
           onEdit={openEditDialog}
           onDelete={handleDeleteLead}
+          onGeneratePaymentLink={handleGeneratePaymentLink}
           formatDate={formatDate}
         />
       )}
@@ -162,6 +174,13 @@ export default function LeadsPage() {
         onSubmit={handleEditLead}
         isSubmitting={isSubmitting}
         isEdit={true}
+      />
+
+      {/* Payment Link Modal */}
+      <PaymentLinkModal
+        isOpen={isPaymentModalOpen}
+        onOpenChange={setIsPaymentModalOpen}
+        lead={selectedLead}
       />
     </div>
   );

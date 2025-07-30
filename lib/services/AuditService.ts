@@ -34,6 +34,7 @@ export class AuditService {
       const auditData = {
         ...data,
         createdAt: serverTimestamp(),
+        timestamp: data.timestamp || Date.now(), // Ensure timestamp is always present
       };
 
       await addDoc(collection(db, this.collectionName), auditData);
@@ -56,9 +57,24 @@ export class AuditService {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => {
         const data = doc.data();
+        
+        // Handle timestamp conversion from Firestore
+        let timestamp = data.timestamp;
+        if (!timestamp && data.createdAt) {
+          if (typeof data.createdAt.toMillis === 'function') {
+            timestamp = data.createdAt.toMillis();
+          } else if (typeof data.createdAt.getTime === 'function') {
+            timestamp = data.createdAt.getTime();
+          } else if (data.createdAt.seconds) {
+            timestamp = data.createdAt.seconds * 1000;
+          } else {
+            timestamp = Date.now();
+          }
+        }
+        
         return {
           id: doc.id,
-          timestamp: data.timestamp || (data.createdAt ? data.createdAt.toMillis?.() || data.createdAt.getTime?.() || Date.now() : Date.now()),
+          timestamp: timestamp || Date.now(),
           userId: data.userId,
           userEmail: data.userEmail,
           action: data.action,
@@ -112,9 +128,24 @@ export class AuditService {
       
       let logs: AuditLog[] = snapshot.docs.map(doc => {
         const data = doc.data();
+        
+        // Handle timestamp conversion from Firestore
+        let timestamp = data.timestamp;
+        if (!timestamp && data.createdAt) {
+          if (typeof data.createdAt.toMillis === 'function') {
+            timestamp = data.createdAt.toMillis();
+          } else if (typeof data.createdAt.getTime === 'function') {
+            timestamp = data.createdAt.getTime();
+          } else if (data.createdAt.seconds) {
+            timestamp = data.createdAt.seconds * 1000;
+          } else {
+            timestamp = Date.now();
+          }
+        }
+        
         return {
           id: doc.id,
-          timestamp: data.timestamp || (data.createdAt ? data.createdAt.toMillis?.() || data.createdAt.getTime?.() || Date.now() : Date.now()),
+          timestamp: timestamp || Date.now(),
           userId: data.userId,
           userEmail: data.userEmail,
           action: data.action,
@@ -136,9 +167,10 @@ export class AuditService {
         );
       }
       
+      // For now, return a simple response to test the API
       return {
-        logs,
-        total: logs.length, // Note: This is approximate due to Firestore limitations
+        logs: logs || [],
+        total: logs.length,
         page,
         limit: pageLimit,
       };
@@ -167,9 +199,24 @@ export class AuditService {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => {
         const data = doc.data();
+        
+        // Handle timestamp conversion from Firestore
+        let timestamp = data.timestamp;
+        if (!timestamp && data.createdAt) {
+          if (typeof data.createdAt.toMillis === 'function') {
+            timestamp = data.createdAt.toMillis();
+          } else if (typeof data.createdAt.getTime === 'function') {
+            timestamp = data.createdAt.getTime();
+          } else if (data.createdAt.seconds) {
+            timestamp = data.createdAt.seconds * 1000;
+          } else {
+            timestamp = Date.now();
+          }
+        }
+        
         return {
           id: doc.id,
-          timestamp: data.timestamp || (data.createdAt ? data.createdAt.toMillis?.() || data.createdAt.getTime?.() || Date.now() : Date.now()),
+          timestamp: timestamp || Date.now(),
           userId: data.userId,
           userEmail: data.userEmail,
           action: data.action,
@@ -198,9 +245,24 @@ export class AuditService {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => {
         const data = doc.data();
+        
+        // Handle timestamp conversion from Firestore
+        let timestamp = data.timestamp;
+        if (!timestamp && data.createdAt) {
+          if (typeof data.createdAt.toMillis === 'function') {
+            timestamp = data.createdAt.toMillis();
+          } else if (typeof data.createdAt.getTime === 'function') {
+            timestamp = data.createdAt.getTime();
+          } else if (data.createdAt.seconds) {
+            timestamp = data.createdAt.seconds * 1000;
+          } else {
+            timestamp = Date.now();
+          }
+        }
+        
         return {
           id: doc.id,
-          timestamp: data.timestamp || (data.createdAt ? data.createdAt.toMillis?.() || data.createdAt.getTime?.() || Date.now() : Date.now()),
+          timestamp: timestamp || Date.now(),
           userId: data.userId,
           userEmail: data.userEmail,
           action: data.action,

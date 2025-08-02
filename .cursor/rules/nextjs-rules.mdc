@@ -1,3 +1,9 @@
+---
+description: Strict engineering, code style, and architecture rules for Next.js projects. Covers package management, type safety, ESLint, file organization, OOP, security, performance, and more. All contributors must follow these rules to ensure a robust, maintainable, and secure codebase.
+globs: "*"
+alwaysApply: true
+---
+
 # Senior Software Engineering Rules for Next.js Projects
 
 This document provides strict engineering guidelines to ensure code quality, maintainability, and security for Next.js projects.  
@@ -53,6 +59,7 @@ All contributors should adhere to the following rules, which are enforced throug
 - Run `pnpm lint` regularly to catch and fix style issues.
 - Follow the established code style in the existing files for consistency.
 - Use ESLint's auto-fix feature when possible: `pnpm lint --fix`.
+- **Never underscore variables** - Either use them or remove them completely. Do not prefix variables with underscores to indicate they are unused.
 
 **Reference:**  
 - `eslint.config.mjs` - ESLint configuration

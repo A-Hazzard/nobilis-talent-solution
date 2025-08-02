@@ -2,16 +2,7 @@
  * Validation utilities for form inputs
  */
 
-export interface ValidationResult {
-  isValid: boolean;
-  error?: string;
-}
-
-export interface PasswordValidationResult extends ValidationResult {
-  hasMinLength: boolean;
-  hasUppercase: boolean;
-  hasSpecialChar: boolean;
-}
+import type { ValidationResult, PasswordValidationResult } from '@/lib/types/validation';
 
 /**
  * Validates email format

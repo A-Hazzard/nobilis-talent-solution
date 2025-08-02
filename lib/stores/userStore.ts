@@ -20,6 +20,7 @@ interface UserState {
   // Auth actions
   signIn: (email: string, password: string) => Promise<{ error: FirebaseAuthError | null }>;
   signUp: (email: string, password: string, firstName: string, lastName: string, organization: string, phone: string) => Promise<{ error: FirebaseAuthError | null }>;
+  signInWithGoogle: () => Promise<{ error: FirebaseAuthError | null; isNewUser?: boolean }>;
   signOut: () => Promise<{ error: FirebaseAuthError | null }>;
   initializeAuth: () => () => void;
 }
@@ -83,12 +84,29 @@ export const useUserStore = create<UserState>()(
                   email: user.email,
                   firstName: userProfile?.firstName || user.displayName?.split(' ')[0] || '',
                   lastName: userProfile?.lastName || user.displayName?.split(' ').slice(1).join(' ') || '',
+                  displayName: userProfile?.displayName,
                   phone: userProfile?.phone,
                   organization: userProfile?.organization,
                   role: userProfile?.role || (user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
                   createdAt: userProfile?.createdAt || user.createdAt,
                   lastLoginAt: userProfile?.lastLoginAt || user.lastLoginAt,
                   isActive: userProfile?.isActive ?? true,
+                  
+                  // Email verification
+                  emailVerified: userProfile?.emailVerified || false,
+                  emailVerifiedAt: userProfile?.emailVerifiedAt,
+                  
+                  // Onboarding fields
+                  onboardingCompleted: userProfile?.onboardingCompleted || false,
+                  onboardingCompletedAt: userProfile?.onboardingCompletedAt,
+                  jobTitle: userProfile?.jobTitle,
+                  organizationType: userProfile?.organizationType,
+                  industryFocus: userProfile?.industryFocus,
+                  teamSize: userProfile?.teamSize,
+                  primaryGoals: userProfile?.primaryGoals,
+                  challengesDescription: userProfile?.challengesDescription,
+                  timeline: userProfile?.timeline,
+                  budget: userProfile?.budget,
                 };
                 
                 set({ 
@@ -109,6 +127,8 @@ export const useUserStore = create<UserState>()(
                   createdAt: user.createdAt,
                   lastLoginAt: user.lastLoginAt,
                   isActive: true,
+                  emailVerified: false, // Default to false for new users
+                  onboardingCompleted: false, // Default to false for new users
                 };
                 
                 set({ 
@@ -160,6 +180,8 @@ export const useUserStore = create<UserState>()(
                 createdAt: userProfile?.createdAt || user.createdAt,
                 lastLoginAt: userProfile?.lastLoginAt || user.lastLoginAt,
                 isActive: userProfile?.isActive ?? true,
+                emailVerified: false, // New users need email verification
+                onboardingCompleted: false, // New users need onboarding
               };
               
               set({ 
@@ -168,6 +190,17 @@ export const useUserStore = create<UserState>()(
                 isAuthenticated: true, 
                 isLoading: false 
               });
+              
+              // Send verification email for new users
+              try {
+                await fetch('/api/auth/send-verification', {
+                  method: 'POST',
+                  credentials: 'include',
+                });
+              } catch (emailError) {
+                console.error('Failed to send verification email:', emailError);
+                // Don't fail signup if email fails
+              }
             }
             
             return { error: null };
@@ -181,6 +214,64 @@ export const useUserStore = create<UserState>()(
             };
           }
         },
+
+        signInWithGoogle: async () => {
+          set({ isLoading: true });
+          
+          try {
+            const authService = AuthService.getInstance();
+            const { user, error, isNewUser } = await authService.signInWithGoogle();
+            
+            if (error) {
+              set({ isLoading: false });
+              return { error, isNewUser };
+            }
+            
+            if (user) {
+              // Fetch user profile from Firestore to get real data
+              const userProfile = await authService.getUserProfile(user.uid);
+              
+              // Parse names from display name
+              const names = user.displayName?.split(' ') || ['', ''];
+              const firstName = names[0] || '';
+              const lastName = names.slice(1).join(' ') || '';
+              
+              // Map Firebase user to our User type with real data
+              const mappedUser: User = {
+                id: user.uid,
+                email: user.email,
+                firstName: userProfile?.firstName || firstName,
+                lastName: userProfile?.lastName || lastName,
+                phone: userProfile?.phone || '',
+                organization: userProfile?.organization || '',
+                role: userProfile?.role || (user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
+                createdAt: userProfile?.createdAt || user.createdAt,
+                lastLoginAt: userProfile?.lastLoginAt || user.lastLoginAt,
+                isActive: userProfile?.isActive ?? true,
+              };
+              
+              set({ 
+                user: mappedUser, 
+                firebaseUser: user, 
+                isAuthenticated: true, 
+                isLoading: false 
+              });
+            }
+            
+            return { error: null, isNewUser };
+          } catch {
+            set({ isLoading: false });
+            return { 
+              error: { 
+                code: 'unknown-error', 
+                message: 'An unexpected error occurred' 
+              },
+              isNewUser: false
+            };
+          }
+        },
+
+
         
         signOut: async () => {
           set({ isLoading: true });

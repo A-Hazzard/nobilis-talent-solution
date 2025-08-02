@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Upload, X } from 'lucide-react';
-import type { ResourceFormData } from '@/lib/hooks/useResources';
+import type { ResourceFormData } from '@/lib/types/hooks';
 
 interface ResourceFormProps {
   isOpen: boolean;

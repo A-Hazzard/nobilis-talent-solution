@@ -50,103 +50,82 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
-        <div className="hero-text">
-          <h1 className="text-hero text-white mb-6 hero-stagger">
-            Transform Your
-            <span className="bg-gradient-to-r from-primary-light to-secondary bg-clip-text text-transparent block">
-              Leadership Impact
-            </span>
-          </h1>
-          
-          <p className="text-xl lg:text-2xl text-white/90 mb-8 max-w-2xl leading-relaxed hero-stagger">
-            Unlock your team's potential with proven leadership strategies that drive results. 
-            Join hundreds of successful leaders who've transformed their organizations.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 mb-12 hero-stagger">
-            <a
-              href="#contact"
-              className="btn-primary group inline-flex items-center justify-center"
-            >
-              Book Your Strategy Call
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </a>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="hero-text">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 hero-stagger">
+              Transform Your
+              <span className="bg-gradient-to-r from-primary-light to-secondary bg-clip-text text-transparent block">
+                Leadership Impact
+              </span>
+            </h1>
             
-            <a
-              href="#services"
-              className="btn-outline bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white hover:text-accent"
-            >
-              Explore Services
-            </a>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/20 hero-stagger">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-white mb-1">500+</div>
-              <div className="text-sm text-white/80">Leaders Coached</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-white mb-1">98%</div>
-              <div className="text-sm text-white/80">Success Rate</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-white mb-1">5+</div>
-              <div className="text-sm text-white/80">Years Experience</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right side - Contact form card */}
-        <div className="hero-image">
-          <div className="card-elevated bg-white/95 backdrop-blur-sm hover-glow">
-            <div className="text-center mb-6">
-              <Calendar className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-accent mb-2">Ready to Get Started?</h3>
-              <p className="text-muted-foreground">Book a free 30-minute strategy session</p>
-            </div>
-            
-            <form className="space-y-4">
-              <div>
-                <input
-                  type="text"
-                  placeholder="Your Name"
-                  className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
-                />
-              </div>
-              <div>
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
-                />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  placeholder="Company Name"
-                  className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
-                />
-              </div>
-              <div>
-                <textarea
-                  placeholder="What leadership challenges are you facing?"
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth resize-none"
-                ></textarea>
-              </div>
-              <button
-                type="submit"
-                className="btn-primary w-full"
-              >
-                Schedule Free Consultation
-              </button>
-            </form>
-            
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              No spam. Unsubscribe at any time.
+            <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed hero-stagger">
+              Unlock your team's potential with proven leadership strategies that drive results. 
+              Join hundreds of successful leaders who've transformed their organizations through 
+              personalized coaching and strategic development.
             </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 mb-12 hero-stagger justify-center">
+              <button
+                onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
+                className="btn-primary group inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg"
+              >
+                Book Now
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              
+              <a
+                href="#services"
+                className="btn-outline bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white hover:text-accent px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg"
+              >
+                Explore Services
+              </a>
+            </div>
+
+            {/* Value Proposition */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-12 hero-stagger">
+              <h3 className="text-xl font-semibold text-white mb-4">Why Choose Kareem Payne Leadership?</h3>
+              <div className="grid md:grid-cols-3 gap-6 text-center">
+                <div>
+                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-white mb-2">Proven Results</h4>
+                  <p className="text-white/80 text-sm">98% success rate with measurable improvements</p>
+                </div>
+                <div>
+                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <TrendingUp className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-white mb-2">Strategic Approach</h4>
+                  <p className="text-white/80 text-sm">Customized solutions for your unique challenges</p>
+                </div>
+                <div>
+                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-white mb-2">Free Consultation</h4>
+                  <p className="text-white/80 text-sm">30-minute strategy session at no cost</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-white/20 hero-stagger">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white mb-1">500+</div>
+                <div className="text-sm text-white/80">Leaders Coached</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white mb-1">98%</div>
+                <div className="text-sm text-white/80">Success Rate</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white mb-1">5+</div>
+                <div className="text-sm text-white/80">Years Experience</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

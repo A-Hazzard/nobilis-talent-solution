@@ -1,57 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Resource } from '@/shared/types/entities';
+import type { ResourceFormData, ResourcesState, ResourcesActions } from '@/lib/types/hooks';
 import { ResourcesService } from '@/lib/services/ResourcesService';
 import { toast } from 'sonner';
-
-export interface ResourceFormData {
-  title: string;
-  description: string;
-  type: Resource['type'];
-  category: Resource['category'];
-  fileUrl: string;
-  isPublic: boolean;
-  createdBy: string;
-}
-
-export interface ResourcesState {
-  resources: Resource[];
-  isLoading: boolean;
-  searchTerm: string;
-  error: string | null;
-  isAddDialogOpen: boolean;
-  isEditDialogOpen: boolean;
-  isPreviewDialogOpen: boolean;
-  previewResource: Resource | null;
-  previewFile: File | null;
-  editingResource: Resource | null;
-  selectedFile: File | null;
-  isUploading: boolean;
-  formData: ResourceFormData;
-}
-
-export interface ResourcesActions {
-  loadResources: () => Promise<void>;
-  handleFileSelect: (file: File) => void;
-  handleFileRemove: () => void;
-  openPreviewDialog: (resource: Resource) => void;
-  openFilePreview: (file: File) => void;
-  handleAddResource: () => Promise<void>;
-  handleEditResource: () => Promise<void>;
-  handleDeleteResource: (id: string) => Promise<void>;
-  openEditDialog: (resource: Resource) => void;
-  resetForm: () => void;
-  setSearchTerm: (term: string) => void;
-  setIsAddDialogOpen: (open: boolean) => void;
-  setIsEditDialogOpen: (open: boolean) => void;
-  setIsPreviewDialogOpen: (open: boolean) => void;
-  setFormData: (data: Partial<ResourceFormData>) => void;
-  getStatusBadge: (isPublic: boolean) => { variant: string; text: string };
-  formatDate: (date: Date) => string;
-  formatFileSize: (bytes: number) => string;
-  getAcceptedTypes: (type: Resource['type']) => string[];
-  extractYouTubeVideoId: (url: string) => string | null;
-  getPreviewContent: () => { type: 'file'; file: File } | { type: 'resource'; resource: Resource } | null;
-}
 
 /**
  * Custom hook for resources state management

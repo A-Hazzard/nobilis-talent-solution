@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/config';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Add admin authentication check here
     // For now, we'll allow access to this endpoint

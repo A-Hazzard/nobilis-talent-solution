@@ -1,6 +1,7 @@
 import { useUserStore } from '@/lib/stores/userStore';
 import { AuditService } from '@/lib/services/AuditService';
 import type { AuditLog } from '@/shared/types/audit';
+
 import { 
   User, 
   FileText, 
@@ -235,14 +236,106 @@ export const getEntityTypeBadgeColors = (entityType: string) => {
 };
 
 /**
- * Get activity description for dashboard display
+ * Convert Firestore timestamp to Unix milliseconds
  */
-export const getActivityDescription = (log: AuditLog): string => {
+export function convertFirestoreTimestamp(timestamp: any): number {
+  if (!timestamp) {
+    return Date.now();
+  }
+
+  // If it's already a number, return it
+  if (typeof timestamp === 'number') {
+    return timestamp;
+  }
+
+  // If it's a Firestore Timestamp object
+  if (timestamp && typeof timestamp.toMillis === 'function') {
+    return timestamp.toMillis();
+  }
+
+  // If it's a Date object
+  if (timestamp && typeof timestamp.getTime === 'function') {
+    return timestamp.getTime();
+  }
+
+  // If it's a Firestore timestamp with seconds/nanoseconds
+  if (timestamp && typeof timestamp.seconds === 'number') {
+    return timestamp.seconds * 1000 + (timestamp.nanoseconds || 0) / 1000000;
+  }
+
+  // If it's a string, try to parse it
+  if (typeof timestamp === 'string') {
+    const parsed = new Date(timestamp).getTime();
+    if (!isNaN(parsed)) {
+      return parsed;
+    }
+  }
+
+  // Fallback to current time
+  return Date.now();
+}
+
+/**
+ * Validate and sanitize audit log data
+ */
+export function validateAuditLog(data: any): Partial<AuditLog> {
+  const validated: Partial<AuditLog> = {};
+
+  // Validate timestamp
+  validated.timestamp = convertFirestoreTimestamp(data.timestamp || data.createdAt);
+
+  // Validate userId
+  if (data.userId && typeof data.userId === 'string') {
+    validated.userId = data.userId;
+  }
+
+  // Validate userEmail
+  if (data.userEmail && typeof data.userEmail === 'string') {
+    validated.userEmail = data.userEmail;
+  }
+
+  // Validate action
+  const validActions = ['login', 'create', 'update', 'delete'] as const;
+  if (data.action && validActions.includes(data.action)) {
+    validated.action = data.action;
+  }
+
+  // Validate entity
+  const validEntities = ['lead', 'resource', 'testimonial', 'blog', 'calendar', 'auth'] as const;
+  if (data.entity && validEntities.includes(data.entity)) {
+    validated.entity = data.entity;
+  }
+
+  // Validate entityId
+  if (data.entityId && typeof data.entityId === 'string') {
+    validated.entityId = data.entityId;
+  }
+
+  // Validate details
+  if (data.details) {
+    if (typeof data.details === 'string') {
+      try {
+        validated.details = JSON.parse(data.details);
+      } catch {
+        validated.details = { message: data.details };
+      }
+    } else if (typeof data.details === 'object' && data.details !== null) {
+      validated.details = data.details;
+    }
+  }
+
+  return validated;
+}
+
+/**
+ * Generate activity description from audit log
+ */
+export function getActivityDescription(log: AuditLog): string {
   const actionMap = {
-    create: 'Created',
-    update: 'Updated',
-    delete: 'Deleted',
-    login: 'Logged in',
+    login: 'logged in',
+    create: 'created',
+    update: 'updated',
+    delete: 'deleted'
   };
 
   const entityMap = {
@@ -251,14 +344,46 @@ export const getActivityDescription = (log: AuditLog): string => {
     testimonial: 'testimonial',
     blog: 'blog post',
     calendar: 'calendar event',
-    auth: 'authentication',
+    auth: 'account',
+    contact: 'contact form',
   };
 
   const action = actionMap[log.action] || log.action;
   const entity = entityMap[log.entity] || log.entity;
-  
-  return `${action} ${entity}`;
-};
+
+  if (log.details?.title) {
+    return `${log.userEmail} ${action} ${entity}: "${log.details.title}"`;
+  }
+
+  return `${log.userEmail} ${action} ${entity}`;
+}
+
+/**
+ * Format timestamp for display
+ */
+export function formatAuditTimestamp(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffInHours = (now.getTime() - timestamp) / (1000 * 60 * 60);
+
+  if (diffInHours < 1) {
+    const diffInMinutes = Math.floor((now.getTime() - timestamp) / (1000 * 60));
+    return `${diffInMinutes} minutes ago`;
+  } else if (diffInHours < 24) {
+    return `${Math.floor(diffInHours)} hours ago`;
+  } else if (diffInHours < 168) { // 7 days
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} days ago`;
+  } else {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+}
 
 /**
  * Log an audit action with current user context

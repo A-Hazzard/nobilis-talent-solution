@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Check, X, Eye, EyeOff } from 'lucide-react';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Chrome } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { validateLoginForm } from '@/lib/utils/validation';
 import { getRedirectPath } from '@/lib/utils/authUtils';
@@ -18,8 +19,9 @@ export const dynamic = 'force-dynamic';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { signIn, signInWithGoogle, user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{
@@ -29,7 +31,8 @@ export default function LoginPage() {
 
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    rememberMe: false
   });
 
   // Redirect if user is already authenticated
@@ -47,7 +50,10 @@ export default function LoginPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: value 
+    }));
     setError(null);
 
     // Clear field-specific error when user starts typing
@@ -72,6 +78,13 @@ export default function LoginPage() {
         setFieldErrors(prev => ({ ...prev, password: undefined }));
       }
     }
+  };
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      rememberMe: checked 
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,8 +123,33 @@ export default function LoginPage() {
   };
 
   const isFieldValid = (fieldName: string) => {
-    return !getFieldError(fieldName) && formData[fieldName as keyof typeof formData]?.trim() !== '';
+    const value = formData[fieldName as keyof typeof formData];
+    return !getFieldError(fieldName) && typeof value === 'string' && value.trim() !== '';
   };
+
+  const handleGoogleSignIn = async () => {
+    setSocialLoading('google');
+    setError(null);
+    
+    try {
+      console.log('LoginPage: Attempting Google sign-in...');
+      const { error, isNewUser } = await signInWithGoogle();
+      if (error) {
+        console.log('LoginPage: Google sign-in error:', error);
+        setError(error.message);
+      } else {
+        console.log('LoginPage: Google sign-in successful, isNewUser:', isNewUser);
+        // The redirect will happen automatically via useEffect when auth state updates
+      }
+    } catch (error) {
+      console.error('LoginPage: Google sign-in error:', error);
+      setError('Failed to sign in with Google. Please try again.');
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+
 
   // Show loading state while auth is initializing
   if (authLoading) {
@@ -130,12 +168,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
+      
+      <Card className="w-full max-w-md relative z-10 backdrop-blur-sm bg-white/80 border-0 shadow-2xl">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access your account
+          <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-center text-gray-600">
+            Sign in to your account to continue
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -197,12 +244,68 @@ export default function LoginPage() {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={formData.rememberMe}
+                  onCheckedChange={handleCheckboxChange}
+                />
+                <label htmlFor="rememberMe" className="text-sm text-gray-600">
+                  Remember me
+                </label>
+              </div>
+              <a href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500 transition-colors">
+                Forgot password?
+              </a>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:transform-none disabled:opacity-50" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Signing In...
+                </div>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-sm">
+          {/* Social Login Divider */}
+          <div className="my-6 flex items-center">
+            <div className="flex-1 border-t border-gray-300"></div>
+            <span className="mx-4 text-sm text-gray-500 bg-white px-2">Or continue with</span>
+            <div className="flex-1 border-t border-gray-300"></div>
+          </div>
+
+          {/* Social Login Buttons */}
+          <div>
+            <Button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={socialLoading !== null || isLoading}
+              className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-md disabled:transform-none disabled:opacity-50"
+            >
+              {socialLoading === 'google' ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  Signing in...
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <Chrome className="h-5 w-5 mr-3 text-blue-600" />
+                  Continue with Google
+                </div>
+              )}
+            </Button>
+          </div>
+
+          <div className="mt-6 text-center text-sm">
             Don't have an account?{' '}
             <a href="/signup" className="text-blue-600 hover:text-blue-500">
               Create account

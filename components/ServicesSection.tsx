@@ -87,12 +87,12 @@ const ServicesSection = () => {
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="flex items-center mb-6">
-                <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <service.icon className="w-8 h-8 text-white" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                  <service.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-accent">{service.title}</h3>
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                  <h3 className="text-xl sm:text-2xl font-bold text-accent">{service.title}</h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-muted-foreground mt-1">
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-1" />
                       {service.duration}
@@ -126,10 +126,10 @@ const ServicesSection = () => {
         <div className="card-elevated bg-gradient-subtle text-center max-w-4xl mx-auto hover-glow" data-animate>
           <div className="flex justify-center mb-6">
             {[...Array(testimonialHighlight.rating)].map((_, i) => (
-              <Star key={i} className="w-6 h-6 text-secondary fill-current" />
+              <Star key={i} className="w-5 h-5 sm:w-6 sm:h-6 text-secondary fill-current" />
             ))}
           </div>
-          <blockquote className="text-2xl font-medium text-accent mb-8 leading-relaxed">
+          <blockquote className="text-xl sm:text-2xl font-medium text-accent mb-8 leading-relaxed">
             "{testimonialHighlight.quote}"
           </blockquote>
           <div className="text-center">
@@ -140,25 +140,27 @@ const ServicesSection = () => {
 
         {/* CTA Section */}
         <div className="text-center mt-16" data-animate>
-          <h3 className="text-3xl font-bold text-accent mb-6">
+          <h3 className="text-2xl sm:text-3xl font-bold text-accent mb-6">
             Ready to Transform Your Leadership?
           </h3>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Schedule a free consultation to discuss your specific needs and explore 
             how we can work together to achieve your goals.
           </p>
-          <a
-            href="#contact"
-            className="btn-primary mr-4"
-          >
-            Book Free Consultation
-          </a>
-          <a
-            href="mailto:kareempayne11@gmail.com"
-            className="btn-outline"
-          >
-            Email Directly
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="#contact"
+              className="btn-primary"
+            >
+              Book Free Consultation
+            </a>
+            <a
+              href="mailto:kareempayne11@gmail.com"
+              className="btn-outline"
+            >
+              Email Directly
+            </a>
+          </div>
         </div>
       </div>
     </section>

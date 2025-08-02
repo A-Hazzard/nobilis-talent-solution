@@ -1,71 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Lead } from '@/shared/types/entities';
+import type { LeadFormData, FieldErrors, LeadsState, LeadsActions } from '@/lib/types/hooks';
 import { LeadsService } from '@/lib/services/LeadsService';
 import { toast } from 'sonner';
 import { validatePassword } from '@/lib/utils/validation';
-
-export interface LeadFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  organization: string;
-  phone: string;
-}
-
-export interface FieldErrors {
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-  firstName?: string;
-  lastName?: string;
-  organization?: string;
-  challenges?: string;
-}
-
-export interface PasswordValidation {
-  hasMinLength: boolean;
-  hasUppercase: boolean;
-  hasSpecialChar: boolean;
-}
-
-export interface LeadsState {
-  leads: Lead[];
-  isLoading: boolean;
-  searchTerm: string;
-  currentPage: number;
-  totalLeads: number;
-  error: string | null;
-  isAddDialogOpen: boolean;
-  isEditDialogOpen: boolean;
-  editingLead: Lead | null;
-  isSubmitting: boolean;
-  showPassword: boolean;
-  showConfirmPassword: boolean;
-  fieldErrors: FieldErrors;
-  passwordValidation: PasswordValidation;
-  formData: LeadFormData;
-}
-
-export interface LeadsActions {
-  loadLeads: () => Promise<void>;
-  handleAddLead: () => Promise<void>;
-  handleEditLead: () => Promise<void>;
-  handleDeleteLead: (id: string) => Promise<void>;
-  openEditDialog: (lead: Lead) => void;
-  resetForm: () => void;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  setSearchTerm: (term: string) => void;
-  setCurrentPage: (page: number) => void;
-  setIsAddDialogOpen: (open: boolean) => void;
-  setIsEditDialogOpen: (open: boolean) => void;
-  setShowPassword: (show: boolean) => void;
-  setShowConfirmPassword: (show: boolean) => void;
-  formatDate: (date: Date) => string;
-  getFieldError: (fieldName: string) => string | undefined;
-  isFieldValid: (fieldName: string) => boolean;
-}
+import { logAuditAction } from '@/lib/utils/auditUtils';
 
 /**
  * Custom hook for leads state management
@@ -148,6 +87,21 @@ export function useLeads(): [LeadsState, LeadsActions] {
         setState(prev => ({ ...prev, error }));
         toast.error(error);
       } else {
+        // Log audit action
+        await logAuditAction({
+          action: 'create',
+          entity: 'lead',
+          entityId: formData.email, // Use email as entityId for leads
+          timestamp: Date.now(),
+          details: {
+            title: `Lead account created`,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            organization: formData.organization,
+          },
+        });
+        
         toast.success("Lead account created successfully!");
         setState(prev => ({ 
           ...prev, 
@@ -185,6 +139,22 @@ export function useLeads(): [LeadsState, LeadsActions] {
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        await logAuditAction({
+          action: 'update',
+          entity: 'lead',
+          entityId: editingLead.id,
+          timestamp: Date.now(),
+          details: {
+            title: `Lead account updated`,
+            previousEmail: editingLead.email,
+            newEmail: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            organization: formData.organization,
+          },
+        });
+        
         toast.success("Lead updated successfully");
         setState(prev => ({ 
           ...prev, 
@@ -221,17 +191,37 @@ export function useLeads(): [LeadsState, LeadsActions] {
     if (!confirm('Are you sure you want to delete this lead?')) return;
     
     try {
+      // Get lead details before deletion for audit log
+      const leadToDelete = state.leads.find(lead => lead.id === id);
+      
       const response = await leadsService.delete(id);
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        if (leadToDelete) {
+          await logAuditAction({
+            action: 'delete',
+            entity: 'lead',
+            entityId: id,
+            timestamp: Date.now(),
+            details: {
+              title: `Lead account deleted`,
+              firstName: leadToDelete.firstName,
+              lastName: leadToDelete.lastName,
+              email: leadToDelete.email,
+              organization: leadToDelete.organization,
+            },
+          });
+        }
+        
         toast.success("Lead deleted successfully");
         await loadLeads();
       }
     } catch {
       toast.error("Failed to delete lead");
     }
-  }, [leadsService, loadLeads]);
+  }, [leadsService, loadLeads, state.leads]);
 
   const openEditDialog = useCallback((lead: Lead) => {
     setState(prev => ({

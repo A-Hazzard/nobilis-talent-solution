@@ -4,7 +4,7 @@ export type AuditLog = {
   userId: string;
   userEmail?: string;
   action: 'login' | 'create' | 'update' | 'delete';
-  entity: 'lead' | 'resource' | 'testimonial' | 'blog' | 'calendar' | 'auth';
+  entity: 'lead' | 'resource' | 'testimonial' | 'blog' | 'calendar' | 'auth' | 'contact';
   entityId?: string;
   details?: Record<string, any>;
 }; 

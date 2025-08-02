@@ -4,28 +4,16 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  signInWithPopup,
+  GoogleAuthProvider,
   User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 import type { FirebaseUser as AppUser, FirebaseAuthError } from '@/shared/types/firebase';
+import type { UserProfile } from '@/lib/types/services';
 import { validateSignupForm, validateLoginForm } from '@/lib/utils/validation';
 import { logAdminLogin } from '@/lib/utils/auditUtils';
-
-export interface UserProfile {
-  uid: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  organization?: string;
-  role: 'admin' | 'user';
-  isActive: boolean;
-  displayName: string;
-  createdAt: Date;
-  lastLoginAt?: Date;
-  updatedAt: Date;
-}
 
 export class AuthService {
   private static instance: AuthService;
@@ -217,6 +205,72 @@ export class AuthService {
       return null;
     }
   }
+
+  async signInWithGoogle(): Promise<{ user: AppUser | null; error: FirebaseAuthError | null; isNewUser?: boolean }> {
+    try {
+      console.log('AuthService: Starting Google sign-in...');
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+      
+      if (!firebaseUser) {
+        return { 
+          user: null, 
+          error: { code: 'auth/user-not-found', message: 'No user returned from Google sign-in' } 
+        };
+      }
+
+      // Get or create user profile
+      let userProfile = await this.getUserProfile(firebaseUser.uid);
+      const isNewUser = !userProfile; // Determine if this is a new user
+      
+      if (!userProfile) {
+        // Create profile for new social user
+        const names = firebaseUser.displayName?.split(' ') || ['', ''];
+        const firstName = names[0] || '';
+        const lastName = names.slice(1).join(' ') || '';
+        
+        await this.createUserProfile(firebaseUser.uid, {
+          firstName,
+          lastName,
+          email: firebaseUser.email || '',
+          organization: '',
+          phone: '',
+          displayName: firebaseUser.displayName || `${firstName} ${lastName}`.trim(),
+        });
+        
+        userProfile = await this.getUserProfile(firebaseUser.uid);
+      }
+      
+      // Update last login
+      await this.updateLastLogin(firebaseUser.uid);
+      
+      const user = this.mapFirebaseUser(firebaseUser);
+      
+      // Log admin login if applicable
+      if (userProfile?.role === 'admin') {
+        await logAdminLogin(firebaseUser.uid, firebaseUser.email || '');
+      }
+      
+      console.log('AuthService: Google sign-in successful');
+      return { user, error: null, isNewUser };
+      
+    } catch (error: any) {
+      console.error('AuthService: Google sign-in error:', error);
+      return { 
+        user: null, 
+        error: { 
+          code: error.code || 'auth/unknown-error',
+          message: error.message || 'Failed to sign in with Google'
+        }
+      };
+    }
+  }
+
+
 
   private mapFirebaseUser(firebaseUser: FirebaseUser): AppUser {
     return {

@@ -8,9 +8,12 @@ import { ResourcesSearch } from '@/components/admin/resources/ResourcesSearch';
 import { ResourcesGrid } from '@/components/admin/resources/ResourcesGrid';
 import { ResourceForm } from '@/components/admin/resources/ResourceForm';
 import { ResourcePreview } from '@/components/admin/resources/ResourcePreview';
+import { ResourceAnalytics } from '@/components/admin/resources/ResourceAnalytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import type { Resource } from '@/shared/types/entities';
+import { useState } from 'react';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -55,6 +58,20 @@ export default function ResourcesPage() {
     extractYouTubeVideoId,
     getPreviewContent,
   } = actions;
+
+  // Analytics state
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [selectedResourceForAnalytics, setSelectedResourceForAnalytics] = useState<Resource | null>(null);
+
+  const handleAnalytics = (resource: Resource) => {
+    setSelectedResourceForAnalytics(resource);
+    setIsAnalyticsOpen(true);
+  };
+
+  const handleCloseAnalytics = () => {
+    setIsAnalyticsOpen(false);
+    setSelectedResourceForAnalytics(null);
+  };
 
   if (isLoading) {
     return (
@@ -132,6 +149,7 @@ export default function ResourcesPage() {
           onEdit={openEditDialog}
           onDelete={handleDeleteResource}
           onPreview={openPreviewDialog}
+          onAnalytics={handleAnalytics}
           getStatusBadge={getStatusBadge}
           formatDate={formatDate}
           formatFileSize={formatFileSize}
@@ -177,6 +195,15 @@ export default function ResourcesPage() {
         formatFileSize={formatFileSize}
         extractYouTubeVideoId={extractYouTubeVideoId}
       />
+
+      {/* Analytics Dialog */}
+      {selectedResourceForAnalytics && (
+        <ResourceAnalytics
+          resource={selectedResourceForAnalytics}
+          isOpen={isAnalyticsOpen}
+          onClose={handleCloseAnalytics}
+        />
+      )}
     </div>
   );
 } 

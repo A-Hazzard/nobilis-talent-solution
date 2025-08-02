@@ -1,6 +1,83 @@
-import { Phone, Mail, MapPin, Calendar, Send, Clock } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { Phone, Mail, MapPin, Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const ContactSection = () => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    company: '',
+    challenges: '',
+    contactMethod: 'email'
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
+
+    try {
+      // Submit to backend API
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        setSubmitStatus('success');
+        
+        // Reset form after success
+        setTimeout(() => {
+          setFormData({
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            company: '',
+            challenges: '',
+            contactMethod: 'email'
+          });
+          setSubmitStatus('idle');
+        }, 3000);
+      } else {
+        setSubmitStatus('error');
+        if (result.details && Array.isArray(result.details)) {
+          setErrorMessage(result.details.join(', '));
+        } else {
+          setErrorMessage(result.error || 'Failed to submit form. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('Contact form submission error:', error);
+      setSubmitStatus('error');
+      setErrorMessage('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <section id="contact" className="py-20 lg:py-32 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -24,98 +101,144 @@ const ContactSection = () => {
                 <h3 className="text-2xl font-bold text-accent">Book Your Strategy Session</h3>
               </div>
 
-              <form className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-4">
+              {/* Success/Error Messages */}
+              {submitStatus === 'success' && (
+                <Alert className="mb-6 border-green-200 bg-green-50">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    Thank you! Your message has been sent successfully. We'll get back to you within 24 hours to schedule your free consultation.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {submitStatus === 'error' && (
+                <Alert className="mb-6 border-red-200 bg-red-50">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800">
+                    {errorMessage}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-accent mb-2">
+                    <Label htmlFor="firstName" className="text-accent">
                       First Name *
-                    </label>
-                    <input
+                    </Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
                       type="text"
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className="mt-1"
                       placeholder="John"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-accent mb-2">
+                    <Label htmlFor="lastName" className="text-accent">
                       Last Name *
-                    </label>
-                    <input
+                    </Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
                       type="text"
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className="mt-1"
                       placeholder="Smith"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-accent mb-2">
+                  <Label htmlFor="email" className="text-accent">
                     Email Address *
-                  </label>
-                  <input
+                  </Label>
+                  <Input
+                    id="email"
+                    name="email"
                     type="email"
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="mt-1"
                     placeholder="john@company.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-accent mb-2">
+                  <Label htmlFor="phone" className="text-accent">
                     Phone Number
-                  </label>
-                  <input
+                  </Label>
+                  <Input
+                    id="phone"
+                    name="phone"
                     type="tel"
-                    className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="mt-1"
                     placeholder="(555) 123-4567"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-accent mb-2">
+                  <Label htmlFor="company" className="text-accent">
                     Company Name
-                  </label>
-                  <input
+                  </Label>
+                  <Input
+                    id="company"
+                    name="company"
                     type="text"
-                    className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
+                    value={formData.company}
+                    onChange={handleInputChange}
+                    className="mt-1"
                     placeholder="Your Company"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-accent mb-2">
+                  <Label htmlFor="challenges" className="text-accent">
                     What leadership challenges are you facing? *
-                  </label>
-                  <textarea
+                  </Label>
+                  <Textarea
+                    id="challenges"
+                    name="challenges"
                     required
                     rows={4}
-                    className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth resize-none"
+                    value={formData.challenges}
+                    onChange={handleInputChange}
+                    className="mt-1"
                     placeholder="Tell us about your specific leadership challenges, team dynamics, or organizational goals..."
-                  ></textarea>
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-accent mb-2">
+                  <Label className="text-accent mb-2 block">
                     Preferred Contact Method
-                  </label>
+                  </Label>
                   <div className="grid grid-cols-2 gap-4">
                     <label className="flex items-center">
                       <input
                         type="radio"
-                        name="contact-method"
+                        name="contactMethod"
                         value="email"
+                        checked={formData.contactMethod === 'email'}
+                        onChange={handleInputChange}
                         className="mr-2 text-primary focus:ring-primary"
-                        defaultChecked
                       />
                       Email
                     </label>
                     <label className="flex items-center">
                       <input
                         type="radio"
-                        name="contact-method"
+                        name="contactMethod"
                         value="phone"
+                        checked={formData.contactMethod === 'phone'}
+                        onChange={handleInputChange}
                         className="mr-2 text-primary focus:ring-primary"
                       />
                       Phone
@@ -123,13 +246,23 @@ const ContactSection = () => {
                   </div>
                 </div>
 
-                <button
+                <Button
                   type="submit"
-                  className="btn-primary w-full group"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white py-3 sm:py-4 text-base sm:text-lg rounded-xl"
                 >
-                  Send Message & Book Consultation
-                  <Send className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Sending Message...
+                    </div>
+                  ) : (
+                    <>
+                      Send Message & Book Consultation
+                      <Send className="ml-2 w-5 h-5" />
+                    </>
+                  )}
+                </Button>
               </form>
 
               <p className="text-sm text-muted-foreground mt-4">
@@ -198,15 +331,18 @@ const ContactSection = () => {
                 </div>
               </div>
 
-              {/* Calendly Integration Placeholder */}
+              {/* Calendly Integration */}
               <div className="card-elevated bg-primary text-white">
                 <h4 className="text-xl font-bold mb-4">Schedule Directly</h4>
                 <p className="mb-6 opacity-90">
                   Prefer to book immediately? Use our online calendar to select 
                   a time that works for you.
                 </p>
-                <button className="bg-white text-primary px-6 py-3 rounded-xl font-semibold hover:bg-white/90 transition-smooth w-full">
-                  Open Calendar (Calendly)
+                <button 
+                  onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
+                  className="bg-white text-primary px-6 py-3 rounded-xl font-semibold hover:bg-white/90 transition-smooth w-full"
+                >
+                  Book Now
                 </button>
                 <p className="text-xs opacity-75 mt-3">
                   All appointments are confirmed via email
@@ -218,7 +354,7 @@ const ContactSection = () => {
 
         {/* Trust Indicators */}
         <div className="mt-16 text-center animate-fade-up">
-          <div className="inline-flex items-center space-x-8 text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 text-sm text-muted-foreground">
             <div className="flex items-center">
               <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
               Confidential Consultations

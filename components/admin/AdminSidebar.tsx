@@ -3,16 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Calendar,
-  Star,
-  PenTool,
-  Activity,
-  CreditCard,
+import { 
+  LayoutDashboard, 
+  Users, 
+  FileText, 
+  Calendar, 
+  MessageSquare, 
+  Settings, 
+  BarChart3,
+  Receipt
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -20,6 +19,11 @@ const sidebarItems = [
     title: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard,
+  },
+  {
+    title: 'Analytics',
+    href: '/admin/analytics',
+    icon: BarChart3,
   },
   {
     title: 'Leads',
@@ -32,63 +36,63 @@ const sidebarItems = [
     icon: FileText,
   },
   {
-    title: 'Content', // Renamed from 'Blog'
+    title: 'Blog',
     href: '/admin/blog',
-    icon: PenTool,
-  },
-  {
-    title: 'Testimonials',
-    href: '/admin/testimonials',
-    icon: Star,
+    icon: FileText,
   },
   {
     title: 'Calendar',
     href: '/admin/calendar',
     icon: Calendar,
   },
-
   {
-    title: 'Audit',
-    href: '/admin/audit',
-    icon: Activity,
+    title: 'Testimonials',
+    href: '/admin/testimonials',
+    icon: MessageSquare,
   },
   {
-    title: 'Payments',
-    href: '/admin/payments',
-    icon: CreditCard,
+    title: 'Invoices',
+    href: '/admin/invoices',
+    icon: Receipt,
+  },
+  {
+    title: 'Settings',
+    href: '/admin/settings',
+    icon: Settings,
   },
 ];
 
-export default function AdminSidebar() {
+export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="pb-12 min-h-screen">
-      <div className="space-y-4 py-4">
-        <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight hidden lg:block">
-            Admin Panel
-          </h2>
-          <div className="space-y-1">
-            {sidebarItems.map((item) => (
-              <Button
-                key={item.href}
-                asChild
-                variant={pathname === item.href ? 'secondary' : 'ghost'}
-                className={cn(
-                  'w-full justify-start text-sm lg:text-base',
-                  pathname === item.href && 'bg-secondary'
-                )}
-              >
-                <Link href={item.href}>
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.title}
-                </Link>
-              </Button>
-            ))}
-          </div>
-        </div>
+    <div className="flex flex-col w-64 bg-white border-r border-gray-200">
+      <div className="flex items-center h-16 px-6 border-b border-gray-200">
+        <h1 className="text-xl font-semibold text-gray-900">Admin Panel</h1>
       </div>
+      
+      <nav className="flex-1 px-4 py-6 space-y-2">
+        {sidebarItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
+          
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ease-in-out transform hover:scale-105',
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              )}
+            >
+              <Icon className="mr-3 h-5 w-5" />
+              {item.title}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 } 

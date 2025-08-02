@@ -1,43 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Testimonial } from '@/shared/types/entities';
+import type { TestimonialFormData, TestimonialsState, TestimonialsActions } from '@/lib/types/hooks';
 import { TestimonialsService } from '@/lib/services/TestimonialsService';
 import { toast } from 'sonner';
-
-export interface TestimonialFormData {
-  clientName: string;
-  company: string;
-  content: string;
-  rating: number;
-  isPublic: boolean;
-}
-
-export interface TestimonialsState {
-  testimonials: Testimonial[];
-  isLoading: boolean;
-  searchTerm: string;
-  error: string | null;
-  isAddDialogOpen: boolean;
-  isEditDialogOpen: boolean;
-  editingTestimonial: Testimonial | null;
-  formData: TestimonialFormData;
-  isSubmitting: boolean;
-}
-
-export interface TestimonialsActions {
-  loadTestimonials: () => Promise<void>;
-  handleAddTestimonial: () => Promise<void>;
-  handleEditTestimonial: () => Promise<void>;
-  handleDeleteTestimonial: (id: string) => Promise<void>;
-  openEditDialog: (testimonial: Testimonial) => void;
-  resetForm: () => void;
-  setSearchTerm: (term: string) => void;
-  setIsAddDialogOpen: (open: boolean) => void;
-  setIsEditDialogOpen: (open: boolean) => void;
-  setFormData: (data: Partial<TestimonialFormData>) => void;
-  getStatusBadge: (isPublic: boolean) => { variant: string; className: string; icon: string; text: string };
-  renderStars: (rating: number) => number[];
-  formatDate: (date: Date) => string;
-}
+import { logAuditAction } from '@/lib/utils/auditUtils';
 
 /**
  * Custom hook for testimonials state management
@@ -117,6 +83,21 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        await logAuditAction({
+          action: 'create',
+          entity: 'testimonial',
+          entityId: response.id || formData.clientName,
+          timestamp: Date.now(),
+          details: {
+            title: `Testimonial added`,
+            clientName: formData.clientName,
+            company: formData.company,
+            rating: formData.rating,
+            isPublic: formData.isPublic,
+          },
+        });
+        
         toast.success("Testimonial added successfully");
         setState(prev => ({ 
           ...prev, 
@@ -170,6 +151,22 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        await logAuditAction({
+          action: 'update',
+          entity: 'testimonial',
+          entityId: editingTestimonial.id,
+          timestamp: Date.now(),
+          details: {
+            title: `Testimonial updated`,
+            clientName: formData.clientName,
+            company: formData.company,
+            rating: formData.rating,
+            isPublic: formData.isPublic,
+            previousRating: editingTestimonial.rating,
+          },
+        });
+        
         toast.success("Testimonial updated successfully");
         setState(prev => ({ 
           ...prev, 
@@ -206,17 +203,37 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
     if (!confirm('Are you sure you want to delete this testimonial?')) return;
     
     try {
+      // Get testimonial details before deletion for audit log
+      const testimonialToDelete = state.testimonials.find(testimonial => testimonial.id === id);
+      
       const response = await testimonialsService.delete(id);
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        if (testimonialToDelete) {
+          await logAuditAction({
+            action: 'delete',
+            entity: 'testimonial',
+            entityId: id,
+            timestamp: Date.now(),
+            details: {
+              title: `Testimonial deleted`,
+              clientName: testimonialToDelete.clientName,
+              company: testimonialToDelete.company,
+              rating: testimonialToDelete.rating,
+              isPublic: testimonialToDelete.isPublic,
+            },
+          });
+        }
+        
         toast.success("Testimonial deleted successfully");
         await loadTestimonials();
       }
     } catch {
       toast.error("Failed to delete testimonial");
     }
-  }, [testimonialsService, loadTestimonials]);
+  }, [testimonialsService, loadTestimonials, state.testimonials]);
 
 
 

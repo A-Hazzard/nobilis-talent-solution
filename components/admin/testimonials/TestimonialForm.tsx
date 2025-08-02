@@ -19,7 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import type { TestimonialFormData } from '@/lib/hooks/useTestimonials';
+import type { TestimonialFormData } from '@/lib/types/hooks';
 
 interface TestimonialFormProps {
   isOpen: boolean;

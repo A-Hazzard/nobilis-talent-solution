@@ -1,55 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { CalendarEvent } from '@/shared/types/entities';
+import type { EventFormData, CalendarState, CalendarActions } from '@/lib/types/hooks';
 import { CalendarService } from '@/lib/services/CalendarService';
 import { CalendlyService } from '@/lib/services/CalendlyService';
 import { CalendarUtils } from '@/lib/utils/calendarUtils';
-
-export interface EventFormData {
-  title: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  attendees: number;
-  type: CalendarEvent['type'];
-}
-
-export interface CalendarState {
-  events: CalendarEvent[];
-  isLoading: boolean;
-  currentMonth: Date;
-  isModalOpen: boolean;
-  editingEvent: CalendarEvent | null;
-  form: EventFormData;
-  formError: string | null;
-  calendlyAuthStatus: 'connected' | 'disconnected' | 'error' | 'connecting';
-  syncStatus: 'disconnected' | 'syncing' | 'success' | 'error';
-  lastSyncTime: Date | null;
-  syncStats: { synced: number; total: number };
-  showInstructions: boolean;
-  showCalendlyBooking: boolean;
-  selectedEventType: any;
-  connectionAttempts: number;
-  maxConnectionAttempts: number;
-}
-
-export interface CalendarActions {
-  loadEvents: (forceConnectionStatus?: 'connected' | 'disconnected' | 'error') => Promise<void>;
-  syncCalendlyEvents: () => Promise<void>;
-  connectCalendly: () => void;
-  handleOpenModal: (event?: CalendarEvent) => void;
-  handleCloseModal: () => void;
-  handleSubmit: (e: React.FormEvent) => Promise<void>;
-  handleDeleteEvent: (eventId: string) => Promise<void>;
-  handleFormChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleTypeChange: (value: string) => void;
-  handleTimeChange: (field: 'startTime' | 'endTime', value: string) => void;
-  changeMonth: (direction: 'prev' | 'next') => void;
-  openCalendlyBooking: () => Promise<void>;
-  closeCalendlyBooking: () => void;
-  toggleInstructions: () => void;
-  checkCalendlyConnection: () => Promise<'connected' | 'disconnected' | 'error'>;
-}
 
 /**
  * Custom hook for calendar state management

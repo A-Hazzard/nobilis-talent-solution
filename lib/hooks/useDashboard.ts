@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Analytics } from '@/shared/types/entities';
+import type { DashboardState, DashboardActions } from '@/lib/types/hooks';
 import { analyticsApi } from '@/lib/helpers/api';
 import { FakeDataService } from '@/lib/services/FakeDataService';
 import { useDashboardStore } from '@/lib/stores/dashboardStore';
@@ -7,27 +8,6 @@ import { useDashboardStore } from '@/lib/stores/dashboardStore';
 import { formatTimeAgo } from '@/lib/utils/auditUtils';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-
-export interface DashboardState {
-  analytics: Analytics | null;
-  isLoading: boolean;
-  period: 'week' | 'month' | 'year';
-  recentActivity: any[];
-  error: string | null;
-}
-
-export interface DashboardActions {
-  loadDashboardData: () => Promise<void>;
-  setPeriod: (period: 'week' | 'month' | 'year') => void;
-  getStats: () => Array<{
-    title: string;
-    value: string | number;
-    change: string | number;
-    icon: any;
-    color: string;
-    bgColor: string;
-  }>;
-}
 
 /**
  * Custom hook for dashboard state management

@@ -1,13 +1,23 @@
 import { User } from '@/shared/types/entities';
 
 /**
- * Determines the appropriate redirect path based on user role
+ * Determines the appropriate redirect path based on user role, email verification, and onboarding status
  * @param user - The authenticated user
  * @returns The path to redirect to
  */
 export function getRedirectPath(user: User | null): string {
   if (!user) {
     return '/';
+  }
+
+  // Check if user needs email verification (non-admin users only)
+  if (user.role !== 'admin' && !user.emailVerified) {
+    return '/verify-email';
+  }
+
+  // Check if user needs onboarding (non-admin users only)
+  if (user.role !== 'admin' && !user.onboardingCompleted) {
+    return '/onboarding';
   }
 
   // Admin users go to admin dashboard

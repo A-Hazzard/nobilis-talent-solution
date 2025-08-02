@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import type { LeadFormData, FieldErrors, PasswordValidation } from '@/lib/hooks/useLeads';
+import type { LeadFormData, FieldErrors, PasswordValidation } from '@/lib/types/hooks';
 
 interface LeadFormProps {
   isOpen: boolean;

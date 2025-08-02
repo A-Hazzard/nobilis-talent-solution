@@ -10,6 +10,15 @@ import Color from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { CodeBlock } from '@tiptap/extension-code-block';
+import { Blockquote } from '@tiptap/extension-blockquote';
+import { TaskList } from '@tiptap/extension-task-list';
+import { TaskItem } from '@tiptap/extension-task-item';
+import { CharacterCount } from '@tiptap/extension-character-count';
 import { 
   Bold, 
   Italic, 
@@ -31,7 +40,14 @@ import {
   Undo,
   Redo,
   Eraser,
-  Type
+  Type,
+  Table as TableIcon,
+  Code,
+  Quote,
+  CheckSquare,
+  Save,
+  Clock,
+  Users
 } from 'lucide-react';
 import { Button } from './button';
 import { Separator } from './separator';
@@ -46,6 +62,9 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  onAutoSave?: (content: string) => void;
+  showCollaboration?: boolean;
+  collaborators?: Array<{ id: string; name: string; color: string }>;
 }
 
 const highlightColors = [
@@ -81,13 +100,18 @@ export function RichTextEditor({
   onChange, 
   placeholder: _placeholder = 'Start writing...', 
   className,
-  disabled = false 
+  disabled = false,
+  onAutoSave,
+  showCollaboration = false,
+  collaborators = []
 }: RichTextEditorProps) {
   const [isClient, setIsClient] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [showFontSizePicker, setShowFontSizePicker] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -129,10 +153,42 @@ export function RichTextEditor({
         multicolor: true,
       }),
       Underline,
-    ],
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      CodeBlock.configure({
+        HTMLAttributes: {
+          class: 'bg-gray-100 p-4 rounded-lg font-mono text-sm',
+        },
+      }),
+      Blockquote.configure({
+        HTMLAttributes: {
+          class: 'border-l-4 border-gray-300 pl-4 italic',
+        },
+      }),
+      TaskList,
+             TaskItem.configure({
+         nested: true,
+       }),
+       CharacterCount,
+     ],
     content: value,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const content = editor.getHTML();
+      onChange(content);
+      
+      // Auto-save functionality
+      if (onAutoSave) {
+        setIsSaving(true);
+        setTimeout(() => {
+          onAutoSave(content);
+          setLastSaved(new Date());
+          setIsSaving(false);
+        }, 2000); // Auto-save after 2 seconds of inactivity
+      }
     },
     editable: !disabled,
     immediatelyRender: false,
@@ -493,41 +549,128 @@ export function RichTextEditor({
 
         <Separator orientation="vertical" className="h-6" />
 
-        {/* Actions */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().chain().focus().undo().run()}
-          >
-            <Undo className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().redo().run()}
-            disabled={!editor.can().chain().focus().redo().run()}
-          >
-            <Redo className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
-          >
-            <Eraser className="h-4 w-4" />
-          </Button>
-        </div>
+                 {/* Advanced Features */}
+         <div className="flex items-center gap-1">
+           <Button
+             variant="ghost"
+             size="sm"
+             onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+           >
+             <TableIcon className="h-4 w-4" />
+           </Button>
+           <Button
+             variant="ghost"
+             size="sm"
+             onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+             className={cn(editor.isActive('codeBlock') && 'bg-gray-200')}
+           >
+             <Code className="h-4 w-4" />
+           </Button>
+           <Button
+             variant="ghost"
+             size="sm"
+             onClick={() => editor.chain().focus().toggleBlockquote().run()}
+             className={cn(editor.isActive('blockquote') && 'bg-gray-200')}
+           >
+             <Quote className="h-4 w-4" />
+           </Button>
+           <Button
+             variant="ghost"
+             size="sm"
+             onClick={() => editor.chain().focus().toggleTaskList().run()}
+             className={cn(editor.isActive('taskList') && 'bg-gray-200')}
+           >
+             <CheckSquare className="h-4 w-4" />
+           </Button>
+         </div>
+
+         <Separator orientation="vertical" className="h-6" />
+
+         {/* Actions */}
+         <div className="flex items-center gap-1">
+           <Button
+             variant="ghost"
+             size="sm"
+             onClick={() => editor.chain().focus().undo().run()}
+             disabled={!editor.can().chain().focus().undo().run()}
+           >
+             <Undo className="h-4 w-4" />
+           </Button>
+           <Button
+             variant="ghost"
+             size="sm"
+             onClick={() => editor.chain().focus().redo().run()}
+             disabled={!editor.can().chain().focus().redo().run()}
+           >
+             <Redo className="h-4 w-4" />
+           </Button>
+           <Button
+             variant="ghost"
+             size="sm"
+             onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+           >
+             <Eraser className="h-4 w-4" />
+           </Button>
+         </div>
       </div>
 
-      {/* Editor Content */}
-      <div className="min-h-[300px]">
-        <EditorContent 
-          editor={editor} 
-          className="min-h-[300px] p-4 focus:outline-none prose max-w-none"
-        />
-      </div>
+             {/* Editor Content */}
+       <div className="min-h-[300px]">
+         <EditorContent 
+           editor={editor} 
+           className="min-h-[300px] p-4 focus:outline-none prose max-w-none"
+         />
+       </div>
+
+       {/* Status Bar */}
+       <div className="border-t bg-gray-50 px-4 py-2 flex items-center justify-between text-sm text-gray-600">
+         <div className="flex items-center gap-4">
+           {/* Auto-save status */}
+           {onAutoSave && (
+             <div className="flex items-center gap-2">
+               {isSaving ? (
+                 <>
+                   <div className="w-3 h-3 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                   <span>Saving...</span>
+                 </>
+               ) : lastSaved ? (
+                 <>
+                   <Save className="w-3 h-3" />
+                   <span>Last saved {lastSaved.toLocaleTimeString()}</span>
+                 </>
+               ) : (
+                 <>
+                   <Clock className="w-3 h-3" />
+                   <span>Auto-save enabled</span>
+                 </>
+               )}
+             </div>
+           )}
+
+           {/* Collaboration indicators */}
+           {showCollaboration && collaborators.length > 0 && (
+             <div className="flex items-center gap-2">
+               <Users className="w-3 h-3" />
+               <span>{collaborators.length} collaborator{collaborators.length !== 1 ? 's' : ''} online</span>
+               <div className="flex gap-1">
+                 {collaborators.map((collaborator) => (
+                   <div
+                     key={collaborator.id}
+                     className="w-2 h-2 rounded-full"
+                     style={{ backgroundColor: collaborator.color }}
+                     title={collaborator.name}
+                   />
+                 ))}
+               </div>
+             </div>
+           )}
+         </div>
+
+         {/* Word count */}
+         <div className="text-xs">
+           {editor.storage.characterCount.characters()} characters
+         </div>
+       </div>
 
       {/* Click outside to close pickers */}
       {(showColorPicker || showHighlightPicker || showFontSizePicker) && (

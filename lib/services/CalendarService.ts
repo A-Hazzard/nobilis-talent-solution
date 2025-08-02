@@ -1,32 +1,8 @@
 import type { CalendarEvent } from '@/shared/types/entities';
+import type { CreateEventData, UpdateEventData, CalendarServiceResponse } from '@/lib/types/services';
 import { db } from '@/lib/firebase/config';
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { logAdminAction } from '@/lib/helpers/auditLogger';
-
-export interface CreateEventData {
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  attendees: number;
-  type: CalendarEvent['type'];
-  description?: string;
-  createdBy: string;
-}
-
-export interface UpdateEventData extends Partial<CreateEventData> {
-  id: string;
-}
-
-export interface CalendarServiceError {
-  code: string;
-  message: string;
-}
-
-export interface CalendarServiceResponse<T> {
-  data?: T;
-  error?: CalendarServiceError;
-}
 
 /**
  * Service class for managing calendar events with Firebase integration

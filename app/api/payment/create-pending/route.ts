@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreatePendingPaymentRequest, PendingPaymentResponse } from '@/shared/types/payment';
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, updateDoc } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -92,16 +92,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Get the first pending payment (should only be one per email)
-    const doc = querySnapshot.docs[0];
+    const docSnapshot = querySnapshot.docs[0];
+    const paymentData = docSnapshot.data();
     const pendingPayment = {
-      id: doc.id,
-      ...doc.data(),
+      id: docSnapshot.id,
+      ...paymentData,
     };
 
     // Check if payment has expired
-    if (new Date() > new Date(pendingPayment.expiresAt.toDate())) {
+    if (paymentData.expiresAt && new Date() > new Date(paymentData.expiresAt.toDate())) {
       // Update status to expired
-      await updateDoc(doc.ref, { status: 'expired' });
+      await updateDoc(docSnapshot.ref, { status: 'expired' });
       return NextResponse.json(
         { error: 'Payment has expired' },
         { status: 410 }

@@ -21,7 +21,8 @@ import {
   BookOpen,
   Download,
   File,
-  Upload
+  Upload,
+  CheckCircle
 } from 'lucide-react';
 
 import {
@@ -57,6 +58,8 @@ import type { BlogPost, Resource } from '@/shared/types/entities';
 import dynamic from 'next/dynamic';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/lib/firebase/config';
+import { SEOAnalyzer } from '@/components/admin/blog/SEOAnalyzer';
+import { ContentScheduler } from '@/components/admin/blog/ContentScheduler';
 
 // Dynamically import RichTextEditor to avoid SSR issues
 const RichTextEditor = dynamic(
@@ -85,6 +88,8 @@ export default function ContentPage() {
   const [isEditResourceDialogOpen, setIsEditResourceDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
   const [selectedResourceFile, setSelectedResourceFile] = useState<File | null>(null);
+  const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [resourceFormData, setResourceFormData] = useState({
     title: '',
     description: '',
@@ -113,10 +118,30 @@ export default function ContentPage() {
       url: string;
       description?: string;
     }>, // External references/links
+    scheduledDate: '',
+    scheduledTime: '',
+    isScheduled: false,
   });
 
   const blogService = new BlogService();
   const resourcesService = new ResourcesService();
+
+  // Auto-save functionality
+  const handleAutoSave = async (content: string) => {
+    if (!editingPost) return; // Only auto-save when editing existing posts
+    
+    setIsAutoSaving(true);
+    try {
+      await blogService.update(editingPost.id, { content });
+      setLastAutoSaved(new Date());
+      toast.success('Draft auto-saved');
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      toast.error('Auto-save failed');
+    } finally {
+      setIsAutoSaving(false);
+    }
+  };
 
 
   const categories = [
@@ -337,6 +362,9 @@ export default function ContentPage() {
       featuredImage: post.featuredImage || '',
       resources: post.resources || [],
       references: post.references || [],
+      scheduledDate: post.scheduledDate || '',
+      scheduledTime: post.scheduledTime || '',
+      isScheduled: post.isScheduled || false,
     });
     setSelectedImage(null);
     setIsEditDialogOpen(true);
@@ -358,6 +386,9 @@ export default function ContentPage() {
       featuredImage: '',
       resources: [],
       references: [],
+      scheduledDate: '',
+      scheduledTime: '',
+      isScheduled: false,
     });
     setSelectedImage(null);
     setContentType('blog');
@@ -499,9 +530,7 @@ export default function ContentPage() {
     return new Date(date).toLocaleDateString();
   };
 
-  const _formatTags = (tags: string[]) => {
-    return tags.slice(0, 2).join(', ') + (tags.length > 2 ? ` +${tags.length - 2}` : '');
-  };
+
 
 
 
@@ -731,7 +760,24 @@ export default function ContentPage() {
                     onChange={(content: string) => setFormData({ ...formData, content })}
                     placeholder="Write your blog content here..."
                     className="min-h-[300px]"
+                    onAutoSave={handleAutoSave}
                   />
+                  {/* Auto-save Status */}
+                  {(isAutoSaving || lastAutoSaved) && (
+                    <div className="mt-2 text-xs text-gray-600 flex items-center gap-2">
+                      {isAutoSaving ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                          <span>Auto-saving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          <span>Last saved: {lastAutoSaved?.toLocaleTimeString()}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -880,6 +926,39 @@ export default function ContentPage() {
                   >
                     Add Reference
                   </Button>
+                </div>
+              </div>
+
+              {/* SEO Analysis */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">SEO Analysis</Label>
+                <div className="col-span-3">
+                  <SEOAnalyzer
+                    title={formData.title}
+                    description={formData.seoDescription}
+                    content={formData.content}
+                    keywords={formData.tags}
+                  />
+                </div>
+              </div>
+
+              {/* Content Scheduling */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">Scheduling</Label>
+                <div className="col-span-3">
+                  <ContentScheduler
+                    scheduledDate={formData.scheduledDate}
+                    scheduledTime={formData.scheduledTime}
+                    isScheduled={formData.isScheduled}
+                    onScheduleChange={(date, time, isScheduled) => {
+                      setFormData({
+                        ...formData,
+                        scheduledDate: date,
+                        scheduledTime: time,
+                        isScheduled
+                      });
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -1405,7 +1484,24 @@ export default function ContentPage() {
                   onChange={(content: string) => setFormData({ ...formData, content })}
                   placeholder="Write your blog content here..."
                   className="min-h-[300px]"
+                  onAutoSave={handleAutoSave}
                 />
+                {/* Auto-save Status */}
+                {(isAutoSaving || lastAutoSaved) && (
+                  <div className="mt-2 text-xs text-gray-600 flex items-center gap-2">
+                    {isAutoSaving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                        <span>Auto-saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                        <span>Last saved: {lastAutoSaved?.toLocaleTimeString()}</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

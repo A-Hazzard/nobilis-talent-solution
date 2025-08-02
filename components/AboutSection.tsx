@@ -34,29 +34,29 @@ const AboutSection = () => {
           {/* Left side - Image and stats */}
           <div className="relative" data-animate>
             <div className="relative z-10">
-              <div className="relative w-full max-w-md mx-auto">
+              <div className="relative w-full max-w-sm sm:max-w-md mx-auto">
                 <Image
                   src="/assets/kareem-profile.jpg"
-                alt="Nobilis Talent Solutions - Leadership Coach"
+                  alt="Nobilis Talent Solutions - Leadership Coach"
                   width={400}
                   height={500}
                   className="rounded-3xl shadow-strong hover-float"
-              />
+                />
               </div>
             </div>
             
             {/* Floating achievement cards */}
-            <div className="absolute -top-6 -right-6 animate-float">
-              <div className="card-elevated bg-primary text-white p-6 max-w-48">
-                <div className="text-3xl font-bold mb-1">5+</div>
-                <div className="text-sm opacity-90">Years of Impact</div>
+            <div className="absolute -top-6 -right-6 animate-float hidden sm:block">
+              <div className="card-elevated bg-primary text-white p-4 sm:p-6 max-w-40 sm:max-w-48">
+                <div className="text-2xl sm:text-3xl font-bold mb-1">5+</div>
+                <div className="text-xs sm:text-sm opacity-90">Years of Impact</div>
               </div>
             </div>
             
-            <div className="absolute -bottom-6 -left-6 animate-float" style={{ animationDelay: '2s' }}>
-              <div className="card-elevated bg-secondary text-white p-6 max-w-48">
-                <div className="text-3xl font-bold mb-1">98%</div>
-                <div className="text-sm opacity-90">Client Success Rate</div>
+            <div className="absolute -bottom-6 -left-6 animate-float hidden sm:block" style={{ animationDelay: '2s' }}>
+              <div className="card-elevated bg-secondary text-white p-4 sm:p-6 max-w-40 sm:max-w-48">
+                <div className="text-2xl sm:text-3xl font-bold mb-1">98%</div>
+                <div className="text-sm sm:text-sm opacity-90">Client Success Rate</div>
               </div>
             </div>
           </div>

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CalendarEvent } from '@/shared/types/entities';
-import type { EventFormData } from '@/lib/hooks/useCalendar';
+import type { EventFormData } from '@/lib/types/hooks';
 
 interface EventFormProps {
   isOpen: boolean;

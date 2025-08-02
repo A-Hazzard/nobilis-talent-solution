@@ -31,10 +31,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BlogPost, Resource } from '@/shared/types/entities';
-import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import ResourceDownloadModal from '@/components/ResourceDownloadModal';
+import AuthModal from '@/components/AuthModal';
 import { BlogService } from '@/lib/services/BlogService';
 import { ResourcesService } from '@/lib/services/ResourcesService';
+import { useAuth } from '@/hooks/useAuth';
 
 const categoryLabels: Record<string, string> = {
   'leadership': 'Leadership',
@@ -60,6 +62,8 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function ContentPage() {
+  const { isAuthenticated } = useAuth();
+  
   // Blog Posts State
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [filteredBlogPosts, setFilteredBlogPosts] = useState<BlogPost[]>([]);
@@ -79,6 +83,16 @@ export default function ContentPage() {
   const [isLoadingBlogs, setIsLoadingBlogs] = useState(true);
   const [isLoadingResources, setIsLoadingResources] = useState(true);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
+
+  // Modal State
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalContext, setAuthModalContext] = useState<{
+    title: string;
+    description: string;
+    onSuccess: () => void;
+  } | null>(null);
 
   useEffect(() => {
     loadBlogPosts();
@@ -186,7 +200,41 @@ export default function ContentPage() {
   };
 
   const handleViewPost = (slug: string) => {
+    if (!isAuthenticated) {
+      setAuthModalContext({
+        title: 'Sign in to read blog posts',
+        description: 'Please sign in or create an account to read our blog posts and access exclusive content.',
+        onSuccess: () => window.open(`/blog/${slug}`, '_blank')
+      });
+      setIsAuthModalOpen(true);
+      return;
+    }
     window.open(`/blog/${slug}`, '_blank');
+  };
+
+  const handleDownloadClick = (resourceId: string) => {
+    if (!isAuthenticated) {
+      const resource = resources.find(r => r.id === resourceId);
+      setAuthModalContext({
+        title: 'Sign in to download resources',
+        description: `Please sign in or create an account to download "${resource?.title || 'this resource'}" and access our content library.`,
+        onSuccess: () => {
+          const resource = resources.find(r => r.id === resourceId);
+          if (resource) {
+            setSelectedResource(resource);
+            setIsModalOpen(true);
+          }
+        }
+      });
+      setIsAuthModalOpen(true);
+      return;
+    }
+    
+    const resource = resources.find(r => r.id === resourceId);
+    if (resource) {
+      setSelectedResource(resource);
+      setIsModalOpen(true);
+    }
   };
 
   const handleDownload = async (resourceId: string) => {
@@ -217,6 +265,11 @@ export default function ContentPage() {
     } catch (error) {
       console.error('Error downloading resource:', error);
     }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedResource(null);
   };
 
   const toggleDescription = (resourceId: string) => {
@@ -254,8 +307,6 @@ export default function ContentPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <Navigation />
-      
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -515,7 +566,7 @@ export default function ContentPage() {
                            ))}
                          </div>
                          <Button 
-                           onClick={() => handleDownload(resource.id)}
+                           onClick={() => handleDownloadClick(resource.id)}
                            className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border-0 h-12 rounded-xl"
                          >
                            <Download className="w-5 h-5 mr-2" />
@@ -604,7 +655,7 @@ export default function ContentPage() {
                            ))}
                          </div>
                          <Button 
-                           onClick={() => handleDownload(resource.id)}
+                           onClick={() => handleDownloadClick(resource.id)}
                            className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border-0 h-12 rounded-xl"
                          >
                            <Download className="w-5 h-5 mr-2" />
@@ -621,6 +672,26 @@ export default function ContentPage() {
       </div>
 
       <Footer />
+
+      {/* Resource Download Modal */}
+      <ResourceDownloadModal
+        resource={selectedResource}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onDownload={handleDownload}
+      />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthModalContext(null);
+        }}
+        onSuccess={authModalContext?.onSuccess}
+        title={authModalContext?.title}
+        description={authModalContext?.description}
+      />
     </div>
   );
 } 

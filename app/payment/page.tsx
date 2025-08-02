@@ -2,10 +2,13 @@
 
 import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Check, CreditCard, Shield, Zap } from 'lucide-react';
+import { Check, CreditCard, Shield, Zap, FileText } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import InvoicePreviewModal from '@/components/InvoicePreviewModal';
 import { PaymentService } from '@/lib/services/PaymentService';
+import { InvoiceService } from '@/lib/services/InvoiceService';
+import type { InvoicePreview } from '@/shared/types/payment';
 
 // Initialize Stripe (you'll need to add your publishable key to .env.local)
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -16,6 +19,12 @@ export default function PaymentPage() {
   const [selectedOption, setSelectedOption] = useState('consultation');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [invoicePreview, setInvoicePreview] = useState<InvoicePreview | null>(null);
+  const [clientInfo, setClientInfo] = useState({
+    name: '',
+    email: ''
+  });
 
   const handlePayment = async () => {
     setIsLoading(true);
@@ -36,6 +45,32 @@ export default function PaymentPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleInvoicePreview = () => {
+    if (!clientInfo.name || !clientInfo.email) {
+      setError('Please enter your name and email to preview invoice');
+      return;
+    }
+
+    const selectedPaymentOption = paymentOptions.find(option => option.id === selectedOption);
+    if (!selectedPaymentOption) return;
+
+    const invoiceRequest = InvoiceService.createInvoiceFromPaymentOption(
+      selectedPaymentOption,
+      clientInfo.name,
+      clientInfo.email
+    );
+
+    const preview = InvoiceService.generatePreview(invoiceRequest);
+    setInvoicePreview(preview);
+    setIsInvoiceModalOpen(true);
+    setError('');
+  };
+
+  const handleProceedToPayment = () => {
+    setIsInvoiceModalOpen(false);
+    handlePayment();
   };
 
   const selectedPaymentOption = paymentOptions.find(option => option.id === selectedOption);
@@ -129,29 +164,69 @@ export default function PaymentPage() {
                   </p>
                 </div>
 
+                {/* Client Information Form */}
+                <div className="mb-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={clientInfo.name}
+                      onChange={(e) => setClientInfo(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      value={clientInfo.email}
+                      onChange={(e) => setClientInfo(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-smooth"
+                      placeholder="john@example.com"
+                      required
+                    />
+                  </div>
+                </div>
+
                 {error && (
                   <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg mb-6">
                     {error}
                   </div>
                 )}
 
-                <button
-                  onClick={handlePayment}
-                  disabled={isLoading}
-                  className="w-full btn-primary py-4 text-lg font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="w-5 h-5" />
-                      <span>Pay Securely with Stripe</span>
-                    </>
-                  )}
-                </button>
+                <div className="space-y-4">
+                  <button
+                    onClick={handleInvoicePreview}
+                    className="w-full btn-outline py-4 text-lg font-semibold flex items-center justify-center space-x-2"
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span>Preview Invoice</span>
+                  </button>
+
+                  <button
+                    onClick={handlePayment}
+                    disabled={isLoading}
+                    className="w-full btn-primary py-4 text-lg font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-5 h-5" />
+                        <span>Pay Securely with Stripe</span>
+                      </>
+                    )}
+                  </button>
+                </div>
 
                 {/* Security Features */}
                 <div className="mt-8 pt-6 border-t border-border">
@@ -173,6 +248,14 @@ export default function PaymentPage() {
       </section>
 
       <Footer />
+
+      {/* Invoice Preview Modal */}
+      <InvoicePreviewModal
+        invoice={invoicePreview}
+        isOpen={isInvoiceModalOpen}
+        onClose={() => setIsInvoiceModalOpen(false)}
+        onProceedToPayment={handleProceedToPayment}
+      />
     </div>
   );
 } 

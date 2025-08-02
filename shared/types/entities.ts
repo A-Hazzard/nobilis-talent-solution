@@ -7,12 +7,29 @@ export type User = {
   email: string;
   firstName: string;
   lastName: string;
+  displayName?: string;
   phone?: string;
   organization?: string;
   role: 'admin' | 'user';
   createdAt: Date;
   lastLoginAt?: Date;
   isActive: boolean;
+  
+  // Email verification
+  emailVerified?: boolean;
+  emailVerifiedAt?: Date;
+  
+  // Onboarding fields
+  onboardingCompleted?: boolean;
+  onboardingCompletedAt?: Date;
+  jobTitle?: string;
+  organizationType?: 'startup' | 'small-business' | 'enterprise' | 'nonprofit' | 'other';
+  industryFocus?: string;
+  teamSize?: string;
+  primaryGoals?: string[];
+  challengesDescription?: string;
+  timeline?: string;
+  budget?: string;
 };
 
 export type Lead = {
@@ -94,6 +111,10 @@ export type BlogPost = {
     url: string;
     description?: string;
   }>; // External references/links
+  // Content scheduling fields
+  scheduledDate?: string; // ISO date string (YYYY-MM-DD)
+  scheduledTime?: string; // Time string (HH:MM)
+  isScheduled?: boolean; // Whether the post is scheduled for future publication
 };
 
 export type Testimonial = {

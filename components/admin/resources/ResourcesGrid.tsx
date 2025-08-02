@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Eye, Download, FileText, Image, Video, Music } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Eye, Download, FileText, Image, Video, Music, BarChart3 } from 'lucide-react';
 import type { Resource } from '@/shared/types/entities';
 
 interface ResourcesGridProps {
@@ -17,6 +17,7 @@ interface ResourcesGridProps {
   onEdit: (resource: Resource) => void;
   onDelete: (id: string) => void;
   onPreview: (resource: Resource) => void;
+  onAnalytics?: (resource: Resource) => void;
   getStatusBadge: (isPublic: boolean) => { variant: string; text: string };
   formatDate: (date: Date) => string;
   formatFileSize: (bytes: number) => string;
@@ -31,6 +32,7 @@ export function ResourcesGrid({
   onEdit,
   onDelete,
   onPreview,
+  onAnalytics,
   getStatusBadge,
   formatDate,
   formatFileSize,
@@ -94,6 +96,12 @@ export function ResourcesGrid({
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </DropdownMenuItem>
+                  {onAnalytics && (
+                    <DropdownMenuItem onClick={() => onAnalytics(resource)}>
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Analytics
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem>
                     <Download className="h-4 w-4 mr-2" />
                     Download
@@ -125,6 +133,13 @@ export function ResourcesGrid({
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Status:</span>
                 {renderStatusBadge(resource.isPublic)}
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Downloads:</span>
+                <span className="text-gray-700 font-medium">
+                  {resource.downloadCount.toLocaleString()}
+                </span>
               </div>
               
               <div className="flex items-center justify-between text-sm">

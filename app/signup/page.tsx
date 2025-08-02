@@ -180,12 +180,21 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
+      
+      <Card className="w-full max-w-md relative z-10 backdrop-blur-sm bg-white/80 border-0 shadow-2xl">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
-          <CardDescription className="text-center">
-            Enter your information to create your account
+          <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Join Us
+          </CardTitle>
+          <CardDescription className="text-center text-gray-600">
+            Create your account to get started
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -338,20 +347,62 @@ export default function SignupPage() {
                 <p className="text-sm text-red-500">{getFieldError('password')}</p>
               )}
               
-              {/* Password strength indicator */}
+              {/* Enhanced Password strength indicator */}
               {formData.password && (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${passwordValidation.hasMinLength ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span className="text-xs text-gray-600">At least 8 characters</span>
+                <div className="space-y-3 p-3 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Password Strength</span>
+                    <span className={`text-xs font-medium ${
+                      passwordValidation.hasMinLength && passwordValidation.hasUppercase && passwordValidation.hasSpecialChar 
+                        ? 'text-green-600' 
+                        : 'text-orange-600'
+                    }`}>
+                      {passwordValidation.hasMinLength && passwordValidation.hasUppercase && passwordValidation.hasSpecialChar 
+                        ? 'Strong' 
+                        : 'Weak'}
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${passwordValidation.hasUppercase ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span className="text-xs text-gray-600">1 uppercase letter</span>
+                  
+                  {/* Progress bar */}
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        passwordValidation.hasMinLength && passwordValidation.hasUppercase && passwordValidation.hasSpecialChar 
+                          ? 'bg-green-500' 
+                          : passwordValidation.hasMinLength && (passwordValidation.hasUppercase || passwordValidation.hasSpecialChar)
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
+                      }`}
+                      style={{
+                        width: `${[
+                          passwordValidation.hasMinLength,
+                          passwordValidation.hasUppercase,
+                          passwordValidation.hasSpecialChar
+                        ].filter(Boolean).length * 33.33}%`
+                      }}
+                    ></div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${passwordValidation.hasSpecialChar ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span className="text-xs text-gray-600">1 special character</span>
+                  
+                  {/* Requirements list */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${passwordValidation.hasMinLength ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                      <span className={`text-xs ${passwordValidation.hasMinLength ? 'text-green-600' : 'text-gray-500'}`}>
+                        At least 8 characters
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${passwordValidation.hasUppercase ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                      <span className={`text-xs ${passwordValidation.hasUppercase ? 'text-green-600' : 'text-gray-500'}`}>
+                        1 uppercase letter
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${passwordValidation.hasSpecialChar ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                      <span className={`text-xs ${passwordValidation.hasSpecialChar ? 'text-green-600' : 'text-gray-500'}`}>
+                        1 special character
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -384,8 +435,19 @@ export default function SignupPage() {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:transform-none disabled:opacity-50" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating Account...
+                </div>
+              ) : (
+                'Create Account'
+              )}
             </Button>
           </form>
 

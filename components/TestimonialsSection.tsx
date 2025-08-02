@@ -139,16 +139,16 @@ const TestimonialsSection = () => {
           <div className="card-feature text-center relative overflow-hidden animate-fade-up">
             <Quote className="w-16 h-16 text-primary/20 mx-auto mb-8" />
             
-            <blockquote className="text-2xl lg:text-3xl font-medium text-accent mb-8 leading-relaxed">
+            <blockquote className="text-xl sm:text-2xl lg:text-3xl font-medium text-accent mb-8 leading-relaxed">
               "{current?.content}"
             </blockquote>
 
             <div className="flex items-center justify-center mb-6">
-              <div className="w-16 h-16 rounded-full mr-4 shadow-medium bg-primary/10 flex items-center justify-center">
-                <User className="w-8 h-8 text-primary" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full mr-4 shadow-medium bg-primary/10 flex items-center justify-center">
+                <User className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
               </div>
               <div className="text-left">
-                              <div className="font-semibold text-accent text-lg">
+                              <div className="font-semibold text-accent text-base sm:text-lg">
                 {TestimonialUtils.formatClientName(current?.clientName || '')}
               </div>
               <div className="text-primary font-medium text-sm">{current?.company}</div>
@@ -157,7 +157,7 @@ const TestimonialsSection = () => {
 
             <div className="flex justify-center mb-8">
               {[...Array(current?.rating || 0)].map((_, i) => (
-                <Star key={i} className="w-6 h-6 text-secondary fill-current" />
+                <Star key={i} className="w-5 h-5 sm:w-6 sm:h-6 text-secondary fill-current" />
               ))}
             </div>
 
@@ -165,15 +165,15 @@ const TestimonialsSection = () => {
             <div className="flex justify-center space-x-4">
               <button
                 onClick={prevTestimonial}
-                className="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary hover:text-white transition-smooth flex items-center justify-center"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 hover:bg-primary hover:text-white transition-smooth flex items-center justify-center"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
               <button
                 onClick={nextTestimonial}
-                className="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary hover:text-white transition-smooth flex items-center justify-center"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 hover:bg-primary hover:text-white transition-smooth flex items-center justify-center"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
 
@@ -183,7 +183,7 @@ const TestimonialsSection = () => {
                 <button
                   key={index}
                   onClick={() => setCurrentTestimonial(index)}
-                  className={`w-3 h-3 rounded-full transition-smooth ${
+                  className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-smooth ${
                     index === currentTestimonial ? 'bg-primary' : 'bg-primary/30'
                   }`}
                 />
@@ -193,11 +193,11 @@ const TestimonialsSection = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-4 gap-8 animate-fade-up">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 animate-fade-up">
           {displayStats.map((stat, index) => (
             <div key={index} className="text-center">
-              <div className="text-4xl font-bold text-primary mb-2">{stat.value}</div>
-              <div className="text-muted-foreground">{stat.label}</div>
+              <div className="text-3xl sm:text-4xl font-bold text-primary mb-2">{stat.value}</div>
+              <div className="text-muted-foreground text-sm sm:text-base">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -205,23 +205,23 @@ const TestimonialsSection = () => {
         {/* CTA Section */}
         <div className="text-center mt-16 animate-fade-up">
           <div className="card-elevated bg-gradient-hero text-white max-w-4xl mx-auto">
-            <h3 className="text-3xl font-bold mb-6">
+            <h3 className="text-2xl sm:text-3xl font-bold mb-6">
               Join Hundreds of Successful Leaders
             </h3>
-            <p className="text-xl opacity-90 mb-8 leading-relaxed">
+            <p className="text-lg sm:text-xl opacity-90 mb-8 leading-relaxed">
               Ready to transform your leadership and drive exceptional results? 
               Let's start with a conversation about your goals.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="#contact"
-                className="bg-white text-accent px-8 py-4 rounded-full font-semibold hover:bg-white/90 transition-smooth"
+                className="bg-white text-accent px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold hover:bg-white/90 transition-smooth"
               >
                 Schedule Free Consultation
               </a>
               <a
                 href="tel:678-920-6605"
-                className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-accent transition-smooth"
+                className="border-2 border-white text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold hover:bg-white hover:text-accent transition-smooth"
               >
                 Call (678) 920-6605
               </a>

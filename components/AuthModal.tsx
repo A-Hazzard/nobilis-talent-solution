@@ -18,6 +18,7 @@ type AuthModalProps = {
   onSuccess?: () => void;
   title?: string;
   description?: string;
+  className?: string;
 };
 
 export default function AuthModal({ 
@@ -25,7 +26,8 @@ export default function AuthModal({
   onClose, 
   onSuccess,
   title = 'Sign in to continue',
-  description = 'Please sign in or create an account to access this content'
+  description = 'Please sign in or create an account to access this content',
+  className
 }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
@@ -114,7 +116,13 @@ export default function AuthModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={`sm:max-w-md ${className || ''}`} style={{ 
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        margin: 0
+      }}>
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             {title}

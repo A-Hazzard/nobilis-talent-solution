@@ -227,7 +227,7 @@ export default function ServicesPage() {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-4"
+                className="border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-4 font-semibold"
               >
                 <Play className="mr-2 h-5 w-5" />
                 Watch Introduction
@@ -300,7 +300,11 @@ export default function ServicesPage() {
                         <Calendar className="mr-2 h-5 w-5" />
                         Book This Service
                       </Button>
-                      <Button variant="outline" size="lg">
+                      <Button 
+                        variant="outline" 
+                        size="lg"
+                        className="border-primary text-primary hover:bg-primary hover:text-white text-lg px-8 py-4 font-semibold"
+                      >
                         <FileText className="mr-2 h-5 w-5" />
                         Download Brochure
                       </Button>

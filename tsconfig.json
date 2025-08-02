@@ -37,6 +37,7 @@
   ],
   "exclude": [
     "node_modules",
-    "payne-leadership-web - Copy/**/*"
+    "payne-leadership-web - Copy/**/*",
+    "scalable-consultation-website-main/**/*"
   ]
 }

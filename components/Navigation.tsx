@@ -5,7 +5,7 @@ import { Menu, X, LogOut, User, ChevronDown } from 'lucide-react';
 import { usePendingPayment } from '@/lib/hooks/usePendingPayment';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { ThemeToggle } from '@/components/ThemeToggle';
+
 import Link from 'next/link';
 
 
@@ -224,12 +224,7 @@ const Navigation = () => {
                         <li>
                           <hr className="my-1 border-gray-200" />
                         </li>
-                        <li>
-                          <div className="px-4 py-2 flex items-center justify-between">
-                            <span className="text-gray-700 text-sm">Theme</span>
-                            <ThemeToggle />
-                          </div>
-                        </li>
+
                         <li>
                           <hr className="my-1 border-gray-200" />
                         </li>
@@ -366,10 +361,7 @@ const Navigation = () => {
                         Admin Dashboard
                       </Link>
                     )}
-                    <div className="flex items-center justify-between px-3 py-2">
-                      <span className="text-foreground text-sm">Theme</span>
-                      <ThemeToggle />
-                    </div>
+
                     <button
                       onClick={() => {
                         signOut();

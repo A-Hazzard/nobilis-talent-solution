@@ -1,6 +1,15 @@
+'use client';
+
 import { Mail, Phone, Linkedin, Twitter, Instagram } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const Footer = () => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const quickLinks = [
     { href: '#home', label: 'Home' },
     { href: '#about', label: 'About' },
@@ -15,6 +24,11 @@ const Footer = () => {
     'Leadership Workshops',
     'Organizational Culture Change'
   ];
+
+  // Don't render on server to prevent hydration issues
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <footer className="bg-accent text-white">

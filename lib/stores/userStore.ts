@@ -305,13 +305,31 @@ export const useUserStore = create<UserState>()(
         },
         
         initializeAuth: () => {
+          console.log('UserStore: initializeAuth called');
+          
+          // Add a timeout to prevent infinite loading
+          const timeoutId = setTimeout(() => {
+            console.log('UserStore: Auth initialization timeout, setting loading to false');
+            set({
+              user: null,
+              firebaseUser: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
+          }, 5000); // 5 second timeout
+          
           const authService = AuthService.getInstance();
           const unsubscribe = authService.onAuthStateChanged((firebaseUser) => {
+            console.log('UserStore: onAuthStateChanged called with user:', firebaseUser);
+            clearTimeout(timeoutId); // Clear timeout when auth state changes
+            
             if (firebaseUser) {
+              console.log('UserStore: User found, fetching profile...');
               // Handle async user profile fetching properly
               const fetchUserProfile = async () => {
                 try {
                   const userProfile = await authService.getUserProfile(firebaseUser.uid);
+                  console.log('UserStore: User profile fetched:', userProfile);
                   
                   // Map Firebase user to our User type with real data
                   const mappedUser: User = {
@@ -327,6 +345,7 @@ export const useUserStore = create<UserState>()(
                     isActive: userProfile?.isActive ?? true,
                   };
                   
+                  console.log('UserStore: Setting authenticated user state');
                   set({ 
                     user: mappedUser, 
                     firebaseUser, 
@@ -334,7 +353,7 @@ export const useUserStore = create<UserState>()(
                     isLoading: false 
                   });
                 } catch (error) {
-                  console.error('Error fetching user profile:', error);
+                  console.error('UserStore: Error fetching user profile:', error);
                   // Fallback to Firebase Auth data only
                   const mappedUser: User = {
                     id: firebaseUser.uid,
@@ -347,6 +366,7 @@ export const useUserStore = create<UserState>()(
                     isActive: true,
                   };
                   
+                  console.log('UserStore: Setting fallback user state');
                   set({ 
                     user: mappedUser, 
                     firebaseUser, 
@@ -358,6 +378,7 @@ export const useUserStore = create<UserState>()(
               
               fetchUserProfile();
             } else {
+              console.log('UserStore: No user found, setting unauthenticated state');
               set({
                 user: null,
                 firebaseUser: null,
@@ -368,7 +389,10 @@ export const useUserStore = create<UserState>()(
           });
           
           // Return unsubscribe function for cleanup
-          return unsubscribe;
+          return () => {
+            clearTimeout(timeoutId);
+            unsubscribe();
+          };
         },
       };
     },

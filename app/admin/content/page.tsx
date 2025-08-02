@@ -443,9 +443,7 @@ export default function ContentPage() {
     return new Date(date).toLocaleDateString();
   };
 
-  const _formatTags = (tags: string[]) => {
-    return tags.slice(0, 2).join(', ') + (tags.length > 2 ? ` +${tags.length - 2}` : '');
-  };
+
 
 
 

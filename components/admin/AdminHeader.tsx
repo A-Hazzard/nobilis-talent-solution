@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, Menu } from 'lucide-react';
+import { LogOut, User, Menu, Home } from 'lucide-react';
 import ProfileModal from './ProfileModal';
 
 interface AdminHeaderProps {
@@ -42,6 +42,10 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
 
   const handleProfileClick = () => {
     setIsProfileModalOpen(true);
+  };
+
+  const handleGoHome = () => {
+    router.push('/');
   };
 
   if (isLoading) {
@@ -86,6 +90,15 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           </div>
 
           <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGoHome}
+              className="hidden sm:flex items-center gap-2"
+            >
+              <Home className="h-4 w-4" />
+              Go to Home
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">

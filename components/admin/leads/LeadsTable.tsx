@@ -1,8 +1,10 @@
 'use client';
+import * as React from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -40,6 +42,7 @@ export function LeadsTable({
   onGeneratePaymentLink,
   formatDate,
 }: LeadsTableProps) {
+  const [detailLead, setDetailLead] = React.useState<Lead | null>(null);
   return (
     <Card>
       <CardHeader>
@@ -51,6 +54,9 @@ export function LeadsTable({
             <TableRow>
               <TableHead>Lead</TableHead>
               <TableHead>Organization</TableHead>
+              <TableHead>Job Title</TableHead>
+              <TableHead>Goals</TableHead>
+              <TableHead>Details</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
@@ -59,7 +65,7 @@ export function LeadsTable({
           </TableHeader>
           <TableBody>
             {leads.map((lead) => (
-              <TableRow key={lead.id} data-lead-id={lead.id}>
+              <TableRow key={lead.id} data-lead-id={lead.id} onClick={() => setDetailLead(lead)} className="cursor-pointer hover:bg-muted/40">
                 <TableCell>
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-10 w-10">
@@ -76,8 +82,38 @@ export function LeadsTable({
                   </div>
                 </TableCell>
                 <TableCell>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    {lead.organizationType && <div><span className="font-medium">Type:</span> {lead.organizationType}</div>}
+                    {lead.industryFocus && <div><span className="font-medium">Industry:</span> {lead.industryFocus}</div>}
+                    {lead.teamSize && <div><span className="font-medium">Team:</span> {lead.teamSize}</div>}
+                    {lead.timeline && <div><span className="font-medium">Timeline:</span> {lead.timeline}</div>}
+                    {lead.budget && <div><span className="font-medium">Budget:</span> {lead.budget}</div>}
+                  </div>
+                </TableCell>
+                <TableCell>
                   {lead.organization ? (
                     <Badge variant="outline">{lead.organization}</Badge>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {lead.jobTitle ? (
+                    <span className="text-sm">{lead.jobTitle}</span>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {Array.isArray(lead.primaryGoals) && lead.primaryGoals.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {lead.primaryGoals.slice(0, 3).map((g, idx) => (
+                        <Badge key={idx} variant="secondary">{g}</Badge>
+                      ))}
+                      {lead.primaryGoals.length > 3 && (
+                        <span className="text-xs text-gray-500">+{lead.primaryGoals.length - 3}</span>
+                      )}
+                    </div>
                   ) : (
                     <span className="text-gray-400">-</span>
                   )}
@@ -118,9 +154,11 @@ export function LeadsTable({
                         <CreditCard className="h-4 w-4 mr-2" />
                         Generate Payment Link
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Mail className="h-4 w-4 mr-2" />
-                        Send Email
+                      <DropdownMenuItem asChild>
+                        <a href={`mailto:${lead.email}`}>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Send Email
+                        </a>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         className="text-red-600"
@@ -137,6 +175,48 @@ export function LeadsTable({
           </TableBody>
         </Table>
       </CardContent>
+      <Dialog open={!!detailLead} onOpenChange={() => setDetailLead(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Lead Details</DialogTitle>
+          </DialogHeader>
+          {detailLead && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-medium mb-1">Profile</div>
+                <div>{detailLead.firstName} {detailLead.lastName}</div>
+                <div>{detailLead.email}</div>
+                {detailLead.phone && <div>{detailLead.phone}</div>}
+              </div>
+              <div>
+                <div className="font-medium mb-1">Organization</div>
+                {detailLead.organization && <div>{detailLead.organization}</div>}
+                {detailLead.organizationType && <div>Type: {detailLead.organizationType}</div>}
+                {detailLead.teamSize && <div>Team: {detailLead.teamSize}</div>}
+                {detailLead.industryFocus && <div>Industry: {detailLead.industryFocus}</div>}
+              </div>
+              <div className="md:col-span-2">
+                <div className="font-medium mb-1">Goals</div>
+                {detailLead.primaryGoals && detailLead.primaryGoals.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {detailLead.primaryGoals.map((g, i) => (
+                      <Badge key={i} variant="secondary">{g}</Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500">-</div>
+                )}
+              </div>
+              {detailLead.challengesDescription && (
+                <div className="md:col-span-2">
+                  <div className="font-medium mb-1">Challenges</div>
+                  <div className="text-gray-700 whitespace-pre-wrap">{detailLead.challengesDescription}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 } 

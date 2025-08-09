@@ -24,7 +24,6 @@ import {
   Play,
   FileText
 } from 'lucide-react';
-import Footer from '@/components/Footer';
 
 // Service data
 const services = [
@@ -416,7 +415,7 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <Footer />
+      {/* Footer rendered globally in RootLayout */}
 
       {/* Booking Modal */}
       <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>

@@ -31,7 +31,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BlogPost, Resource } from '@/shared/types/entities';
-import Footer from '@/components/Footer';
 import ResourceDownloadModal from '@/components/ResourceDownloadModal';
 import AuthModal from '@/components/AuthModal';
 import { BlogService } from '@/lib/services/BlogService';
@@ -671,7 +670,7 @@ export default function ContentPage() {
         </Tabs>
       </div>
 
-      <Footer />
+      {/* Footer rendered globally in RootLayout */}
 
       {/* Resource Download Modal */}
       <ResourceDownloadModal

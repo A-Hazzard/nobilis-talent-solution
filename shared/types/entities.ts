@@ -39,6 +39,14 @@ export type Lead = {
   email: string;
   phone?: string;
   organization?: string;
+  jobTitle?: string;
+  primaryGoals?: string[];
+  organizationType?: 'startup' | 'small-business' | 'enterprise' | 'nonprofit' | 'other';
+  industryFocus?: string;
+  teamSize?: string;
+  challengesDescription?: string;
+  timeline?: string;
+  budget?: string;
   createdAt: Date;
   updatedAt: Date;
   // Authentication fields (stored in users collection)

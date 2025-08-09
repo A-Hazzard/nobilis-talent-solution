@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreatePendingPaymentRequest, PendingPaymentResponse } from '@/shared/types/payment';
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { EmailService } from '@/lib/services/EmailService';
+import { PDFService } from '@/lib/services/PDFService';
+import type { InvoicePreview } from '@/shared/types/payment';
 
 export async function POST(request: NextRequest) {
   try {
     const body: CreatePendingPaymentRequest = await request.json();
-    const { clientEmail, clientName, baseAmount, description, expiresInDays = 30 } = body;
+    const { clientEmail, clientName, baseAmount, description } = body;
 
     // Validate input
     if (!clientEmail || !clientName || !baseAmount || !description) {
@@ -23,11 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate expiration date
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + expiresInDays);
-
-    // Create pending payment object
+    // Create pending payment object (no expiration for Firebase-based auth)
     const pendingPaymentData = {
       clientEmail,
       clientName,
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
       description,
       status: 'pending' as const,
       createdAt: new Date(),
-      expiresAt,
+      // Removed expiresAt - payments don't expire in Firebase-based system
     };
 
     // Store the pending payment in Firebase
@@ -51,6 +50,50 @@ export async function POST(request: NextRequest) {
       id: paymentId,
       pendingPayment,
     };
+
+    // Attempt to send an invoice email to the client (non-blocking)
+    try {
+      const invoiceNumber = `INV-${paymentId.slice(0, 6).toUpperCase()}`;
+      const invoice: InvoicePreview = {
+        invoiceNumber,
+        clientName,
+        clientEmail,
+        items: [
+          {
+            id: '1',
+            description,
+            quantity: 1,
+            unitPrice: baseAmount,
+            total: baseAmount,
+            type: 'service',
+          },
+        ],
+        subtotal: baseAmount,
+        taxAmount: 0,
+        total: baseAmount,
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      };
+
+      // Save invoice number to the payment
+      await updateDoc(docRef, { invoiceNumber, updatedAt: serverTimestamp() });
+
+      const emailService = EmailService.getInstance();
+      const pdfService = PDFService.getInstance();
+      const pdf = await pdfService.generateInvoicePDF(invoice, invoiceNumber);
+
+      await emailService.sendInvoiceEmail({
+        invoice,
+        clientEmail,
+        clientName,
+        customMessage: 'Please find your invoice attached. You can also pay securely from your dashboard.',
+        pdfAttachment:
+          pdf.success && pdf.data
+            ? { filename: `invoice-${invoiceNumber}.pdf`, content: pdf.data, contentType: 'application/pdf' }
+            : undefined,
+      });
+    } catch (e) {
+      console.error('Invoice email send failed (non-blocking):', e);
+    }
 
     return NextResponse.json(response);
   } catch (error) {
@@ -99,15 +142,7 @@ export async function GET(request: NextRequest) {
       ...paymentData,
     };
 
-    // Check if payment has expired
-    if (paymentData.expiresAt && new Date() > new Date(paymentData.expiresAt.toDate())) {
-      // Update status to expired
-      await updateDoc(docSnapshot.ref, { status: 'expired' });
-      return NextResponse.json(
-        { error: 'Payment has expired' },
-        { status: 410 }
-      );
-    }
+    // Removed expiration check - payments don't expire in Firebase-based system
 
     return NextResponse.json({ pendingPayment });
   } catch (error) {

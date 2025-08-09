@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Check, CreditCard, Shield, Zap, FileText } from 'lucide-react';
 import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
 import InvoicePreviewModal from '@/components/InvoicePreviewModal';
 import { PaymentService } from '@/lib/services/PaymentService';
 import { InvoiceService } from '@/lib/services/InvoiceService';
@@ -247,7 +246,7 @@ export default function PaymentPage() {
         </div>
       </section>
 
-      <Footer />
+      {/* Footer rendered globally in RootLayout */}
 
       {/* Invoice Preview Modal */}
       <InvoicePreviewModal

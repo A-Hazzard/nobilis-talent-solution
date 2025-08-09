@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Handle custom payments (from pending payments)
     if (optionId === 'custom' && customData) {
-      const { clientName, clientEmail, amount, description, pendingPaymentId } = customData;
+      const { clientName, clientEmail, amount, description, pendingPaymentId, invoiceNumber } = customData;
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
           description,
           amount: amount.toString(),
           pendingPaymentId,
+          invoiceNumber,
         },
       });
 

@@ -15,6 +15,11 @@ export function useLeads(): [LeadsState, LeadsActions] {
     leads: [],
     isLoading: true,
     searchTerm: '',
+    // Simple filters for the table
+    filters: {
+      organizationType: '',
+      teamSize: '',
+    },
     currentPage: 1,
     totalLeads: 0,
     error: null,
@@ -56,10 +61,10 @@ export function useLeads(): [LeadsState, LeadsActions] {
       if (response.error) {
         setState(prev => ({ ...prev, error: response.error || 'Unknown error' }));
       } else {
-        setState(prev => ({ 
-          ...prev, 
+        setState(prev => ({
+          ...prev,
           leads: response.leads,
-          totalLeads: response.total 
+          totalLeads: response.total,
         }));
       }
     } catch (error) {
@@ -69,6 +74,29 @@ export function useLeads(): [LeadsState, LeadsActions] {
       setState(prev => ({ ...prev, isLoading: false }));
     }
   }, [state.currentPage, state.searchTerm, leadsService]);
+
+  // Helper to get the filtered list on the fly
+  const getFilteredLeads = useCallback(() => {
+    const { searchTerm, filters, leads } = state;
+    let list = [...leads];
+    if (filters.organizationType) {
+      list = list.filter(l => (l.organizationType || '').toLowerCase() === filters.organizationType.toLowerCase());
+    }
+    if (filters.teamSize) {
+      list = list.filter(l => (l.teamSize || '').toLowerCase() === filters.teamSize.toLowerCase());
+    }
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      list = list.filter(l =>
+        l.firstName.toLowerCase().includes(q) ||
+        l.lastName.toLowerCase().includes(q) ||
+        (l.email || '').toLowerCase().includes(q) ||
+        (l.organization || '').toLowerCase().includes(q) ||
+        (l.jobTitle || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [state]);
 
   const handleAddLead = useCallback(async () => {
     const { formData } = state;
@@ -357,6 +385,10 @@ export function useLeads(): [LeadsState, LeadsActions] {
     setState(prev => ({ ...prev, searchTerm: term, currentPage: 1 }));
   }, []);
 
+  const setFilters = useCallback((filters: { organizationType?: string; teamSize?: string }) => {
+    setState(prev => ({ ...prev, filters: { ...prev.filters, ...filters }, currentPage: 1 }));
+  }, []);
+
   const setCurrentPage = useCallback((page: number) => {
     setState(prev => ({ ...prev, currentPage: page }));
   }, []);
@@ -409,6 +441,7 @@ export function useLeads(): [LeadsState, LeadsActions] {
     resetForm,
     handleInputChange,
     setSearchTerm,
+    setFilters,
     setCurrentPage,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
@@ -417,6 +450,7 @@ export function useLeads(): [LeadsState, LeadsActions] {
     formatDate,
     getFieldError,
     isFieldValid,
+    getFilteredLeads,
   };
 
   return [state, actions];

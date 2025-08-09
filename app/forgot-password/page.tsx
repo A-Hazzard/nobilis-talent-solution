@@ -34,12 +34,10 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!email.trim()) {
       setEmailError('Email is required');
       return;
     }
-
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError('Please enter a valid email address');
       return;
@@ -49,28 +47,19 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     try {
-      // Call the email API to send password reset email
-      const response = await fetch('/api/email/test', {
+      const res = await fetch('/api/auth/send-password-reset', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          type: 'password-reset'
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
-
-      const result = await response.json();
-      
-      if (response.ok) {
-        setSuccess(true);
-      } else {
-        setError(result.error || 'Failed to send password reset email');
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to send password reset email');
       }
-    } catch (error) {
-      console.error('Password reset error:', error);
-      setError('Failed to send password reset email. Please try again.');
+      setSuccess(true);
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to send password reset email. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -95,12 +84,8 @@ export default function ForgotPasswordPage() {
                 Password reset email sent successfully to <strong>{email}</strong>
               </AlertDescription>
             </Alert>
-            
             <div className="text-center space-y-4">
-              <p className="text-sm text-gray-600">
-                Didn't receive the email? Check your spam folder or try again.
-              </p>
-              
+              <p className="text-sm text-gray-600">Didn't receive the email? Check your spam folder or try again.</p>
               <div className="space-y-2">
                 <Button
                   type="button"
@@ -112,13 +97,8 @@ export default function ForgotPasswordPage() {
                 >
                   Send Another Email
                 </Button>
-                
                 <Link href="/login">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                  >
+                  <Button type="button" variant="outline" className="w-full font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Login
                   </Button>
@@ -157,7 +137,6 @@ export default function ForgotPasswordPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <div className="relative">
@@ -176,14 +155,12 @@ export default function ForgotPasswordPage() {
                   <Check className="absolute right-3 top-3 h-4 w-4 text-green-500" />
                 )}
               </div>
-              {emailError && (
-                <p className="text-sm text-red-500">{emailError}</p>
-              )}
+              {emailError && <p className="text-sm text-red-500">{emailError}</p>}
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:transform-none disabled:opacity-50" 
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:transform-none disabled:opacity-50"
               disabled={isLoading || !!emailError || !email.trim()}
             >
               {isLoading ? (

@@ -75,7 +75,8 @@ export async function POST(request: NextRequest) {
 
     // Send verification email
     const emailService = EmailService.getInstance();
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}&mode=verify`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}&mode=verify`;
     
     const emailResult = await emailService.sendEmail({
       to: email,

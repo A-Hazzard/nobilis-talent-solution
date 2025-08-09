@@ -6,18 +6,18 @@ import { EmailService } from '@/lib/services/EmailService';
 import { logAuditAction } from '@/lib/utils/auditUtils';
 
 type OnboardingData = {
-  firstName: string;
-  lastName: string;
-  jobTitle: string;
-  phone: string;
-  organizationName: string;
-  organizationType: 'startup' | 'small-business' | 'enterprise' | 'nonprofit' | 'other';
-  industryFocus: string;
-  teamSize: string;
-  primaryGoals: string[];
-  challengesDescription: string;
-  timeline: string;
-  budget: string;
+  firstName?: string;
+  lastName?: string;
+  jobTitle?: string;
+  phone?: string;
+  organizationName?: string;
+  organizationType?: 'startup' | 'small-business' | 'enterprise' | 'nonprofit' | 'other';
+  industryFocus?: string;
+  teamSize?: string;
+  primaryGoals?: string[];
+  challengesDescription?: string;
+  timeline?: string;
+  budget?: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -30,48 +30,31 @@ export async function POST(request: NextRequest) {
 
     const onboardingData: OnboardingData = await request.json();
 
-    // Validate required fields
-    if (!onboardingData.firstName || !onboardingData.lastName || !onboardingData.organizationName) {
-      return NextResponse.json(
-        { error: 'First name, last name, and organization name are required' },
-        { status: 400 }
-      );
-    }
-
-    if (!onboardingData.primaryGoals || onboardingData.primaryGoals.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one primary goal must be selected' },
-        { status: 400 }
-      );
-    }
-
     // Update user document with onboarding data
     const userRef = doc(db, 'users', authResult.user.uid);
-    const updateData = {
-      // Basic profile info
-      firstName: onboardingData.firstName,
-      lastName: onboardingData.lastName,
-      displayName: `${onboardingData.firstName} ${onboardingData.lastName}`,
-      jobTitle: onboardingData.jobTitle || '',
-      phone: onboardingData.phone || '',
-      
-      // Organization info
-      organization: onboardingData.organizationName,
-      organizationType: onboardingData.organizationType,
-      industryFocus: onboardingData.industryFocus || '',
-      teamSize: onboardingData.teamSize || '',
-      
-      // Goals and preferences
-      primaryGoals: onboardingData.primaryGoals,
-      challengesDescription: onboardingData.challengesDescription || '',
-      timeline: onboardingData.timeline || '',
-      budget: onboardingData.budget || '',
-      
+    const updateData: any = {
       // Onboarding completion
       onboardingCompleted: true,
       onboardingCompletedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
+
+    // Only apply fields that were provided so we don't repeat registration info or overwrite blanks
+    if (onboardingData.firstName) updateData.firstName = onboardingData.firstName;
+    if (onboardingData.lastName) updateData.lastName = onboardingData.lastName;
+    if (onboardingData.firstName || onboardingData.lastName) {
+      updateData.displayName = `${onboardingData.firstName || ''} ${onboardingData.lastName || ''}`.trim();
+    }
+    if (onboardingData.jobTitle) updateData.jobTitle = onboardingData.jobTitle;
+    if (onboardingData.phone) updateData.phone = onboardingData.phone;
+    if (onboardingData.organizationName) updateData.organization = onboardingData.organizationName;
+    if (onboardingData.organizationType) updateData.organizationType = onboardingData.organizationType;
+    if (onboardingData.industryFocus) updateData.industryFocus = onboardingData.industryFocus;
+    if (onboardingData.teamSize) updateData.teamSize = onboardingData.teamSize;
+    if (onboardingData.primaryGoals && onboardingData.primaryGoals.length > 0) updateData.primaryGoals = onboardingData.primaryGoals;
+    if (onboardingData.challengesDescription) updateData.challengesDescription = onboardingData.challengesDescription;
+    if (onboardingData.timeline) updateData.timeline = onboardingData.timeline;
+    if (onboardingData.budget) updateData.budget = onboardingData.budget;
 
     await updateDoc(userRef, updateData);
 
@@ -80,7 +63,7 @@ export async function POST(request: NextRequest) {
       const emailService = EmailService.getInstance();
       await emailService.sendWelcomeEmail(
         authResult.user.email,
-        `${onboardingData.firstName} ${onboardingData.lastName}`
+        `${onboardingData.firstName || ''} ${onboardingData.lastName || ''}`.trim()
       );
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
@@ -95,11 +78,11 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now(),
       details: {
         title: 'Onboarding completed',
-        organizationName: onboardingData.organizationName,
-        primaryGoals: onboardingData.primaryGoals,
+        organizationName: onboardingData.organizationName || null,
+        primaryGoals: onboardingData.primaryGoals || [],
         hasCustomChallenges: !!onboardingData.challengesDescription,
-        timeline: onboardingData.timeline,
-        budget: onboardingData.budget
+        timeline: onboardingData.timeline || null,
+        budget: onboardingData.budget || null
       }
     });
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { auth } from '@/lib/firebase/config';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,23 +84,25 @@ export default function VerifyEmailPage() {
 
     setIsResending(true);
     try {
-      const response = await fetch('/api/auth/resend-verification', {
+      if (!auth.currentUser) {
+        setMessage('Unauthorized');
+        return;
+      }
+      // Use our branded server email
+      const idToken = await auth.currentUser.getIdToken();
+      const response = await fetch('/api/auth/send-verification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ email: user.email }),
       });
-
       const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Verification email sent! Please check your inbox.');
-        setMessage('A new verification email has been sent to your inbox.');
-      } else {
-        toast.error(data.error || 'Failed to send verification email');
-        setMessage(data.error || 'Failed to send verification email');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send verification email');
       }
+      toast.success('Verification email sent! Please check your inbox.');
+      setMessage('A new verification email has been sent to your inbox.');
     } catch (error) {
       console.error('Resend verification error:', error);
       toast.error('Failed to send verification email');

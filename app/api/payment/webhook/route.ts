@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { db } from '@/lib/firebase/config';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { EmailService } from '@/lib/services/EmailService';
 
 // Check if Stripe secret key is available
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -40,20 +43,49 @@ export async function POST(request: NextRequest) {
 
     // Handle the event
     switch (event.type) {
-      case 'checkout.session.completed':
+      case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log('Payment successful for session:', session.id);
-        
-        // Here you would typically:
-        // 1. Update your database with the payment status
-        // 2. Send confirmation emails
-        // 3. Create calendar events
-        // 4. Update inventory/availability
-        
-        // Example: Send confirmation email
-        // await sendConfirmationEmail(session.customer_details?.email, session.metadata);
-        
+
+        // Update corresponding pending payment if present
+        const pendingPaymentId = session.metadata?.pendingPaymentId;
+        const clientEmail = session.customer_details?.email || session.metadata?.clientEmail || '';
+        const clientName = session.metadata?.clientName || '';
+        const amount = session.amount_total ? session.amount_total / 100 : Number(session.metadata?.amount || 0);
+
+        if (pendingPaymentId) {
+          try {
+            const ref = doc(db, 'pendingPayments', pendingPaymentId);
+            await updateDoc(ref, {
+              status: 'completed',
+              stripeSessionId: session.id,
+              updatedAt: serverTimestamp(),
+            });
+          } catch (e) {
+            console.error('Failed to update pending payment status:', e);
+          }
+        }
+
+        // Send payment confirmation email (receipt)
+        try {
+          const invoiceNumber = session.metadata?.invoiceNumber || session.id;
+          const emailService = EmailService.getInstance();
+          if (clientEmail) {
+            await emailService.sendPaymentConfirmation({
+              to: clientEmail,
+              clientName: clientName || clientEmail,
+              invoiceNumber,
+              amount,
+              paymentMethod: session.payment_method_types?.[0] || 'card',
+              transactionId: session.payment_intent?.toString() || session.id,
+            });
+          }
+        } catch (e) {
+          console.error('Failed to send payment confirmation email:', e);
+        }
+
         break;
+      }
         
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object as Stripe.PaymentIntent;

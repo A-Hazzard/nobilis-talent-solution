@@ -207,10 +207,6 @@ export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModa
                   <span className="text-muted-foreground">Payment ID:</span>
                   <span className="ml-2 font-mono text-xs">{success.id}</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Expires:</span>
-                  <span className="ml-2">{new Date(success.pendingPayment.expiresAt).toLocaleDateString()}</span>
-                </div>
               </div>
             </div>
 

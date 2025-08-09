@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { CreditCard, Heart, AlertCircle, Clock } from 'lucide-react';
 import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
 import { PaymentLinkService } from '@/lib/services/PaymentLinkService';
 import type { PendingPayment } from '@/shared/types/payment';
 
@@ -82,6 +81,7 @@ export default function PendingPaymentPage() {
             amount: totalAmount,
             description: pendingPayment.description,
             pendingPaymentId: pendingPayment.id,
+            invoiceNumber: pendingPayment.invoiceNumber,
           },
         }),
       });
@@ -127,7 +127,7 @@ export default function PendingPaymentPage() {
             <p className="text-lg text-muted-foreground">Loading your payment...</p>
           </div>
         </div>
-        <Footer />
+        {/* Footer rendered globally in RootLayout */}
       </div>
     );
   }
@@ -153,7 +153,7 @@ export default function PendingPaymentPage() {
             </a>
           </div>
         </div>
-        <Footer />
+        {/* Footer rendered globally in RootLayout */}
       </div>
     );
   }
@@ -179,7 +179,7 @@ export default function PendingPaymentPage() {
             </a>
           </div>
         </div>
-        <Footer />
+        {/* Footer rendered globally in RootLayout */}
       </div>
     );
   }
@@ -353,7 +353,7 @@ export default function PendingPaymentPage() {
         </div>
       </section>
 
-      <Footer />
+      {/* Footer rendered globally in RootLayout */}
     </div>
   );
 } 

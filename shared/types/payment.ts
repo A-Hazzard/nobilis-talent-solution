@@ -69,10 +69,11 @@ export type PendingPayment = {
   description: string;
   status: 'pending' | 'completed' | 'cancelled' | 'expired';
   createdAt: Date;
-  expiresAt: Date;
+  expiresAt?: Date;
   stripeSessionId?: string;
   notes?: string;
   updatedAt?: Date;
+  invoiceNumber?: string;
 };
 
 export type CreatePendingPaymentRequest = {

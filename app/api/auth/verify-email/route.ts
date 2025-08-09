@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/helpers/auth';
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { logAuditAction } from '@/lib/utils/auditUtils';
@@ -13,12 +12,6 @@ export async function POST(request: NextRequest) {
         { error: 'Verification token is required' },
         { status: 400 }
       );
-    }
-
-    // Check authentication
-    const authResult = await getAuth(request);
-    if (!authResult.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Look up the verification token
@@ -48,16 +41,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if token belongs to the authenticated user
-    if (tokenData.userId !== authResult.user.uid) {
-      return NextResponse.json(
-        { error: 'Invalid verification token' },
-        { status: 400 }
-      );
-    }
-
     // Update user as email verified
-    const userRef = doc(db, 'users', authResult.user.uid);
+    const userRef = doc(db, 'users', tokenData.userId);
     await updateDoc(userRef, {
       emailVerified: true,
       emailVerifiedAt: serverTimestamp(),
@@ -71,11 +56,11 @@ export async function POST(request: NextRequest) {
     await logAuditAction({
       action: 'update',
       entity: 'auth',
-      entityId: authResult.user.uid,
+      entityId: tokenData.userId,
       timestamp: Date.now(),
       details: {
         title: 'Email verified',
-        email: authResult.user.email,
+        email: tokenData.email,
         action: 'email_verification'
       }
     });

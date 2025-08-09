@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Download, Calendar, FileText, Video, BookOpen, Star, Grid, List, Image, Music, File } from 'lucide-react';
 import { Resource } from '@/shared/types/entities';
 import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -734,7 +733,7 @@ export default function ResourcesPage() {
         )}
       </div>
 
-      <Footer />
+      {/* Footer rendered globally in RootLayout */}
     </div>
   );
 } 

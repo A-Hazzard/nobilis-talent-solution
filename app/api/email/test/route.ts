@@ -30,10 +30,14 @@ export async function POST(request: NextRequest) {
         result = await emailService.sendWelcomeEmail(email, 'Test User');
         break;
       case 'password-reset':
-        result = await emailService.sendPasswordResetEmail(
-          email, 
-          `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=test-token`
-        );
+        {
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          // Note: In production you'd generate a real Firebase password reset link via Admin SDK
+          result = await emailService.sendPasswordResetEmail(
+            email, 
+            `${appUrl}/reset-password?token=test-token`
+          );
+        }
         break;
       case 'invoice':
         // Create a test invoice

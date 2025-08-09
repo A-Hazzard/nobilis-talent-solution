@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle, Calendar, Mail, ArrowRight } from 'lucide-react';
+import { CheckCircle,  Mail, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
@@ -14,21 +13,33 @@ export default function PaymentSuccessPage() {
 
   useEffect(() => {
     if (sessionId) {
-      // Get client and amount from URL parameters
-      const client = searchParams.get('client');
-      const amount = searchParams.get('amount');
-      
-      // In a real application, you would verify the session with your backend
-      // For now, we'll use the URL parameters or simulate the payment details
-      setTimeout(() => {
-        setPaymentDetails({
-          amount: amount ? `$${parseFloat(amount).toFixed(2)}` : '$150.00',
-          service: client ? `Leadership Consultation for ${client}` : 'Leadership Consultation',
-          email: 'customer@example.com',
-          date: new Date().toLocaleDateString(),
-        });
-        setIsLoading(false);
-      }, 1000);
+      // Confirm with backend to get canonical details + trigger email/DB safety updates
+      (async () => {
+        try {
+          const res = await fetch('/api/payment/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId }),
+          });
+          const data = await res.json();
+          setPaymentDetails({
+            amount: data.amount,
+            service: data.service,
+            email: data.email,
+            date: data.date,
+          });
+        } catch {
+          // Fallback to minimal display
+          setPaymentDetails({
+            amount: '$0.00',
+            service: 'Leadership Consultation',
+            email: '',
+            date: new Date().toLocaleDateString(),
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      })();
     }
   }, [sessionId, searchParams]);
 
@@ -42,7 +53,7 @@ export default function PaymentSuccessPage() {
             <p className="text-lg text-muted-foreground">Verifying your payment...</p>
           </div>
         </div>
-        <Footer />
+        {/* Footer rendered globally in RootLayout */}
       </div>
     );
   }
@@ -103,16 +114,7 @@ export default function PaymentSuccessPage() {
                   <div>
                     <p className="text-foreground font-medium">Confirmation Email</p>
                     <p className="text-sm text-muted-foreground">
-                      We've sent a confirmation email to {paymentDetails?.email}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <Calendar className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-foreground font-medium">Next Steps</p>
-                    <p className="text-sm text-muted-foreground">
-                      You'll receive scheduling information within 24 hours
+                      {paymentDetails?.email ? `We've sent a confirmation email to ${paymentDetails.email}` : 'Confirmation email sent.'}
                     </p>
                   </div>
                 </div>
@@ -121,7 +123,7 @@ export default function PaymentSuccessPage() {
           </div>
 
           {/* Next Steps */}
-          <div className="card-elevated p-8 rounded-2xl mb-12">
+          {/* <div className="card-elevated p-8 rounded-2xl mb-12">
             <h2 className="text-2xl font-bold text-foreground mb-6 text-center">
               What Happens Next?
             </h2>
@@ -157,7 +159,7 @@ export default function PaymentSuccessPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Action Buttons */}
           <div className="text-center space-y-4">
@@ -179,7 +181,7 @@ export default function PaymentSuccessPage() {
         </div>
       </section>
 
-      <Footer />
+      {/* Footer rendered globally in RootLayout */}
     </div>
   );
 } 

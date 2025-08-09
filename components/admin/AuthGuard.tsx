@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
-import { getRedirectPath } from '@/lib/utils/authUtils';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -22,11 +21,10 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     }
   }, [isLoading, isAuthenticated, router, pathname]);
 
-  // Redirect non-admin users away from admin pages
+  // Redirect non-admin users away from admin pages to a friendly access denied page
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user && user.role !== 'admin' && pathname.startsWith('/admin')) {
-      const redirectPath = getRedirectPath(user);
-      router.push(redirectPath);
+    if (!isLoading && isAuthenticated && user && pathname.startsWith('/admin') && user.role !== 'admin') {
+      router.push('/access-denied');
     }
   }, [isLoading, isAuthenticated, user, router, pathname]);
 

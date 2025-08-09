@@ -4,30 +4,12 @@ import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 
 export async function GET(_request: NextRequest) {
   try {
-    // TODO: Add admin authentication check here
-    // For now, we'll allow access to this endpoint
-    
-    const paymentsRef = collection(db, 'pendingPayments');
-    const q = query(paymentsRef, orderBy('createdAt', 'desc'));
-    const querySnapshot = await getDocs(q);
-    
-    const payments = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate?.() || doc.data().createdAt,
-      expiresAt: doc.data().expiresAt?.toDate?.() || doc.data().expiresAt,
-    }));
-    
-    return NextResponse.json({ 
-      success: true, 
-      payments 
-    });
-    
+    const q = query(collection(db, 'pendingPayments'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    const payments = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return NextResponse.json({ payments });
   } catch (error) {
     console.error('Error fetching payments:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch payments' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 });
   }
-} 
+}

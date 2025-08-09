@@ -173,10 +173,13 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
+      // Include Firebase ID token so the API can authenticate you
+      const idToken = await (await import('firebase/auth')).getIdToken?.(await (await import('firebase/auth')).getAuth().currentUser!);
       const response = await fetch('/api/auth/complete-onboarding', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
         },
         body: JSON.stringify(data),
       });
@@ -191,6 +194,42 @@ export default function OnboardingPage() {
     } catch (error) {
       console.error('Onboarding completion error:', error);
       toast.error('Failed to complete onboarding');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    // Mark onboarding completed without extra fields
+    setIsSubmitting(true);
+    try {
+      const idToken = await (await import('firebase/auth')).getIdToken?.(await (await import('firebase/auth')).getAuth().currentUser!);
+      const response = await fetch('/api/auth/complete-onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
+        body: JSON.stringify({
+          firstName: data.firstName || user?.firstName || '',
+          lastName: data.lastName || user?.lastName || '',
+          organizationName: data.organizationName || 'Not specified',
+          organizationType: data.organizationType || 'other',
+          jobTitle: data.jobTitle || '',
+          phone: data.phone || '',
+          industryFocus: '',
+          teamSize: '',
+          primaryGoals: ['unspecified'],
+          challengesDescription: '',
+          timeline: '',
+          budget: '',
+        }),
+      });
+      if (response.ok) {
+        router.push('/');
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Failed to skip onboarding');
+      }
+    } catch {
+      toast.error('Failed to skip onboarding');
     } finally {
       setIsSubmitting(false);
     }
@@ -233,10 +272,13 @@ export default function OnboardingPage() {
             <p className="text-sm text-gray-600">Define your leadership goals</p>
           </div>
         </div>
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-3">
           <Button onClick={nextStep} size="lg">
             Get Started
             <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+          <Button variant="outline" size="lg" onClick={handleSkip}>
+            Skip for now
           </Button>
         </div>
       </CardContent>

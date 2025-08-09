@@ -72,6 +72,11 @@ export type LeadsState = {
   leads: Lead[];
   isLoading: boolean;
   searchTerm: string;
+  // Simple filters used in the Leads page UI
+  filters: {
+    organizationType: string;
+    teamSize: string;
+  };
   currentPage: number;
   totalLeads: number;
   error: string | null;
@@ -95,6 +100,7 @@ export type LeadsActions = {
   resetForm: () => void;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   setSearchTerm: (term: string) => void;
+  setFilters: (filters: { organizationType?: string; teamSize?: string }) => void;
   setCurrentPage: (page: number) => void;
   setIsAddDialogOpen: (open: boolean) => void;
   setIsEditDialogOpen: (open: boolean) => void;
@@ -103,6 +109,7 @@ export type LeadsActions = {
   formatDate: (date: Date) => string;
   getFieldError: (fieldName: string) => string | undefined;
   isFieldValid: (fieldName: string) => boolean;
+  getFilteredLeads: () => Lead[];
 };
 
 // Resources Hook Types

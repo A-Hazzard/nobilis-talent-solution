@@ -31,6 +31,7 @@ export default function LeadsPage() {
     isLoading,
     searchTerm,
     error,
+    filters,
     isAddDialogOpen,
     isEditDialogOpen,
     isSubmitting,
@@ -48,11 +49,13 @@ export default function LeadsPage() {
     openEditDialog,
     handleInputChange,
     setSearchTerm,
+    setFilters,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
     setShowPassword,
     setShowConfirmPassword,
     formatDate,
+    getFilteredLeads,
   } = actions;
 
   const handleGeneratePaymentLink = (lead: Lead) => {
@@ -108,6 +111,8 @@ export default function LeadsPage() {
       <LeadsSearch 
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        filters={filters}
+        setFilters={setFilters}
       />
 
       {/* No Data State */}
@@ -132,9 +137,9 @@ export default function LeadsPage() {
       )}
 
       {/* Leads Table */}
-      {!isLoading && !error && leads.length > 0 && (
+      {!isLoading && !error && getFilteredLeads().length > 0 && (
         <LeadsTable
-          leads={leads}
+          leads={getFilteredLeads()}
           onEdit={openEditDialog}
           onDelete={handleDeleteLead}
           onGeneratePaymentLink={handleGeneratePaymentLink}

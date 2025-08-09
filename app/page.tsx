@@ -6,7 +6,6 @@ import AboutSection from '@/components/AboutSection';
 import ServicesSection from '@/components/ServicesSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
 import ContactSection from '@/components/ContactSection';
-import Footer from '@/components/Footer';
 import StickyCallButton from '@/components/StickyCallButton';
 import ScrollToTop from '@/components/ScrollToTop';
 import { useScrollAnimations, useParallax } from '@/lib/hooks/useScrollAnimations';
@@ -52,7 +51,7 @@ export default function Home() {
       <ServicesSection />
       <TestimonialsSection />
       <ContactSection />
-      <Footer />
+      {/* Footer rendered globally in RootLayout */}
       <StickyCallButton />
       <ScrollToTop />
     </div>

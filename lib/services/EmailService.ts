@@ -418,10 +418,7 @@ export class EmailService {
           <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
         </div>
         
-        <p>Your payment has been received and your invoice has been marked as paid. You can view your payment history in your dashboard.</p>
-        
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/invoices" 
-           style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">View Invoices</a>
+        <p>Your payment has been received and your invoice has been marked as paid. The details above serve as your receipt.</p>
         
         <p>If you have any questions about this payment, please don't hesitate to contact us.</p>
         

@@ -85,6 +85,20 @@ export type DownloadAnalytics = {
   };
 };
 
+// Blog Analytics Service Types
+export type BlogViewEvent = {
+  id: string;
+  postId: string;
+  postTitle: string;
+  userId?: string;
+  userEmail?: string;
+  timestamp: Timestamp;
+  userAgent?: string;
+  referrer?: string;
+  source?: string;
+  campaign?: string;
+};
+
 // PDF Service Types
 export type PDFOptions = {
   format?: 'A4' | 'Letter';

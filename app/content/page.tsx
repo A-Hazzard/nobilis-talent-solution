@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,7 @@ import AuthModal from '@/components/AuthModal';
 import { BlogService } from '@/lib/services/BlogService';
 import { ResourcesService } from '@/lib/services/ResourcesService';
 import { useAuth } from '@/hooks/useAuth';
+import Navigation from '@/components/Navigation';
 
 const categoryLabels: Record<string, string> = {
   'leadership': 'Leadership',
@@ -62,6 +64,10 @@ const typeLabels: Record<string, string> = {
 
 export default function ContentPage() {
   const { isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
+  const initialTabParam = searchParams?.get('tab');
+  const initialTab = initialTabParam === 'resources' ? 'resources' : 'blog';
+  const [activeTab, setActiveTab] = useState<'blog' | 'resources'>(initialTab as 'blog' | 'resources');
   
   // Blog Posts State
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -203,12 +209,12 @@ export default function ContentPage() {
       setAuthModalContext({
         title: 'Sign in to read blog posts',
         description: 'Please sign in or create an account to read our blog posts and access exclusive content.',
-        onSuccess: () => window.open(`/blog/${slug}`, '_blank')
+        onSuccess: () => { window.location.href = `/blog/${slug}`; }
       });
       setIsAuthModalOpen(true);
       return;
     }
-    window.open(`/blog/${slug}`, '_blank');
+    window.location.href = `/blog/${slug}`;
   };
 
   const handleDownloadClick = (resourceId: string) => {
@@ -306,7 +312,8 @@ export default function ContentPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="container mx-auto px-4 py-8">
+      <Navigation />
+      <div className="container mx-auto px-4 pt-24 pb-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Content Library
@@ -316,7 +323,7 @@ export default function ContentPage() {
           </p>
         </div>
 
-        <Tabs defaultValue="blog" className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'blog' | 'resources')} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="blog" className="text-lg">
               <FileText className="h-5 w-5 mr-2" />

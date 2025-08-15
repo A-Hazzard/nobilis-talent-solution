@@ -145,7 +145,7 @@ const Navigation = () => {
                             {serviceDropdownLinks.map((service) => (
                               <li key={service.id}>
                                 <Link
-                                  href={`/services#${service.id}`}
+                                  href={`/services/${service.id}`}
                                   className="block px-4 py-2 text-gray-700 hover:bg-muted hover:text-primary text-sm"
                                   onClick={() => setServicesDropdownOpen(false)}
                                 >
@@ -309,7 +309,7 @@ const Navigation = () => {
                             {serviceDropdownLinks.map((service) => (
                               <li key={service.id}>
                                 <Link
-                                  href={`/services#${service.id}`}
+                                  href={`/services/${service.id}`}
                                   className="block px-2 py-2 text-gray-700 hover:bg-muted hover:text-primary text-sm"
                                   onClick={() => setIsOpen(false)}
                                 >

@@ -223,7 +223,7 @@ export default function ContentSection() {
             {blogs.length > 0 && (
               <div className="text-center mt-8">
                 <Button asChild>
-                  <Link href="/blog">View All Blog Posts</Link>
+                  <Link href="/content?tab=blog">View All Blog Posts</Link>
                 </Button>
               </div>
             )}
@@ -286,7 +286,7 @@ export default function ContentSection() {
             {resources.length > 0 && (
               <div className="text-center mt-8">
                 <Button asChild>
-                  <Link href="/resources">View All Resources</Link>
+                  <Link href="/content?tab=resources">View All Resources</Link>
                 </Button>
               </div>
             )}

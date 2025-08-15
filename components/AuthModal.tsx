@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
-import { LogIn, UserPlus, Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import { LogIn, UserPlus, Lock, Mail, Eye, EyeOff, Chrome, Building2, Phone } from 'lucide-react';
 
 type AuthModalProps = {
   isOpen: boolean;
@@ -31,11 +31,12 @@ export default function AuthModal({
 }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | null>(null);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -51,6 +52,8 @@ export default function AuthModal({
     email: '',
     password: '',
     confirmPassword: '',
+    organization: '',
+    phone: '',
     agreeToTerms: false,
   });
 
@@ -93,8 +96,8 @@ export default function AuthModal({
         signupData.password,
         signupData.firstName,
         signupData.lastName,
-        '', // organization
-        '' // phone
+        signupData.organization || 'Not specified',
+        signupData.phone || ''
       );
       onSuccess?.();
       onClose();
@@ -116,13 +119,7 @@ export default function AuthModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`sm:max-w-md ${className || ''}`} style={{ 
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        margin: 0
-      }}>
+      <DialogContent className={`sm:max-w-md ${className || ''}`}>
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             {title}
@@ -214,6 +211,47 @@ export default function AuthModal({
                   'Sign In'
                 )}
               </Button>
+
+              {/* Social Login Divider */}
+              <div className="my-4 flex items-center">
+                <div className="flex-1 border-t border-gray-200"></div>
+                <span className="mx-3 text-xs text-gray-500">Or continue with</span>
+                <div className="flex-1 border-t border-gray-200"></div>
+              </div>
+
+              {/* Google Sign-In */}
+              <Button
+                type="button"
+                onClick={async () => {
+                  setSocialLoading('google');
+                  setError('');
+                  try {
+                    const { error } = await signInWithGoogle();
+                    if (error) {
+                      setError(error.message || 'Failed to sign in with Google');
+                    } else {
+                      onSuccess?.();
+                      onClose();
+                    }
+                  } finally {
+                    setSocialLoading(null);
+                  }
+                }}
+                disabled={socialLoading !== null || isLoading}
+                className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300"
+              >
+                {socialLoading === 'google' ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    Signing in...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <Chrome className="h-5 w-5 mr-2 text-blue-600" />
+                    Continue with Google
+                  </div>
+                )}
+              </Button>
             </form>
           </TabsContent>
 
@@ -256,6 +294,38 @@ export default function AuthModal({
                     onChange={(e) => handleInputChange('signup', 'email', e.target.value)}
                     className="pl-10"
                     required
+                  />
+                </div>
+              </div>
+
+              {/* Optional organization */}
+              <div className="space-y-2">
+                <Label htmlFor="signup-organization">Organization (Optional)</Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="signup-organization"
+                    type="text"
+                    placeholder="Your organization (optional)"
+                    value={signupData.organization}
+                    onChange={(e) => handleInputChange('signup', 'organization', e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Optional phone */}
+              <div className="space-y-2">
+                <Label htmlFor="signup-phone">Phone (Optional)</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="signup-phone"
+                    type="tel"
+                    placeholder="+1 (555) 123-4567"
+                    value={signupData.phone}
+                    onChange={(e) => handleInputChange('signup', 'phone', e.target.value)}
+                    className="pl-10"
                   />
                 </div>
               </div>

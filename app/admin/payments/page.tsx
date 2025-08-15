@@ -8,7 +8,8 @@ import {
   Edit, 
   Eye, 
   Search,
-  RefreshCw
+  RefreshCw,
+  MoreHorizontal
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/lib/hooks/use-toast';
 import type { PendingPayment } from '@/shared/types/payment';
 
@@ -205,16 +207,20 @@ export default function AdminPaymentsPage() {
   });
 
   const formatDate = (date: any) => {
-    if (!date) return 'N/A';
-    const d = typeof date === 'string' ? new Date(date) : date.toDate();
-    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+    if (!date) return '—';
+    try {
+      const d = typeof date === 'string' ? new Date(date) : (date?.toDate ? date.toDate() : new Date(date));
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) +
+        ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '—';
+    }
   };
 
   const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
+    const num = Number(amount || 0);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
   };
 
   if (isLoading) {
@@ -321,50 +327,37 @@ export default function AdminPaymentsPage() {
                     {formatDate(payment.createdAt)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openViewDialog(payment)}
-                        title="View Details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      
-                      {payment.actions?.canEdit && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openEditDialog(payment)}
-                          title="Edit Payment"
-                        >
-                          <Edit className="w-4 h-4" />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
-                      )}
-                      
-                      {payment.actions?.canComplete && (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => handleStatusChange(payment.id, 'completed')}
-                          className="bg-green-600 hover:bg-green-700"
-                          title="Mark as Completed"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </Button>
-                      )}
-                      
-                      {payment.actions?.canCancel && (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleStatusChange(payment.id, 'cancelled')}
-                          title="Cancel Payment"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openViewDialog(payment)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        {payment.actions?.canEdit && (
+                          <DropdownMenuItem onClick={() => openEditDialog(payment)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                        )}
+                        {payment.actions?.canCancel && (
+                          <DropdownMenuItem className="text-red-600" onClick={() => handleStatusChange(payment.id, 'cancelled')}>
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Cancel
+                          </DropdownMenuItem>
+                        )}
+                        {payment.actions?.canComplete && (
+                          <DropdownMenuItem onClick={() => handleStatusChange(payment.id, 'completed')}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Mark as Completed
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}

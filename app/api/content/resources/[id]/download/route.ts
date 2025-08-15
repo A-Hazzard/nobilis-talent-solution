@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ResourcesService } from '@/lib/services/ResourcesService';
+import { getAuth } from '@/lib/helpers/auth';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require authentication
+    const auth = await getAuth(request);
+    if (!auth.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     
     if (!id) {

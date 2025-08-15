@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LeadsService } from '@/lib/services/LeadsService';
 import { ResourcesService } from '@/lib/services/ResourcesService';
+import { db } from '@/lib/firebase/config';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import type { AnalyticsResponse } from '@/shared/types/api';
 
 export async function GET(request: NextRequest) {
@@ -35,16 +37,65 @@ export async function GET(request: NextRequest) {
         downloads: resource.downloadCount
       }));
 
+    // Revenue from paid invoices and completed pending payments
+    let totalRevenue = 0;
+    let revenueThisMonth = 0;
+    let completedCount = 0;
+
+    // Pending payments (completed)
+    try {
+      const completedPaymentsQ = query(
+        collection(db, 'pendingPayments'),
+        where('status', '==', 'completed')
+      );
+      const completedSnap = await getDocs(completedPaymentsQ);
+      completedSnap.forEach((doc) => {
+        const data: any = doc.data();
+        const amount = Number(data.baseAmount || 0);
+        totalRevenue += amount;
+        completedCount += 1;
+        const created = data.updatedAt?.toDate?.() || data.createdAt?.toDate?.() || new Date(0);
+        if (created >= thisMonth) revenueThisMonth += amount;
+      });
+    } catch {
+      // ignore errors; default to 0
+    }
+
+    // Invoices (paid)
+    try {
+      const paidInvoicesQ = query(
+        collection(db, 'invoices'),
+        where('status', '==', 'paid')
+      );
+      const paidSnap = await getDocs(paidInvoicesQ);
+      paidSnap.forEach((doc) => {
+        const data: any = doc.data();
+        const amount = Number(data.total || 0);
+        totalRevenue += amount;
+        completedCount += 1;
+        const paidAt = data.paidAt?.toDate?.() || data.updatedAt?.toDate?.() || data.createdAt?.toDate?.() || new Date(0);
+        if (paidAt >= thisMonth) revenueThisMonth += amount;
+      });
+    } catch {
+      // ignore errors; default to 0
+    }
+
+    // Cap conversion rate at 100% to avoid unrealistic percentages when
+    // payments are not directly tied to leads or when historical payments
+    // exceed current lead count
+    const rawConversion = totalLeads > 0 ? Math.round((completedCount / totalLeads) * 100) : 0;
+    const conversionRate = Math.max(0, Math.min(100, rawConversion));
+
     const analytics = {
       totalLeads,
       leadsThisMonth,
-      conversionRate: 0, // Conversion rate is no longer calculated
-      totalRevenue: 0, // TODO: Implement revenue tracking
-      revenueThisMonth: 0, // TODO: Implement revenue tracking
-      activeUsers: totalLeads, // Using total leads as active users for now
+      conversionRate,
+      totalRevenue,
+      revenueThisMonth,
+      activeUsers: totalLeads,
       resourceDownloads: allResources.reduce((sum, resource) => sum + resource.downloadCount, 0),
       topResources,
-      leadSources: [], // Lead sources are no longer calculated
+      leadSources: [],
     };
 
     const response: AnalyticsResponse = {

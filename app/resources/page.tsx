@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Search, Download, Calendar, FileText, Video, BookOpen, Star, Grid, List, Image, Music, File } from 'lucide-react';
 import { Resource } from '@/shared/types/entities';
+import { useAuth } from '@/hooks/useAuth';
+import AuthModal from '@/components/AuthModal';
 import Navigation from '@/components/Navigation';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -208,6 +210,7 @@ const typeIcons: Record<string, React.ReactNode> = {
 };
 
 export default function ResourcesPage() {
+  const { isAuthenticated } = useAuth();
   const [resources, setResources] = useState<Resource[]>(sampleResources);
   const [filteredResources, setFilteredResources] = useState<Resource[]>(sampleResources);
   const [searchTerm, setSearchTerm] = useState('');
@@ -216,6 +219,13 @@ export default function ResourcesPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [itemsToShow, setItemsToShow] = useState(6);
+
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalContext, setAuthModalContext] = useState<{
+    title: string;
+    description: string;
+    onSuccess?: () => void;
+  } | null>(null);
 
   // Refs for GSAP animations
   const heroRef = useRef<HTMLDivElement>(null);
@@ -321,13 +331,36 @@ export default function ResourcesPage() {
   }, [filteredResources]);
 
   const handleDownload = async (resourceId: string) => {
-    console.log(`Downloading resource: ${resourceId}`);
-    
-    // Update download count locally for demo
-    setResources(prev => prev.map(resource => 
-      resource.id === resourceId 
-        ? { ...resource, downloadCount: resource.downloadCount + 1 }
-        : resource
+    if (!isAuthenticated) {
+      const resource = resources.find(r => r.id === resourceId);
+      setAuthModalContext({
+        title: 'Sign in to download resources',
+        description: `Please sign in or create an account to download "${resource?.title || 'this resource'}" and access our content library.`,
+        onSuccess: () => {
+          const r = resources.find(x => x.id === resourceId);
+          if (r?.fileUrl && r.fileUrl !== '#') {
+            window.open(r.fileUrl, '_blank');
+          }
+          setResources(prev => prev.map(item =>
+            item.id === resourceId
+              ? { ...item, downloadCount: item.downloadCount + 1 }
+              : item
+          ));
+        }
+      });
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    const resource = resources.find(r => r.id === resourceId);
+    if (resource?.fileUrl && resource.fileUrl !== '#') {
+      window.open(resource.fileUrl, '_blank');
+    }
+
+    setResources(prev => prev.map(item =>
+      item.id === resourceId
+        ? { ...item, downloadCount: item.downloadCount + 1 }
+        : item
     ));
   };
 
@@ -733,7 +766,19 @@ export default function ResourcesPage() {
         )}
       </div>
 
-      {/* Footer rendered globally in RootLayout */}
+    {/* Auth Modal */}
+    <AuthModal
+      isOpen={isAuthModalOpen}
+      onClose={() => setIsAuthModalOpen(false)}
+      onSuccess={() => {
+        authModalContext?.onSuccess?.();
+        setIsAuthModalOpen(false);
+      }}
+      title={authModalContext?.title}
+      description={authModalContext?.description}
+    />
+
+    {/* Footer rendered globally in RootLayout */}
     </div>
   );
 } 

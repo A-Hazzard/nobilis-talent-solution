@@ -31,12 +31,7 @@ const sidebarItems = [
     icon: Users,
   },
   {
-    title: 'Resources',
-    href: '/admin/resources',
-    icon: FileText,
-  },
-  {
-    title: 'Blog',
+    title: 'Content',
     href: '/admin/blog',
     icon: FileText,
   },

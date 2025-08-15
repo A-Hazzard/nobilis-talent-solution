@@ -20,22 +20,30 @@ import {
   Filter
 } from 'lucide-react';
 import { DownloadAnalyticsService } from '@/lib/services/DownloadAnalyticsService';
+import AnalyticsRecentDownloads from '@/components/admin/AnalyticsRecentDownloads';
+import AnalyticsRecentBlogViews from '@/components/admin/AnalyticsRecentBlogViews';
+import { BlogAnalyticsService } from '@/lib/services/BlogAnalyticsService';
 import { ResourcesService } from '@/lib/services/ResourcesService';
+import { BlogService } from '@/lib/services/BlogService';
 import type { DownloadAnalytics } from '@/lib/types/services';
-import type { Resource } from '@/shared/types/entities';
+import type { Resource, BlogPost } from '@/shared/types/entities';
 
 // Analytics Dashboard Component
 export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<DownloadAnalytics | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
+  const [recentViews, setRecentViews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [topBlogs, setTopBlogs] = useState<BlogPost[]>([]);
 
   useEffect(() => {
     loadAnalytics();
     loadResources();
+    loadTopBlogs();
+    loadRecentViews();
   }, [timeRange]);
 
   const loadAnalytics = async () => {
@@ -63,6 +71,30 @@ export default function AnalyticsPage() {
       }
     } catch (error) {
       console.error('Error loading resources:', error);
+    }
+  };
+
+  const loadTopBlogs = async () => {
+    try {
+      const blogService = new BlogService();
+      const { posts } = await blogService.getAll({ status: 'published' });
+      const top = posts
+        .slice()
+        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+        .slice(0, 10);
+      setTopBlogs(top);
+    } catch {
+      setTopBlogs([]);
+    }
+  };
+
+  const loadRecentViews = async () => {
+    try {
+      const svc = BlogAnalyticsService.getInstance();
+      const items = await svc.getRecentViews(20);
+      setRecentViews(items);
+    } catch {
+      setRecentViews([]);
     }
   };
 
@@ -267,6 +299,7 @@ export default function AnalyticsPage() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="resources">Top Resources</TabsTrigger>
+          <TabsTrigger value="blogs">Top Blogs</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="recent">Recent Activity</TabsTrigger>
         </TabsList>
@@ -329,6 +362,32 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Top Blogs Tab */}
+        <TabsContent value="blogs" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Blog Posts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {topBlogs.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">No blog data yet</div>
+                ) : (
+                  topBlogs.map((post, index) => (
+                    <div key={post.id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">#{index + 1}</Badge>
+                        <span className="text-sm font-medium truncate max-w-64">{post.title}</span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{(post.viewCount || 0).toLocaleString()} views</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Top Resources Tab */}
@@ -452,38 +511,12 @@ export default function AnalyticsPage() {
 
         {/* Recent Activity Tab */}
         <TabsContent value="recent" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Downloads</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {analytics?.recentDownloads?.map((download) => (
-                  <div key={download.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <Download className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{download.resourceTitle}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {download.userEmail || 'Anonymous user'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm text-muted-foreground">
-                        {download.timestamp.toDate().toLocaleDateString()}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {download.timestamp.toDate().toLocaleTimeString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {analytics && (
+            <AnalyticsRecentDownloads items={analytics.recentDownloads || []} />
+          )}
+          {recentViews.length > 0 && (
+            <AnalyticsRecentBlogViews items={recentViews} />
+          )}
         </TabsContent>
       </Tabs>
     </div>

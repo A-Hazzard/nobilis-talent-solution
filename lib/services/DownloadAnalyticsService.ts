@@ -43,23 +43,26 @@ export class DownloadAnalyticsService {
     }
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Create enhanced download event
-      const downloadEvent: Omit<DownloadEvent, 'id'> = {
+      // Create enhanced download event (omit undefined fields)
+      const payload: Record<string, any> = {
         resourceId,
         resourceTitle,
-        userId,
-        userEmail,
         timestamp: Timestamp.now(),
-        userAgent: additionalData?.userAgent || (typeof window !== 'undefined' ? window.navigator.userAgent : ''),
-        ipAddress: additionalData?.ipAddress,
-        referrer: additionalData?.referrer || (typeof window !== 'undefined' ? document.referrer : undefined),
-        source: additionalData?.source,
-        campaign: additionalData?.campaign,
       };
+      if (userId) payload.userId = userId;
+      if (userEmail) payload.userEmail = userEmail;
+      const ua = additionalData?.userAgent ?? (typeof window !== 'undefined' ? window.navigator.userAgent : '');
+      if (ua) payload.userAgent = ua;
+      const ip = additionalData?.ipAddress;
+      if (ip) payload.ipAddress = ip;
+      const ref = additionalData?.referrer ?? (typeof window !== 'undefined' ? document.referrer : '');
+      if (ref) payload.referrer = ref;
+      if (additionalData?.source) payload.source = additionalData.source;
+      if (additionalData?.campaign) payload.campaign = additionalData.campaign;
 
       // Add to downloads collection
       const downloadsRef = collection(db, 'downloads');
-      await setDoc(doc(downloadsRef), downloadEvent);
+      await setDoc(doc(downloadsRef), payload);
 
       // Update resource download count and last download timestamp
       const resourceRef = doc(db, 'resources', resourceId);
@@ -107,10 +110,10 @@ export class DownloadAnalyticsService {
 
       const downloadsRef = collection(db, 'downloads');
 
-      // Get total downloads for the time range
+      // Get total downloads for the time range (events)
       const totalQuery = query(downloadsRef, where('timestamp', '>=', startDate));
       const totalSnapshot = await getDocs(totalQuery);
-      const totalDownloads = totalSnapshot.size;
+      let totalDownloads = totalSnapshot.size;
 
       // Get downloads today
       const todayQuery = query(downloadsRef, where('timestamp', '>=', oneDayAgo));
@@ -141,6 +144,17 @@ export class DownloadAnalyticsService {
 
       // Get popular resources
       const popularResources = await this.getPopularResources();
+
+      // Fallback: if there are no event logs yet, approximate totals from resource counters
+      if (totalDownloads === 0) {
+        try {
+          const resourcesSnap = await getDocs(collection(db, 'resources'));
+          const sum = resourcesSnap.docs.reduce((acc, d) => acc + (d.data().downloadCount || 0), 0);
+          totalDownloads = sum;
+        } catch {
+          // keep 0
+        }
+      }
 
       // Get daily download trends
       const dailyTrends = await this.getDailyDownloadTrends(startDate);

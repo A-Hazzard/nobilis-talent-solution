@@ -2,6 +2,7 @@ import { LeadsService } from './LeadsService';
 import { TestimonialsService } from './TestimonialsService';
 import { ResourcesService } from './ResourcesService';
 import type { Analytics } from '@/shared/types/entities';
+import type { AnalyticsResponse } from '@/shared/types/api';
 
 export class AnalyticsService {
   private leadsService = new LeadsService();
@@ -13,6 +14,19 @@ export class AnalyticsService {
    */
   async getDashboardAnalytics(period: 'week' | 'month' | 'year' = 'month'): Promise<{ data: Analytics; error?: string }> {
     try {
+      // Prefer server-calculated analytics (includes revenue from invoices and payments)
+      try {
+        const res = await fetch(`/api/analytics/dashboard?period=${period}`, { cache: 'no-store' });
+        if (res.ok) {
+          const json = (await res.json()) as { success: boolean; data: AnalyticsResponse };
+          if (json?.success && json?.data?.analytics) {
+            return { data: json.data.analytics };
+          }
+        }
+      } catch {
+        // Fall back to client-side aggregation below
+      }
+
       // Get data from all services
       const [leadsStats, , resourcesStats] = await Promise.all([
         this.leadsService.getStats(),
@@ -20,7 +34,8 @@ export class AnalyticsService {
         this.resourcesService.getStats(),
       ]);
 
-      // Calculate conversion rate (no longer calculated since leads don't have status)
+      // Conversion approximated: completed payments + paid invoices over total leads
+      // These are computed server-side; keep 0 here since getDashboardAnalytics uses API now.
       const conversionRate = 0;
 
       // Calculate period-specific leads (mock calculation - in real app would filter by date)
@@ -31,8 +46,8 @@ export class AnalyticsService {
         leadsThisPeriod = Math.round(leadsStats.total * 0.9); // 90% of total for yearly
       }
 
-      // Calculate revenue (mock calculation)
-      const totalRevenue = 0; // No conversion tracking
+      // Revenue is computed via API; default to 0 here
+      const totalRevenue = 0;
       const revenueThisPeriod = 0;
 
       // Get top resources

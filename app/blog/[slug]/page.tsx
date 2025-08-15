@@ -15,16 +15,23 @@ import {
 } from 'lucide-react';
 import { BlogPost, Resource } from '@/shared/types/entities';
 import { BlogService } from '@/lib/services/BlogService';
+import { BlogAnalyticsService } from '@/lib/services/BlogAnalyticsService';
 import { ResourcesService } from '@/lib/services/ResourcesService';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
+import AuthModal from '@/components/AuthModal';
 
 export default function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { isAuthenticated, user } = useAuth();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [slug, setSlug] = useState<string>('');
 
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   const blogService = new BlogService();
+  const blogAnalytics = BlogAnalyticsService.getInstance();
   const resourcesService = new ResourcesService();
 
   useEffect(() => {
@@ -36,10 +43,13 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
   }, [params]);
 
   useEffect(() => {
-    if (slug) {
-      loadBlogPost();
+    if (!slug) return;
+    if (!isAuthenticated) {
+      // Show modal but still load post so views can be tracked anonymously
+      setIsAuthModalOpen(true);
     }
-  }, [slug]);
+    loadBlogPost();
+  }, [slug, isAuthenticated]);
 
   const loadBlogPost = async () => {
     setIsLoading(true);
@@ -52,9 +62,30 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         setPost(getSamplePost(slug));
       } else {
         setPost(response.post);
+        // Increment aggregate view counter on the post
+        if (response.post) {
+          try {
+            await blogService.incrementViewCount(response.post.id);
+          } catch {
+            // non-blocking
+          }
+        }
         // Load associated resources if the post has any
         if (response.post?.resources && response.post.resources.length > 0) {
           await loadResources(response.post.resources);
+        }
+        // Track view (after load)
+        try {
+          if (response.post) {
+            await blogAnalytics.trackView(
+              response.post.id,
+              response.post.title,
+              user?.id,
+              user?.email
+            );
+          }
+        } catch {
+          // non-blocking
         }
       }
     } catch (error) {
@@ -230,7 +261,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Blog Post Not Found</h1>
           <p className="text-gray-600 mb-6">The blog post you're looking for doesn't exist.</p>
-          <Link href="/blog">
+          <Link href="/content?tab=blog">
             <Button>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Blog
@@ -246,7 +277,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       {/* Back Navigation */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/blog">
+          <Link href="/content?tab=blog">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Blog
@@ -388,6 +419,13 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
         
       </div>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        title="Sign in to read blog posts"
+        description="Please sign in or create an account to read this article."
+        onSuccess={() => setIsAuthModalOpen(false)}
+      />
     </div>
   );
 } 

@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/select';
 import { BlogPost } from '@/shared/types/entities';
 import { BlogService } from '@/lib/services/BlogService';
+import { useAuth } from '@/hooks/useAuth';
+import AuthModal from '@/components/AuthModal';
 
 const categoryLabels: Record<string, string> = {
   'leadership': 'Leadership',
@@ -37,11 +39,19 @@ const categoryLabels: Record<string, string> = {
 };
 
 export default function BlogPage() {
+  const { isAuthenticated } = useAuth();
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalContext, setAuthModalContext] = useState<{
+    title: string;
+    description: string;
+    onSuccess?: () => void;
+  } | null>(null);
 
   const blogService = new BlogService();
 
@@ -149,7 +159,17 @@ export default function BlogPage() {
   }, [blogPosts, searchTerm, selectedCategory]);
 
   const handleViewPost = (slug: string) => {
-    // Navigate to individual blog post page
+    if (!isAuthenticated) {
+      setAuthModalContext({
+        title: 'Sign in to read blog posts',
+        description: 'Please sign in or create an account to read our blog posts and access exclusive content.',
+        onSuccess: () => {
+          window.location.href = `/blog/${slug}`;
+        }
+      });
+      setIsAuthModalOpen(true);
+      return;
+    }
     window.location.href = `/blog/${slug}`;
   };
 
@@ -317,6 +337,16 @@ export default function BlogPage() {
           </div>
         )}
       </div>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          authModalContext?.onSuccess?.();
+          setIsAuthModalOpen(false);
+        }}
+        title={authModalContext?.title}
+        description={authModalContext?.description}
+      />
     </div>
   );
 } 

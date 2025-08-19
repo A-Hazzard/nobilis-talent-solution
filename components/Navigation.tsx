@@ -27,6 +27,7 @@ const Navigation = () => {
     { href: '#about', label: 'About' },
     { href: '/services', label: 'Services' },
     { href: '/content', label: 'Content' },
+    { href: '/brand-showcase', label: 'Brand Showcase' },
     { href: '#contact', label: 'Contact' },
   ];
 
@@ -36,6 +37,7 @@ const Navigation = () => {
     { href: '/#about', label: 'About' },
     { href: '/services', label: 'Services' },
     { href: '/content', label: 'Content' },
+    { href: '/brand-showcase', label: 'Brand Showcase' },
     { href: '/#contact', label: 'Contact' },
   ];
 
@@ -234,7 +236,7 @@ const Navigation = () => {
                               signOut();
                               setUserDropdownOpen(false);
                             }}
-                            className="w-full text-left block px-4 py-2 text-gray-700 hover:bg-muted hover:text-primary text-sm flex items-center space-x-2"
+                            className="w-full text-left px-4 py-2 text-gray-700 hover:bg-muted hover:text-primary text-sm flex items-center space-x-2"
                           >
                             <LogOut size={14} />
                             <span>Logout</span>
@@ -327,7 +329,7 @@ const Navigation = () => {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-foreground hover:text-primary block px-4 py-3 rounded-lg hover:bg-muted transition-smooth font-medium touch-manipulation active:scale-98 active:bg-muted min-h-12 flex items-center"
+                    className="text-foreground hover:text-primary px-4 py-3 rounded-lg hover:bg-muted transition-smooth font-medium touch-manipulation active:scale-98 active:bg-muted min-h-12 flex items-center"
                     onClick={(e) => handleLinkClick(link.href, e)}
                   >
                     {link.label}
@@ -339,7 +341,7 @@ const Navigation = () => {
                 {hasPendingPayment && (
                   <a
                     href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
-                    className="btn-secondary w-full text-center block font-semibold"
+                    className="btn-secondary w-full text-center font-semibold"
                     onClick={() => setIsOpen(false)}
                   >
                     Pay ${pendingPayment?.baseAmount || '0'}
@@ -355,7 +357,7 @@ const Navigation = () => {
                     {user?.role === 'admin' && (
                       <Link
                         href="/admin"
-                        className="text-foreground hover:text-primary block px-3 py-2 rounded-lg hover:bg-muted transition-smooth"
+                        className="text-foreground hover:text-primary px-3 py-2 rounded-lg hover:bg-muted transition-smooth"
                         onClick={() => setIsOpen(false)}
                       >
                         Admin Dashboard
@@ -367,7 +369,7 @@ const Navigation = () => {
                         signOut();
                         setIsOpen(false);
                       }}
-                      className="text-foreground hover:text-primary block px-3 py-2 rounded-lg hover:bg-muted transition-smooth w-full text-left flex items-center space-x-2"
+                      className="text-foreground hover:text-primary px-3 py-2 rounded-lg hover:bg-muted transition-smooth w-full text-left flex items-center space-x-2"
                     >
                       <LogOut size={16} />
                       <span>Logout</span>
@@ -377,7 +379,7 @@ const Navigation = () => {
                   <>
                     <Link
                       href="/signup"
-                      className="btn-outline w-full text-center block touch-manipulation active:scale-98 min-h-12 flex items-center justify-center"
+                      className="btn-outline w-full text-center touch-manipulation active:scale-98 min-h-12 flex items-center justify-center"
                       onClick={() => setIsOpen(false)}
                     >
                       Sign Up
@@ -390,7 +392,7 @@ const Navigation = () => {
                     window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank');
                     setIsOpen(false);
                   }}
-                  className="btn-primary w-full text-center block touch-manipulation active:scale-98 min-h-12 flex items-center justify-center"
+                  className="btn-primary w-full text-center touch-manipulation active:scale-98 min-h-12 flex items-center justify-center"
                 >
                   Book Now
                 </button>

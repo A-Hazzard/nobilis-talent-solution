@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase/admin';
+import { getAdminAuth } from '@/lib/firebase/admin';
 import { EmailService } from '@/lib/services/EmailService';
 
 export async function POST(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
     // Generate Firebase password reset link
-    const firebaseLink = await adminAuth.generatePasswordResetLink(email, {
+    const firebaseLink = await getAdminAuth().generatePasswordResetLink(email, {
       url: `${appUrl}/login`,
       handleCodeInApp: true,
     });

@@ -19,9 +19,9 @@ interface SEOProps {
  * Comprehensive SEO component for better search engine optimization
  */
 export default function SEO({
-  title = 'Payne Leadership - Executive Coaching & Leadership Development',
-  description = 'Transform your leadership potential with Kareem Payne. Expert executive coaching, leadership development, and organizational consulting to help you and your team achieve breakthrough results.',
-  keywords = 'executive coaching, leadership development, organizational consulting, business strategy, team building, leadership training, executive mentoring, professional development',
+  title = 'Nobilis Talent Solutions — Where strategy meets humanity',
+  description = 'Helping People and Organizations Thrive. Human Capital Alchemist and Coach helping leaders and teams unlock potential, navigate change, and build cultures where people and performance flourish.',
+  keywords = 'executive coaching, leadership development, organizational consulting, business strategy, team building, leadership training, executive mentoring, professional development, human capital, talent solutions',
   image = '/assets/hero-leadership.jpg',
   url = 'https://payneleadership.com',
   type = 'website',
@@ -32,7 +32,7 @@ export default function SEO({
   tags = [],
   structuredData,
 }: SEOProps) {
-  const fullTitle = title.includes('Payne Leadership') ? title : `${title} | Payne Leadership`;
+  const fullTitle = title.includes('Nobilis Talent Solutions') ? title : `${title} | Nobilis Talent Solutions`;
   const fullUrl = url.startsWith('http') ? url : `https://payneleadership.com${url}`;
   const fullImage = image.startsWith('http') ? image : `https://payneleadership.com${image}`;
 
@@ -40,10 +40,10 @@ export default function SEO({
   const defaultStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Payne Leadership',
+    name: 'Nobilis Talent Solutions LLC',
     url: 'https://payneleadership.com',
     logo: 'https://payneleadership.com/logo-transparent.png',
-    description: 'Executive coaching and leadership development services',
+    description: 'Human Capital Alchemist and Coach helping leaders and teams unlock potential, navigate change, and build cultures where people and performance flourish.',
     address: {
       '@type': 'PostalAddress',
       streetAddress: '123 Business St',
@@ -56,11 +56,11 @@ export default function SEO({
       '@type': 'ContactPoint',
       telephone: '+1-555-123-4567',
       contactType: 'customer service',
-      email: 'contact@payneleadership.com'
+      email: 'nobilis.talent@gmail.com'
     },
     sameAs: [
-      'https://linkedin.com/company/payne-leadership',
-      'https://twitter.com/payneleadership'
+      'https://linkedin.com/company/nobilis-talent-solutions',
+      'https://twitter.com/nobilistalent'
     ]
   };
 
@@ -68,13 +68,13 @@ export default function SEO({
   const personStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: 'Kareem Payne',
-    jobTitle: 'Executive Coach & Leadership Consultant',
+    name: 'Kareem T. Payne',
+    jobTitle: 'Human Capital Alchemist & Coach',
     worksFor: {
       '@type': 'Organization',
-      name: 'Payne Leadership'
+      name: 'Nobilis Talent Solutions LLC'
     },
-    description: 'Experienced executive coach and leadership development consultant',
+    description: 'Purposeful, passionate, and results-driven Human Capital Alchemist & Coach with experience across diverse sectors.',
     image: 'https://payneleadership.com/assets/kareem-profile.jpg',
     url: 'https://payneleadership.com',
     sameAs: [

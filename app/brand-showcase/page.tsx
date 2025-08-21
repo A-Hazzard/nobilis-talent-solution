@@ -1,3 +1,5 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
@@ -8,12 +10,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-
-export const metadata = {
-	title: 'Nobilis Talent Solutions — Where strategy meets humanity',
-	description:
-		'Helping People and Organizations Thrive. Human Capital Alchemist and Coach helping leaders and teams unlock potential, navigate change, and build cultures where people and performance flourish.',
-}
 
 const services: Array<{ title: string; summary: string }> = [
 	{
@@ -59,27 +55,37 @@ const services: Array<{ title: string; summary: string }> = [
 ]
 
 export default function BrandShowcasePage() {
+	// More reliable Unsplash images with verified IDs
 	const serviceImages: string[] = [
-		'https://images.unsplash.com/photo-1515165562835-c3b8bf5f7cf8?q=80&w=1200&auto=format&fit=crop',
-		'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop',
-		'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200&auto=format&fit=crop',
-		'https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?q=80&w=1200&auto=format&fit=crop',
-		'https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=1200&auto=format&fit=crop',
-		'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1200&auto=format&fit=crop',
-		'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?q=80&w=1200&auto=format&fit=crop',
-		'https://images.unsplash.com/photo-1521791136064-ff1f9b9ef0e6?q=80&w=1200&auto=format&fit=crop',
+		'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=800&fit=crop&crop=center',
+		'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=800&fit=crop&crop=center',
+		'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&crop=center',
+		'https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=1200&h=800&fit=crop&crop=center',
+		'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=800&fit=crop&crop=center',
+		'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&h=800&fit=crop&crop=center',
+		'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=1200&h=800&fit=crop&crop=center',
+		'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=800&fit=crop&crop=center',
 	]
+	
 	return (
 		<main className="min-h-screen">
 			{/* Hero */}
 			<section className="relative isolate overflow-hidden">
 				<div className="absolute inset-0 -z-10">
 					<Image
-						src="https://images.unsplash.com/photo-1531496730074-83e981fc6e46?q=80&w=1920&auto=format&fit=crop"
+						src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1920&h=1080&fit=crop&crop=center"
 						alt="Leadership meeting"
 						fill
 						priority
 						className="object-cover"
+						onError={(e) => {
+							// Fallback to a solid color if image fails
+							const target = e.target as HTMLImageElement;
+							target.style.display = 'none';
+							if (target.parentElement) {
+								target.parentElement.style.backgroundColor = '#1f2937';
+							}
+						}}
 					/>
 					<div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
 				</div>
@@ -122,10 +128,17 @@ export default function BrandShowcasePage() {
 				<div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:items-center">
 					<div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-medium">
 						<Image
-							src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=1600&auto=format&fit=crop"
+							src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1600&h=1200&fit=crop&crop=center"
 							alt="Coaching session"
 							fill
 							className="object-cover"
+							onError={(e) => {
+								const target = e.target as HTMLImageElement;
+								target.style.display = 'none';
+								if (target.parentElement) {
+									target.parentElement.style.backgroundColor = '#f3f4f6';
+								}
+							}}
 						/>
 					</div>
 					<div>
@@ -146,7 +159,7 @@ export default function BrandShowcasePage() {
 							<p>
 								Whether in a boardroom, training room, or community hall, his message is consistent: growth is a
 								choice, and learning never stops. A lifelong learner with a growth mindset, Kareem embraces the
-								philosophy — “Stay Curious. Keep Learning.”
+								philosophy — "Stay Curious. Keep Learning."
 							</p>
 						</div>
 
@@ -199,20 +212,27 @@ export default function BrandShowcasePage() {
 							story, challenges, and goals.
 						</p>
 						<p className="mt-4 text-base leading-7 text-foreground/80">
-							We don’t just create plans; we create the conditions for sustainable change. We listen deeply,
+							We don't just create plans; we create the conditions for sustainable change. We listen deeply,
 							ask the right questions, and challenge assumptions to unlock new possibilities together.
 						</p>
 						<p className="mt-4 text-base leading-7 text-foreground/80">
-							If you’re ready to reimagine what you or your organization can achieve, let’s connect and start
+							If you're ready to reimagine what you or your organization can achieve, let's connect and start
 							the transformation journey.
 						</p>
 					</div>
 					<div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-medium">
 						<Image
-							src="https://images.unsplash.com/photo-1557800636-894a64c1696f?q=80&w=1600&auto=format&fit=crop"
+							src="https://images.unsplash.com/photo-1557800636-894a64c1696f?w=1600&h=1200&fit=crop&crop=center"
 							alt="Team collaboration"
 							fill
 							className="object-cover"
+							onError={(e) => {
+								const target = e.target as HTMLImageElement;
+								target.style.display = 'none';
+								if (target.parentElement) {
+									target.parentElement.style.backgroundColor = '#f3f4f6';
+								}
+							}}
 						/>
 					</div>
 				</div>
@@ -236,7 +256,7 @@ export default function BrandShowcasePage() {
 						{
 							title: 'Integrity in Action',
 							desc:
-								'We lead with transparency, authenticity, and accountability. Recommendations are grounded in what’s right for your people and business.',
+								'We lead with transparency, authenticity, and accountability. Recommendations are grounded in what\'s right for your people and business.',
 						},
 						{
 							title: 'Growth as a Way of Life',
@@ -273,6 +293,13 @@ export default function BrandShowcasePage() {
 									alt={s.title}
 									fill
 									className="object-cover transition-smooth group-hover:scale-105"
+									onError={(e) => {
+										const target = e.target as HTMLImageElement;
+										target.style.display = 'none';
+										if (target.parentElement) {
+											target.parentElement.style.backgroundColor = '#f3f4f6';
+										}
+									}}
 								/>
 							</div>
 							<CardHeader>
@@ -281,7 +308,7 @@ export default function BrandShowcasePage() {
 							</CardHeader>
 							<CardContent>
 								<Link href="#contact" className="text-primary hover:underline">
-									Let’s talk
+									Let's talk
 								</Link>
 							</CardContent>
 						</Card>
@@ -305,10 +332,17 @@ export default function BrandShowcasePage() {
 						</div>
 						<div className="relative aspect-[16/9] overflow-hidden rounded-2xl">
 							<Image
-								src="https://images.unsplash.com/photo-1529336953121-ad2dd3d85f09?q=80&w=1600&auto=format&fit=crop"
+								src="https://images.unsplash.com/photo-1529336953121-ad2dd3d85f09?w=1600&h=900&fit=crop&crop=center"
 								alt="Global collaboration"
 								fill
 								className="object-cover"
+								onError={(e) => {
+									const target = e.target as HTMLImageElement;
+									target.style.display = 'none';
+									if (target.parentElement) {
+										target.parentElement.style.backgroundColor = '#f3f4f6';
+									}
+								}}
 							/>
 						</div>
 					</div>

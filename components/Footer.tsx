@@ -102,10 +102,10 @@ const Footer = () => {
               <div className="flex items-center">
                 <Mail className="w-5 h-5 mr-3 text-primary" />
                 <a
-                  href="mailto:kareempayne11@gmail.com"
-                  className="text-white/80 hover:text-primary transition-smooth"
+                  href="mailto:nobilis.talent@gmail.com"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  kareempayne11@gmail.com
+                  nobilis.talent@gmail.com
                 </a>
               </div>
               <div className="flex items-center">

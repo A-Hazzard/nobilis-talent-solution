@@ -15,37 +15,33 @@ import {
   Star, 
   CheckCircle, 
   Calendar,
-  Award,
-  Users2,
   Zap,
   Shield,
   Heart,
   Phone,
   Play,
-  FileText
+  FileText,
+  TrendingUp,
+  BarChart3,
+  GraduationCap,
+  Search
 } from 'lucide-react';
 
 // Service data
 const services = [
   {
-    id: 'executive-coaching',
-    title: 'Executive Coaching',
-    subtitle: 'Transform Your Leadership Potential',
-    description: 'One-on-one coaching sessions designed to unlock your leadership potential and drive organizational success.',
+    id: 'individual-coaching',
+    title: 'Individual & Group Coaching',
+    subtitle: 'Grow with purpose.',
+    description: 'Personalized coaching that sparks holistic growth, strengthens confidence, and helps individuals and teams be better.',
     features: [
-      'Personalized leadership development plan',
-      '360-degree feedback assessment',
+      'Personalized growth strategies',
+      'Confidence building techniques',
+      'Team dynamics optimization',
+      'Holistic development approach',
       'Goal setting and accountability',
-      'Communication skills enhancement',
-      'Strategic thinking development',
-      'Conflict resolution strategies'
+      'Communication skills enhancement'
     ],
-    pricing: {
-      single: 150,
-      package: 1200,
-      duration: '60 minutes per session',
-      packageDetails: '10 sessions package'
-    },
     testimonials: [
       {
         name: 'Sarah Johnson',
@@ -56,90 +52,238 @@ const services = [
       {
         name: 'Michael Chen',
         role: 'VP Operations, Global Corp',
-        content: 'The executive coaching program transformed my approach to leadership. I now lead with clarity and purpose.',
+        content: 'The coaching program transformed my approach to leadership. I now lead with clarity and purpose.',
         rating: 5
       }
     ],
-    icon: Users,
+    icon: Heart,
     color: 'from-blue-500 to-blue-600',
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-200'
   },
   {
-    id: 'team-development',
-    title: 'Team Development',
-    subtitle: 'Build High-Performing Teams',
-    description: 'Comprehensive team building and development programs that foster collaboration, communication, and peak performance.',
+    id: 'performance-management',
+    title: 'Performance Management Design',
+    subtitle: 'Solutions to drive engagement and results.',
+    description: 'We reimagine the approach to managing performance. With an intentional focus on the people, we redesign performance systems to be more human, more agile, and more impactful.',
     features: [
-      'Team dynamics assessment',
-      'Communication workshops',
-      'Conflict resolution training',
-      'Collaboration strategies',
+      'Human-centered performance systems',
+      'Agile performance frameworks',
+      'Engagement-driven metrics',
+      'Impact measurement strategies',
       'Performance optimization',
       'Team culture building'
     ],
-    pricing: {
-      single: 500,
-      package: 4000,
-      duration: 'Half-day workshop',
-      packageDetails: '8 workshops package'
-    },
     testimonials: [
       {
         name: 'Lisa Rodriguez',
         role: 'HR Director, InnovateCo',
-        content: 'Our team productivity increased by 40% after implementing Kareem\'s team development strategies.',
+        content: 'Our team productivity increased by 40% after implementing Kareem\'s performance management strategies.',
         rating: 5
       },
       {
         name: 'David Thompson',
         role: 'Team Lead, Creative Agency',
-        content: 'The team development program completely changed how we work together. We\'re now more cohesive than ever.',
+        content: 'The performance management redesign completely changed how we work together. We\'re now more cohesive than ever.',
         rating: 5
       }
     ],
-    icon: Users2,
+    icon: Target,
     color: 'from-green-500 to-green-600',
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200'
   },
   {
-    id: 'leadership-retreats',
-    title: 'Leadership Retreats',
-    subtitle: 'Intensive Leadership Immersion',
-    description: 'Multi-day intensive programs that provide deep leadership insights and transformative experiences.',
+    id: 'leadership-development',
+    title: 'Leadership Development Design',
+    subtitle: 'Leaders who inspire action.',
+    description: 'From emerging leaders to seasoned execs, we craft experiences to grow leaders who inspire, influence, and deliver results in a changing world.',
     features: [
-      'Comprehensive leadership assessment',
+      'Emerging leader development',
+      'Executive leadership enhancement',
+      'Inspiration and influence skills',
+      'Results-driven leadership',
       'Strategic planning workshops',
-      'Personal brand development',
-      'Networking opportunities',
-      'Action planning sessions',
-      'Follow-up support'
+      'Personal brand development'
     ],
-    pricing: {
-      single: 2500,
-      package: 20000,
-      duration: '2-day intensive',
-      packageDetails: 'Annual membership'
-    },
     testimonials: [
       {
         name: 'Jennifer Park',
         role: 'Founder, StartupXYZ',
-        content: 'The leadership retreat was a game-changer. I gained clarity on my vision and the tools to execute it.',
+        content: 'The leadership development program was a game-changer. I gained clarity on my vision and the tools to execute it.',
         rating: 5
       },
       {
         name: 'Robert Williams',
         role: 'Managing Director, Finance Corp',
-        content: 'The intensive format allowed for deep reflection and practical application. Highly recommend!',
+        content: 'The program allowed for deep reflection and practical application. Highly recommend!',
         rating: 5
       }
     ],
-    icon: Award,
+    icon: Users,
     color: 'from-purple-500 to-purple-600',
     bgColor: 'bg-purple-50',
     borderColor: 'border-purple-200'
+  },
+  {
+    id: 'talent-strategy',
+    title: 'Talent Strategy Development',
+    subtitle: 'People plans that work.',
+    description: 'We partner with you to design plans to attract, engage, retain, and grow the right people so your organization thrives long-term.',
+    features: [
+      'Strategic talent attraction',
+      'Employee engagement programs',
+      'Retention optimization',
+      'Long-term growth planning',
+      'Networking opportunities',
+      'Action planning sessions'
+    ],
+    testimonials: [
+      {
+        name: 'Alex Rodriguez',
+        role: 'HR Director, GrowthCo',
+        content: 'Our talent strategy has completely transformed our ability to attract and retain top talent.',
+        rating: 5
+      },
+      {
+        name: 'Maria Garcia',
+        role: 'VP People, TechCorp',
+        content: 'The strategic approach to talent development has been instrumental in our company\'s growth.',
+        rating: 5
+      }
+    ],
+    icon: TrendingUp,
+    color: 'from-orange-500 to-orange-600',
+    bgColor: 'bg-orange-50',
+    borderColor: 'border-orange-200'
+  },
+  {
+    id: 'succession-planning',
+    title: 'Succession & Workforce Planning Design',
+    subtitle: 'Ready for tomorrow, today.',
+    description: 'Future-proof your organization with smart, scalable plans that ensure the right people are ready for the right roles—when it matters most.',
+    features: [
+      'Future-ready workforce planning',
+      'Succession strategy development',
+      'Risk minimization frameworks',
+      'Value agenda optimization',
+      'Strategic planning workshops',
+      'Follow-up support'
+    ],
+    testimonials: [
+      {
+        name: 'James Wilson',
+        role: 'CEO, Legacy Corp',
+        content: 'Our succession planning has given us confidence in our future leadership pipeline.',
+        rating: 5
+      },
+      {
+        name: 'Patricia Brown',
+        role: 'Board Member, Family Business',
+        content: 'The workforce planning approach has been crucial for our long-term sustainability.',
+        rating: 5
+      }
+    ],
+    icon: BarChart3,
+    color: 'from-indigo-500 to-indigo-600',
+    bgColor: 'bg-indigo-50',
+    borderColor: 'border-indigo-200'
+  },
+  {
+    id: 'training-facilitation',
+    title: 'Training & Facilitation',
+    subtitle: 'Learning that sticks.',
+    description: 'Interactive, engaging and practical learning experiences that build skills and shift mindsets — in the room or online.',
+    features: [
+      'Interactive learning experiences',
+      'Mindset transformation programs',
+      'Practical skill building',
+      'Virtual and in-person delivery',
+      'Customized curriculum',
+      'Follow-up coaching sessions'
+    ],
+    testimonials: [
+      {
+        name: 'Tom Anderson',
+        role: 'Learning Director, EduCorp',
+        content: 'The training programs have significantly improved our team\'s capabilities and engagement.',
+        rating: 5
+      },
+      {
+        name: 'Samantha Lee',
+        role: 'Training Manager, RetailCo',
+        content: 'The facilitation approach makes learning practical and immediately applicable.',
+        rating: 5
+      }
+    ],
+    icon: GraduationCap,
+    color: 'from-teal-500 to-teal-600',
+    bgColor: 'bg-teal-50',
+    borderColor: 'border-teal-200'
+  },
+  {
+    id: 'competency-model',
+    title: 'Competency Model Development',
+    subtitle: 'Defining what great looks like.',
+    description: 'We partner with you to define and highlight the skills, behaviors, and mindsets that drive success in your organization.',
+    features: [
+      'Success competency frameworks',
+      'Behavioral assessment models',
+      'Hiring guidance systems',
+      'Development roadmaps',
+      'Performance optimization',
+      'Team culture building'
+    ],
+    testimonials: [
+      {
+        name: 'Rachel Green',
+        role: 'Talent Director, ScaleUp',
+        content: 'Our competency model has revolutionized how we hire and develop our people.',
+        rating: 5
+      },
+      {
+        name: 'Kevin Martinez',
+        role: 'HR Manager, ServiceCo',
+        content: 'The clear frameworks have made our hiring and development processes much more effective.',
+        rating: 5
+      }
+    ],
+    icon: Shield,
+    color: 'from-red-500 to-red-600',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200'
+  },
+  {
+    id: 'talent-acquisition',
+    title: 'Targeted Talent Acquisition',
+    subtitle: 'The right people, right away.',
+    description: 'Find and attract top talent that aligns with your culture and delivers on your strategy. Strategic, data-informed and deeply human.',
+    features: [
+      'Culture-aligned recruitment',
+      'Strategic talent sourcing',
+      'Data-informed selection',
+      'Human-centered hiring',
+      'Communication skills enhancement',
+      'Conflict resolution strategies'
+    ],
+    testimonials: [
+      {
+        name: 'Amanda Foster',
+        role: 'Recruitment Director, TalentCo',
+        content: 'Our hiring quality has improved dramatically since implementing this approach.',
+        rating: 5
+      },
+      {
+        name: 'Chris Johnson',
+        role: 'Hiring Manager, StartupXYZ',
+        content: 'The strategic approach to talent acquisition has been game-changing for our growth.',
+        rating: 5
+      }
+    ],
+    icon: Search,
+    color: 'from-pink-500 to-pink-600',
+    bgColor: 'bg-pink-50',
+    borderColor: 'border-pink-200'
   }
 ];
 
@@ -312,25 +456,6 @@ export default function ServicesPage() {
 
                   {/* Pricing & Testimonials */}
                   <div className="space-y-8">
-                    {/* Pricing Card */}
-                    <Card className="border-2 border-gray-200">
-                      <CardContent className="p-8">
-                        <div className="text-center mb-6">
-                          <h4 className="text-2xl font-bold text-gray-900 mb-2">Investment</h4>
-                          <div className="flex items-baseline justify-center gap-2 mb-4">
-                            <span className="text-4xl font-bold text-gray-900">${service.pricing.single}</span>
-                            <span className="text-gray-600">per session</span>
-                          </div>
-                          <p className="text-gray-600 mb-4">{service.pricing.duration}</p>
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <p className="font-semibold text-gray-900">{service.pricing.packageDetails}</p>
-                            <p className="text-2xl font-bold text-gray-900">${service.pricing.package}</p>
-                            <p className="text-sm text-gray-600">Save ${(service.pricing.single * 10) - service.pricing.package}</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
                     {/* Testimonials */}
                     <div className="space-y-4">
                       <h4 className="text-xl font-semibold text-gray-900">What Clients Say</h4>

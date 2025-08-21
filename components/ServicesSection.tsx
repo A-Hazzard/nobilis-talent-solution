@@ -1,58 +1,94 @@
-import { Users, Target, Lightbulb, TrendingUp, Clock, Star } from 'lucide-react';
+import { Users, Target, TrendingUp, Star, Shield, Heart, BarChart3, GraduationCap, Search } from 'lucide-react';
 
 const ServicesSection = () => {
   const services = [
     {
-      icon: Users,
-      title: "Executive Leadership Coaching",
-      description: "One-on-one coaching for senior executives to enhance their leadership effectiveness and drive organizational success.",
+      icon: Heart,
+      title: "Individual & Group Coaching — Grow with purpose.",
+      description: "Personalized coaching that sparks holistic growth, strengthens confidence, and helps individuals and teams be better.",
       features: [
-        "Personalized leadership assessment",
-        "Strategic thinking development", 
-        "Communication and influence skills",
-        "Performance optimization"
-      ],
-      duration: "3-6 months",
-      price: "Custom pricing"
+        "Personalized growth strategies",
+        "Confidence building techniques", 
+        "Team dynamics optimization",
+        "Holistic development approach"
+      ]
     },
     {
       icon: Target,
-      title: "Team Development Programs",
-      description: "Comprehensive programs designed to transform team dynamics and boost collective performance.",
+      title: "Performance Management Design — Solutions to drive engagement and results.",
+      description: "We reimagine the approach to managing performance. With an intentional focus on the people, we redesign performance systems to be more human, more agile, and more impactful.",
       features: [
-        "Team assessment and analysis",
-        "Collaboration enhancement",
-        "Conflict resolution strategies",
-        "Goal alignment workshops"
-      ],
-      duration: "2-4 months", 
-      price: "From $5,000"
+        "Human-centered performance systems",
+        "Agile performance frameworks",
+        "Engagement-driven metrics",
+        "Impact measurement strategies"
+      ]
     },
     {
-      icon: Lightbulb,
-      title: "Leadership Workshops",
-      description: "Interactive workshops covering essential leadership skills for managers at all levels.",
+      icon: Users,
+      title: "Leadership Development Design — Leaders who inspire action.",
+      description: "From emerging leaders to seasoned execs, we craft experiences to grow leaders who inspire, influence, and deliver results in a changing world.",
       features: [
-        "Customized curriculum",
-        "Interactive learning modules",
-        "Practical application exercises",
-        "Follow-up coaching sessions"
-      ],
-      duration: "1-2 days",
-      price: "From $2,500"
+        "Emerging leader development",
+        "Executive leadership enhancement",
+        "Inspiration and influence skills",
+        "Results-driven leadership"
+      ]
     },
     {
       icon: TrendingUp,
-      title: "Organizational Culture Change",
-      description: "Strategic initiatives to transform organizational culture and drive sustainable change.",
+      title: "Talent Strategy Development — People plans that work.",
+      description: "We partner with you to design plans to attract, engage, retain, and grow the right people so your organization thrives long-term.",
       features: [
-        "Culture assessment",
-        "Change management strategy",
-        "Leadership alignment",
-        "Implementation support"
-      ],
-      duration: "6-12 months",
-      price: "Custom pricing"
+        "Strategic talent attraction",
+        "Employee engagement programs",
+        "Retention optimization",
+        "Long-term growth planning"
+      ]
+    },
+    {
+      icon: BarChart3,
+      title: "Succession & Workforce Planning Design — Ready for tomorrow, today.",
+      description: "Future-proof your organization with smart, scalable plans that ensure the right people are ready for the right roles—when it matters most. We also partner with you to create plans that will minimize risk and create the biggest impact on your value agenda.",
+      features: [
+        "Future-ready workforce planning",
+        "Succession strategy development",
+        "Risk minimization frameworks",
+        "Value agenda optimization"
+      ]
+    },
+    {
+      icon: GraduationCap,
+      title: "Training & Facilitation — Learning that sticks.",
+      description: "Interactive, engaging and practical learning experiences that build skills and shift mindsets — in the room or online.",
+      features: [
+        "Interactive learning experiences",
+        "Mindset transformation programs",
+        "Practical skill building",
+        "Virtual and in-person delivery"
+      ]
+    },
+    {
+      icon: Shield,
+      title: "Competency Model Development — Defining what great looks like.",
+      description: "We partner with you to define and highlight the skills, behaviors, and mindsets that drive success in your organization – building clear actionable frameworks that guide hiring, development and performance.",
+      features: [
+        "Success competency frameworks",
+        "Behavioral assessment models",
+        "Hiring guidance systems",
+        "Development roadmaps"
+      ]
+    },
+    {
+      icon: Search,
+      title: "Targeted Talent Acquisition — The right people, right away.",
+      description: "Find and attract top talent that aligns with your culture and delivers on your strategy. Strategic, data-informed and deeply human.",
+      features: [
+        "Culture-aligned recruitment",
+        "Strategic talent sourcing",
+        "Data-informed selection",
+        "Human-centered hiring"
+      ]
     }
   ];
 
@@ -69,16 +105,15 @@ const ServicesSection = () => {
         {/* Header */}
         <div className="text-center mb-16" data-animate>
           <h2 className="text-section text-accent mb-6">
-            Leadership Solutions That Drive Results
+            Services
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Comprehensive coaching and development programs tailored to your organization's 
-            unique challenges and goals.
+            No pricing is displayed publicly. Explore offerings and connect to tailor solutions to your needs.
           </p>
         </div>
 
         {/* Services Grid */}
-        <div className="grid md:grid-cols-2 gap-8 mb-20">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
           {services.map((service, index) => (
             <div
               key={index}
@@ -91,14 +126,7 @@ const ServicesSection = () => {
                   <service.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-accent">{service.title}</h3>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-muted-foreground mt-1">
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {service.duration}
-                    </div>
-                    <div className="font-semibold text-primary">{service.price}</div>
-                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-accent">{service.title}</h3>
                 </div>
               </div>
 
@@ -110,14 +138,14 @@ const ServicesSection = () => {
                 {service.features.map((feature, featureIndex) => (
                   <div key={featureIndex} className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-foreground">{feature}</span>
+                    <span className="text-foreground text-sm">{feature}</span>
                   </div>
                 ))}
               </div>
 
-              <button className="btn-outline w-full group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                Learn More
-              </button>
+              <a href="#contact" className="btn-outline w-full group-hover:bg-primary group-hover:text-white transition-all duration-300 text-center">
+                Let's talk
+              </a>
             </div>
           ))}
         </div>
@@ -155,7 +183,7 @@ const ServicesSection = () => {
               Book Free Consultation
             </a>
             <a
-              href="mailto:kareempayne11@gmail.com"
+              href="mailto:nobilis.talent@gmail.com"
               className="btn-outline"
             >
               Email Directly

@@ -54,16 +54,15 @@ const HeroSection = () => {
         <div className="max-w-4xl mx-auto text-center">
           <div className="hero-text">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 hero-stagger">
-              Transform Your
-              <span className="bg-gradient-to-r from-primary-light to-secondary bg-clip-text text-transparent block">
-                Leadership Impact
-              </span>
+              Where strategy meets humanity, transformation happens.
             </h1>
             
             <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed hero-stagger">
-              Unlock your team's potential with proven leadership strategies that drive results. 
-              Join hundreds of successful leaders who've transformed their organizations through 
-              personalized coaching and strategic development.
+              I help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results.
+            </p>
+
+            <p className="text-base sm:text-lg text-white/85 mb-8 max-w-3xl mx-auto leading-relaxed hero-stagger">
+              Helping People and Organizations Thrive — Our work blends strategic insight with a deep understanding of human behavior—because lasting success happens when people and strategy work in harmony.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12 hero-stagger justify-center">

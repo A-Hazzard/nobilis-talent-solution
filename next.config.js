@@ -81,6 +81,10 @@ const nextConfig = {
         source: '/api/health',
         destination: '/api/health/route',
       },
+      {
+        source: '/services/:slug*',
+        destination: '/services',
+      },
     ];
   },
 };

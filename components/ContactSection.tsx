@@ -291,17 +291,13 @@ const ContactSection = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center mr-4">
-                      <Mail className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-accent">Email</div>
-                      <a href="mailto:kareempayne11@gmail.com" className="text-primary hover:underline">
-                        kareempayne11@gmail.com
-                      </a>
-                    </div>
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Mail className="w-5 h-5 text-primary" />
+                    <a href="mailto:nobilis.talent@gmail.com" className="text-primary hover:underline">
+                      nobilis.talent@gmail.com
+                    </a>
                   </div>
+                  <p className="text-sm text-muted-foreground mb-6">Available globally.</p>
 
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gradient-to-r from-accent to-accent-light rounded-xl flex items-center justify-center mr-4">

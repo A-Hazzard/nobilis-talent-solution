@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, MapPin, Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Phone, Mail, Globe, Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -78,27 +78,28 @@ const ContactSection = () => {
       setIsSubmitting(false);
     }
   };
+  
   return (
-    <section id="contact" className="py-20 lg:py-32 bg-background">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+    <section id="contact" className="py-16 lg:py-32 bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16 animate-fade-up">
-          <h2 className="text-section text-accent mb-6">
+        <div className="text-center mb-12 lg:mb-16 animate-fade-up">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-accent mb-4 lg:mb-6">
             Let's Start Your Leadership Journey
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
             Ready to unlock your leadership potential? Get in touch to schedule 
             your free consultation and discover how we can help you achieve your goals.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-16">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
           {/* Contact Form */}
-          <div className="animate-fade-up">
-            <div className="card-feature">
-              <div className="flex items-center mb-8">
-                <Calendar className="w-8 h-8 text-primary mr-3" />
-                <h3 className="text-2xl font-bold text-accent">Book Your Strategy Session</h3>
+          <div className="animate-fade-up order-2 lg:order-1">
+            <div className="card-feature p-6 sm:p-8">
+              <div className="flex items-center mb-6 lg:mb-8">
+                <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3" />
+                <h3 className="text-xl sm:text-2xl font-bold text-accent">Book Your Strategy Session</h3>
               </div>
 
               {/* Success/Error Messages */}
@@ -120,10 +121,10 @@ const ContactSection = () => {
                 </Alert>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid sm:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="firstName" className="text-accent">
+                    <Label htmlFor="firstName" className="text-accent text-sm sm:text-base">
                       First Name *
                     </Label>
                     <Input
@@ -133,12 +134,12 @@ const ContactSection = () => {
                       required
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="mt-1"
+                      className="mt-1 h-12 sm:h-14 text-base"
                       placeholder="John"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="lastName" className="text-accent">
+                    <Label htmlFor="lastName" className="text-accent text-sm sm:text-base">
                       Last Name *
                     </Label>
                     <Input
@@ -148,14 +149,14 @@ const ContactSection = () => {
                       required
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className="mt-1"
+                      className="mt-1 h-12 sm:h-14 text-base"
                       placeholder="Smith"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="email" className="text-accent">
+                  <Label htmlFor="email" className="text-accent text-sm sm:text-base">
                     Email Address *
                   </Label>
                   <Input
@@ -165,13 +166,13 @@ const ContactSection = () => {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="mt-1"
+                    className="mt-1 h-12 sm:h-14 text-base"
                     placeholder="john@company.com"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="phone" className="text-accent">
+                  <Label htmlFor="phone" className="text-accent text-sm sm:text-base">
                     Phone Number
                   </Label>
                   <Input
@@ -180,13 +181,13 @@ const ContactSection = () => {
                     type="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="mt-1"
+                    className="mt-1 h-12 sm:h-14 text-base"
                     placeholder="(555) 123-4567"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="company" className="text-accent">
+                  <Label htmlFor="company" className="text-accent text-sm sm:text-base">
                     Company Name
                   </Label>
                   <Input
@@ -195,13 +196,13 @@ const ContactSection = () => {
                     type="text"
                     value={formData.company}
                     onChange={handleInputChange}
-                    className="mt-1"
+                    className="mt-1 h-12 sm:h-14 text-base"
                     placeholder="Your Company"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="challenges" className="text-accent">
+                  <Label htmlFor="challenges" className="text-accent text-sm sm:text-base">
                     What leadership challenges are you facing? *
                   </Label>
                   <Textarea
@@ -211,37 +212,37 @@ const ContactSection = () => {
                     rows={4}
                     value={formData.challenges}
                     onChange={handleInputChange}
-                    className="mt-1"
+                    className="mt-1 text-base resize-none"
                     placeholder="Tell us about your specific leadership challenges, team dynamics, or organizational goals..."
                   />
                 </div>
 
                 <div>
-                  <Label className="text-accent mb-2 block">
+                  <Label className="text-accent text-sm sm:text-base mb-3 block">
                     Preferred Contact Method
                   </Label>
                   <div className="grid grid-cols-2 gap-4">
-                    <label className="flex items-center">
+                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-muted transition-colors">
                       <input
                         type="radio"
                         name="contactMethod"
                         value="email"
                         checked={formData.contactMethod === 'email'}
                         onChange={handleInputChange}
-                        className="mr-2 text-primary focus:ring-primary"
+                        className="mr-3 text-primary focus:ring-primary"
                       />
-                      Email
+                      <span className="text-sm sm:text-base">Email</span>
                     </label>
-                    <label className="flex items-center">
+                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-muted transition-colors">
                       <input
                         type="radio"
                         name="contactMethod"
                         value="phone"
                         checked={formData.contactMethod === 'phone'}
                         onChange={handleInputChange}
-                        className="mr-2 text-primary focus:ring-primary"
+                        className="mr-3 text-primary focus:ring-primary"
                       />
-                      Phone
+                      <span className="text-sm sm:text-base">Phone</span>
                     </label>
                   </div>
                 </div>
@@ -249,7 +250,7 @@ const ContactSection = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white py-3 sm:py-4 text-base sm:text-lg rounded-xl"
+                  className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white py-4 sm:py-5 text-base sm:text-lg rounded-xl h-14 sm:h-16 touch-manipulation active:scale-98"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center justify-center">
@@ -265,60 +266,63 @@ const ContactSection = () => {
                 </Button>
               </form>
 
-              <p className="text-sm text-muted-foreground mt-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-4 text-center">
                 * Required fields. We'll respond within 24 hours.
               </p>
             </div>
           </div>
 
           {/* Contact Information */}
-          <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
-            <div className="space-y-8">
+          <div className="animate-fade-up order-1 lg:order-2" style={{ animationDelay: '0.2s' }}>
+            <div className="space-y-6 lg:space-y-8">
               {/* Contact Details */}
-              <div className="card-elevated">
-                <h3 className="text-2xl font-bold text-accent mb-6">Get In Touch</h3>
+              <div className="card-elevated p-6 sm:p-8">
+                <h3 className="text-xl sm:text-2xl font-bold text-accent mb-6">Get In Touch</h3>
                 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
                       <Phone className="w-6 h-6 text-white" />
                     </div>
-                    <div>
-                      <div className="font-semibold text-accent">Phone</div>
-                      <a href="tel:678-920-6605" className="text-primary hover:underline">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-accent text-sm sm:text-base">Phone</div>
+                      <a href="tel:678-920-6605" className="text-primary hover:underline text-sm sm:text-base break-all">
                         (678) 920-6605
                       </a>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3 mb-4">
-                    <Mail className="w-5 h-5 text-primary" />
-                    <a href="mailto:nobilis.talent@gmail.com" className="text-primary hover:underline">
-                      nobilis.talent@gmail.com
-                    </a>
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
+                      <Mail className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-accent text-sm sm:text-base">Email</div>
+                      <a href="mailto:nobilis.talent@gmail.com" className="text-primary hover:underline text-sm sm:text-base break-all">
+                        nobilis.talent@gmail.com
+                      </a>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-6">Available globally.</p>
 
                   <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-to-r from-accent to-accent-light rounded-xl flex items-center justify-center mr-4">
-                      <MapPin className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
+                      <Globe className="w-6 h-6 text-white" />
                     </div>
-                    <div>
-                      <div className="font-semibold text-accent">Location</div>
-                      <div className="text-muted-foreground">Trinidad & Tobago</div>
-                      <div className="text-sm text-muted-foreground">Available globally via video</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-accent text-sm sm:text-base">Availability</div>
+                      <div className="text-primary text-sm sm:text-base">Available globally.</div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Response Time */}
-              <div className="card-elevated bg-gradient-subtle">
+              <div className="card-elevated bg-gradient-subtle p-6 sm:p-8">
                 <div className="flex items-center mb-4">
-                  <Clock className="w-8 h-8 text-primary mr-3" />
-                  <h4 className="text-xl font-bold text-accent">Quick Response</h4>
+                  <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3" />
+                  <h4 className="text-lg sm:text-xl font-bold text-accent">Quick Response</h4>
                 </div>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-4 text-sm sm:text-base">
                   We understand that leadership challenges require prompt attention. 
                   You can expect a response within 24 hours.
                 </p>
@@ -328,19 +332,19 @@ const ContactSection = () => {
               </div>
 
               {/* Calendly Integration */}
-              <div className="card-elevated bg-primary text-white">
-                <h4 className="text-xl font-bold mb-4">Schedule Directly</h4>
-                <p className="mb-6 opacity-90">
+              <div className="card-elevated bg-primary text-white p-6 sm:p-8">
+                <h4 className="text-lg sm:text-xl font-bold mb-4">Schedule Directly</h4>
+                <p className="mb-6 opacity-90 text-sm sm:text-base">
                   Prefer to book immediately? Use our online calendar to select 
                   a time that works for you.
                 </p>
                 <button 
                   onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
-                  className="bg-white text-primary px-6 py-3 rounded-xl font-semibold hover:bg-white/90 transition-smooth w-full"
+                  className="bg-white text-primary px-6 py-4 rounded-xl font-semibold hover:bg-white/90 transition-smooth w-full h-14 sm:h-16 touch-manipulation active:scale-98"
                 >
                   Book Now
                 </button>
-                <p className="text-xs opacity-75 mt-3">
+                <p className="text-xs opacity-75 mt-3 text-center">
                   All appointments are confirmed via email
                 </p>
               </div>
@@ -349,8 +353,8 @@ const ContactSection = () => {
         </div>
 
         {/* Trust Indicators */}
-        <div className="mt-16 text-center animate-fade-up">
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 text-sm text-muted-foreground">
+        <div className="mt-12 lg:mt-16 text-center animate-fade-up">
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 text-xs sm:text-sm text-muted-foreground px-4">
             <div className="flex items-center">
               <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
               Confidential Consultations

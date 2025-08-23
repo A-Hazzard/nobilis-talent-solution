@@ -203,31 +203,7 @@ const TestimonialsSection = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center mt-16 animate-fade-up">
-          <div className="card-elevated bg-gradient-hero text-white max-w-4xl mx-auto">
-            <h3 className="text-2xl sm:text-3xl font-bold mb-6">
-              Join Hundreds of Successful Leaders
-            </h3>
-            <p className="text-lg sm:text-xl opacity-90 mb-8 leading-relaxed">
-              Ready to transform your leadership and drive exceptional results? 
-              Let's start with a conversation about your goals.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="#contact"
-                className="bg-white text-accent px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold hover:bg-white/90 transition-smooth"
-              >
-                Schedule Free Consultation
-              </a>
-              <a
-                href="tel:678-920-6605"
-                className="border-2 border-white text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-semibold hover:bg-white hover:text-accent transition-smooth"
-              >
-                Call (678) 920-6605
-              </a>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </section>
   );

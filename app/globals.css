@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 /* Kareem Payne Leadership Coaching Design System */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
 
 @layer base {
   :root {
@@ -72,6 +77,43 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Mobile-specific improvements */
+  @media (max-width: 768px) {
+    html {
+      font-size: 14px;
+    }
+    
+    /* Improve touch targets */
+    button, a, input, textarea, select {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Better form spacing on mobile */
+    form {
+      gap: 1rem;
+    }
+    
+    /* Improve text readability */
+    p, span, div {
+      line-height: 1.6;
+    }
+  }
+
+  /* Smooth scrolling for all devices */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better focus states for accessibility */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
   }
 }
 

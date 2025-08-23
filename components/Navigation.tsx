@@ -5,10 +5,10 @@ import { Menu, X, LogOut, User, ChevronDown } from 'lucide-react';
 import { usePendingPayment } from '@/lib/hooks/usePendingPayment';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 import Link from 'next/link';
-
-
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,9 +25,8 @@ const Navigation = () => {
   const homeNavLinks = [
     { href: '#home', label: 'Home' },
     { href: '#about', label: 'About' },
-    { href: '/services', label: 'Services' },
+    { href: '#services', label: 'Services' },
     { href: '/content', label: 'Content' },
-    { href: '/brand-showcase', label: 'Brand Showcase' },
     { href: '#contact', label: 'Contact' },
   ];
 
@@ -35,9 +34,8 @@ const Navigation = () => {
   const otherPageNavLinks = [
     { href: '/', label: 'Home' },
     { href: '/#about', label: 'About' },
-    { href: '/services', label: 'Services' },
+    { href: '/#services', label: 'Services' },
     { href: '/content', label: 'Content' },
-    { href: '/brand-showcase', label: 'Brand Showcase' },
     { href: '/#contact', label: 'Contact' },
   ];
 
@@ -60,16 +58,7 @@ const Navigation = () => {
     setIsOpen(false);
   };
 
-  const [servicesOpen, setServicesOpen] = useState(false); // for mobile
-  const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false); // for desktop services dropdown
   const [userDropdownOpen, setUserDropdownOpen] = useState(false); // for user profile dropdown
-
-  // Service links for dropdown
-  const serviceDropdownLinks = [
-    { id: 'executive-coaching', title: 'Executive Coaching' },
-    { id: 'team-development', title: 'Team Development' },
-    { id: 'leadership-workshops', title: 'Leadership Workshops' },
-  ];
 
   // Scroll effect for sticky navigation
   useEffect(() => {
@@ -88,14 +77,11 @@ const Navigation = () => {
       if (userDropdownOpen && !(event.target as Element).closest('.user-dropdown')) {
         setUserDropdownOpen(false);
       }
-      if (servicesDropdownOpen && !(event.target as Element).closest('.services-dropdown')) {
-        setServicesDropdownOpen(false);
-      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [userDropdownOpen, servicesDropdownOpen]);
+  }, [userDropdownOpen]);
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -112,82 +98,34 @@ const Navigation = () => {
             </Link>
           </div>
 
-           {/* Desktop Navigation */}
-           <div className="hidden lg:block">
-             <div className="ml-8 flex items-baseline space-x-6">
-               {navLinks.map((link) => {
-                                 if (link.label === 'Services') {
-                  return (
-                    <div 
-                      key="services-dropdown" 
-                      className="relative inline-block services-dropdown"
-                      onMouseEnter={() => setServicesDropdownOpen(true)}
-                      onMouseLeave={() => setServicesDropdownOpen(false)}
-                    >
-                      <button
-                        className="text-foreground hover:text-primary transition-smooth px-3 py-2 rounded-lg hover:bg-muted text-sm font-medium flex items-center gap-1"
-                        onClick={() => setServicesDropdownOpen(!servicesDropdownOpen)}
-                      >
-                        Services
-                        <ChevronDown className={`w-4 h-4 transition-transform ${servicesDropdownOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      {/* Dropdown menu */}
-                      {servicesDropdownOpen && (
-                        <div className="absolute left-0 top-full w-56 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
-                          <ul className="py-2">
-                            <li>
-                              <Link
-                                href="/services"
-                                className="block px-4 py-2 text-gray-700 hover:bg-muted hover:text-primary text-sm font-semibold border-b border-gray-100"
-                                onClick={() => setServicesDropdownOpen(false)}
-                              >
-                                All Services
-                              </Link>
-                            </li>
-                            {serviceDropdownLinks.map((service) => (
-                              <li key={service.id}>
-                                <Link
-                                  href={`/services/${service.id}`}
-                                  className="block px-4 py-2 text-gray-700 hover:bg-muted hover:text-primary text-sm"
-                                  onClick={() => setServicesDropdownOpen(false)}
-                                >
-                                  {service.title}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-                 // Render other links as usual
-                 return (
-                   <Link
-                     key={link.href}
-                     href={link.href}
-                     className="text-foreground hover:text-primary transition-smooth px-3 py-2 rounded-lg hover:bg-muted text-sm font-medium"
-                     onClick={(e) => handleLinkClick(link.href, e)}
-                   >
-                     {link.label}
-                   </Link>
-                 );
-               })}
-             </div>
-           </div>
+          {/* Desktop Navigation */}
+          <div className="hidden lg:block">
+            <div className="ml-8 flex items-baseline space-x-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-foreground hover:text-primary transition-smooth px-3 py-2 rounded-lg hover:bg-muted text-sm font-medium"
+                  onClick={(e) => handleLinkClick(link.href, e)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
 
-           {/* CTA Buttons - Desktop */}
-           <div className="hidden lg:flex items-center space-x-3">
-             {hasPendingPayment && (
-               <a
-                 href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
-                 className="btn-secondary font-semibold whitespace-nowrap"
-               >
-                 Pay ${pendingPayment?.baseAmount || '0'}
-               </a>
-             )}
-             
-                         {isAuthenticated ? (
+          {/* CTA Buttons - Desktop */}
+          <div className="hidden lg:flex items-center space-x-3">
+            {hasPendingPayment && (
+              <a
+                href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
+                className="btn-secondary font-semibold whitespace-nowrap"
+              >
+                Pay ${pendingPayment?.baseAmount || '0'}
+              </a>
+            )}
+            
+            {isAuthenticated ? (
               <>
                 {/* User Profile Dropdown */}
                 <div className="relative group inline-block user-dropdown">
@@ -226,10 +164,6 @@ const Navigation = () => {
                         <li>
                           <hr className="my-1 border-gray-200" />
                         </li>
-
-                        <li>
-                          <hr className="my-1 border-gray-200" />
-                        </li>
                         <li>
                           <button
                             onClick={() => {
@@ -248,156 +182,130 @@ const Navigation = () => {
                 </div>
               </>
             ) : (
-               <>
-                 {/* Show only signup for unauthenticated users */}
-                 <Link
-                   href="/signup"
-                   className="btn-outline"
-                 >
-                   Sign Up
-                 </Link>
-               </>
-             )}
-             
-                           <button
-                onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
-                className="btn-primary text-sm px-4 py-2"
-              >
-                Book Now
-              </button>
-           </div>
-
-          {/* Mobile menu button */}
-          <div className="lg:hidden">
+              <>
+                {/* Show only signup for unauthenticated users */}
+                <Link
+                  href="/signup"
+                  className="btn-outline"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+            
             <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-foreground hover:text-primary transition-smooth p-2 touch-manipulation active:scale-95 hover:bg-muted rounded-lg"
-              aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              aria-expanded={isOpen}
+              onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
+              className="btn-primary text-sm px-4 py-2"
             >
-              <div className={`transform transition-transform duration-200 ${isOpen ? 'rotate-90' : 'rotate-0'}`}>
-                {isOpen ? <X size={24} /> : <Menu size={24} />}
-              </div>
+              Book Now
             </button>
           </div>
-        </div>
 
-        {/* Mobile Navigation */}
-        <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
-        }`}>
-          <div className="px-4 pt-4 pb-6 space-y-2 bg-background border-t border-card-border shadow-lg">
-            <div className={`transform transition-all duration-300 ease-in-out ${
-              isOpen ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
-            }`}>
-              {navLinks.map((link) => {
-                if (link.label === 'Services') {
-                  return (
-                    <div key="services-mobile-dropdown" className="">
-                      <button
-                        className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-foreground hover:text-primary hover:bg-muted transition-smooth font-medium focus:outline-none"
-                        onClick={() => setServicesOpen(!servicesOpen)}
-                        aria-expanded={servicesOpen}
-                        aria-controls="mobile-services-dropdown"
-                      >
-                        <span>Services</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${servicesOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      <div className={`overflow-hidden transition-all duration-200 ease-in-out ${
-                        servicesOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                      }`}>
-                        <div id="mobile-services-dropdown" className="pl-4">
-                          <ul className="py-1">
-                            {serviceDropdownLinks.map((service) => (
-                              <li key={service.id}>
-                                <Link
-                                  href={`/services/${service.id}`}
-                                  className="block px-2 py-2 text-gray-700 hover:bg-muted hover:text-primary text-sm"
-                                  onClick={() => setIsOpen(false)}
-                                >
-                                  {service.title}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="text-foreground hover:text-primary px-4 py-3 rounded-lg hover:bg-muted transition-smooth font-medium touch-manipulation active:scale-98 active:bg-muted min-h-12 flex items-center"
-                    onClick={(e) => handleLinkClick(link.href, e)}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
+          {/* Mobile menu button - Shadcn Sheet */}
+          <div className="lg:hidden">
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-foreground hover:text-primary transition-smooth p-2 touch-manipulation active:scale-95 hover:bg-muted rounded-lg"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu size={24} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
+                <div className="flex flex-col h-full">
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-border">
+                    <h2 className="text-lg font-semibold">Menu</h2>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsOpen(false)}
+                      className="h-8 w-8"
+                    >
+                      <X size={20} />
+                    </Button>
+                  </div>
 
-              <div className="pt-6 space-y-4 border-t border-gray-200">
-                {hasPendingPayment && (
-                  <a
-                    href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
-                    className="btn-secondary w-full text-center font-semibold"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Pay ${pendingPayment?.baseAmount || '0'}
-                  </a>
-                )}
-                
-                {isAuthenticated ? (
-                  <>
-                    <div className="flex items-center space-x-2 text-sm text-foreground px-3 py-2">
-                      <User size={16} />
-                      <span>{user?.firstName || user?.email}</span>
-                    </div>
-                    {user?.role === 'admin' && (
+                  {/* Navigation Links */}
+                  <div className="flex-1 p-6 space-y-2">
+                    {navLinks.map((link) => (
                       <Link
-                        href="/admin"
-                        className="text-foreground hover:text-primary px-3 py-2 rounded-lg hover:bg-muted transition-smooth"
+                        key={link.href}
+                        href={link.href}
+                        className="block text-foreground hover:text-primary px-4 py-3 rounded-lg hover:bg-muted transition-smooth font-medium touch-manipulation active:scale-98 active:bg-muted min-h-12 flex items-center"
+                        onClick={(e) => handleLinkClick(link.href, e)}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+
+                  {/* CTA Buttons */}
+                  <div className="p-6 space-y-4 border-t border-border">
+                    {hasPendingPayment && (
+                      <a
+                        href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
+                        className="btn-secondary w-full text-center font-semibold"
                         onClick={() => setIsOpen(false)}
                       >
-                        Admin Dashboard
-                      </Link>
+                        Pay ${pendingPayment?.baseAmount || '0'}
+                      </a>
                     )}
-
+                    
+                    {isAuthenticated ? (
+                      <>
+                        <div className="flex items-center space-x-2 text-sm text-foreground px-3 py-2">
+                          <User size={16} />
+                          <span>{user?.firstName || user?.email}</span>
+                        </div>
+                        {user?.role === 'admin' && (
+                          <Link
+                            href="/admin"
+                            className="text-foreground hover:text-primary px-3 py-2 rounded-lg hover:bg-muted transition-smooth block"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            Admin Dashboard
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => {
+                            signOut();
+                            setIsOpen(false);
+                          }}
+                          className="text-foreground hover:text-primary px-3 py-2 rounded-lg hover:bg-muted transition-smooth w-full text-left flex items-center space-x-2"
+                        >
+                          <LogOut size={16} />
+                          <span>Logout</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          href="/signup"
+                          className="btn-outline w-full text-center touch-manipulation active:scale-98 min-h-12 flex items-center justify-center"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          Sign Up
+                        </Link>
+                      </>
+                    )}
+                    
                     <button
                       onClick={() => {
-                        signOut();
+                        window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank');
                         setIsOpen(false);
                       }}
-                      className="text-foreground hover:text-primary px-3 py-2 rounded-lg hover:bg-muted transition-smooth w-full text-left flex items-center space-x-2"
+                      className="btn-primary w-full text-center touch-manipulation active:scale-98 min-h-12 flex items-center justify-center"
                     >
-                      <LogOut size={16} />
-                      <span>Logout</span>
+                      Book Now
                     </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/signup"
-                      className="btn-outline w-full text-center touch-manipulation active:scale-98 min-h-12 flex items-center justify-center"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Sign Up
-                    </Link>
-                  </>
-                )}
-                
-                <button
-                  onClick={() => {
-                    window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank');
-                    setIsOpen(false);
-                  }}
-                  className="btn-primary w-full text-center touch-manipulation active:scale-98 min-h-12 flex items-center justify-center"
-                >
-                  Book Now
-                </button>
-              </div>
-            </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

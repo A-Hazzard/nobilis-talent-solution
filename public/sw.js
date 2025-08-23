@@ -1,7 +1,7 @@
 const CACHE_NAME = 'payne-leadership-v1';
 const urlsToCache = [
   '/',
-  '/services',
+
   '/resources',
   '/content',
   '/favicon.ico',

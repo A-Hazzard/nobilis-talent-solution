@@ -35,14 +35,14 @@ const HeroSection = () => {
       </div>
 
       {/* Floating elements */}
-      <div className="absolute top-20 right-10 animate-float hidden lg:block">
+      <div className="absolute top-28 right-10 animate-float hidden lg:block">
         <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white">
           <Users className="w-8 h-8 mb-2" />
           <p className="text-sm font-semibold">500+ Leaders Coached</p>
         </div>
       </div>
       
-      <div className="absolute top-40 right-40 animate-float hidden lg:block" style={{ animationDelay: '2s' }}>
+      <div className="absolute top-48 right-40 animate-float hidden lg:block" style={{ animationDelay: '2s' }}>
         <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white">
           <TrendingUp className="w-8 h-8 mb-2" />
           <p className="text-sm font-semibold">98% Success Rate</p>
@@ -50,7 +50,7 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <div className="hero-text">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 hero-stagger">
@@ -132,11 +132,11 @@ const HeroSection = () => {
       {/* Scroll indicator - clickable */}
       <button 
         onClick={scrollToNextSection}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hover:scale-110 transition-transform group cursor-pointer"
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hover:scale-110 transition-all duration-300 ease-in-out group cursor-pointer"
         aria-label="Scroll to next section"
       >
-        <div className="w-8 h-12 border-2 border-white/70 rounded-full flex flex-col items-center justify-center group-hover:border-white transition-colors">
-          <ChevronDown className="w-4 h-4 text-white/70 group-hover:text-white animate-pulse" />
+        <div className="w-8 h-12 border-2 border-white/70 rounded-full flex flex-col items-center justify-center group-hover:border-white transition-all duration-300 ease-in-out group-hover:shadow-lg">
+          <ChevronDown className="w-4 h-4 text-white/70 group-hover:text-white animate-pulse transition-all duration-300 ease-in-out group-hover:translate-y-1" />
         </div>
       </button>
     </section>

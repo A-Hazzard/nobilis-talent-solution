@@ -1,95 +1,60 @@
-import { Users, Target, TrendingUp, Star, Shield, Heart, BarChart3, GraduationCap, Search } from 'lucide-react';
+import { Star } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 const ServicesSection = () => {
   const services = [
     {
-      icon: Heart,
-      title: "Individual & Group Coaching — Grow with purpose.",
-      description: "Personalized coaching that sparks holistic growth, strengthens confidence, and helps individuals and teams be better.",
-      features: [
-        "Personalized growth strategies",
-        "Confidence building techniques", 
-        "Team dynamics optimization",
-        "Holistic development approach"
-      ]
+      title: 'Individual & Group Coaching — Grow with purpose.',
+      summary: 'Personalized coaching that sparks holistic growth, strengthens confidence, and helps individuals and teams be better.',
     },
     {
-      icon: Target,
-      title: "Performance Management Design — Solutions to drive engagement and results.",
-      description: "We reimagine the approach to managing performance. With an intentional focus on the people, we redesign performance systems to be more human, more agile, and more impactful.",
-      features: [
-        "Human-centered performance systems",
-        "Agile performance frameworks",
-        "Engagement-driven metrics",
-        "Impact measurement strategies"
-      ]
+      title: 'Performance Management Design — Solutions to drive engagement and results.',
+      summary: 'We reimagine the approach to managing performance with more human, agile, and impactful systems.',
     },
     {
-      icon: Users,
-      title: "Leadership Development Design — Leaders who inspire action.",
-      description: "From emerging leaders to seasoned execs, we craft experiences to grow leaders who inspire, influence, and deliver results in a changing world.",
-      features: [
-        "Emerging leader development",
-        "Executive leadership enhancement",
-        "Inspiration and influence skills",
-        "Results-driven leadership"
-      ]
+      title: 'Leadership Development Design — Leaders who inspire action.',
+      summary: 'From emerging leaders to seasoned execs, we craft experiences that grow leaders who inspire, influence, and deliver results.',
     },
     {
-      icon: TrendingUp,
-      title: "Talent Strategy Development — People plans that work.",
-      description: "We partner with you to design plans to attract, engage, retain, and grow the right people so your organization thrives long-term.",
-      features: [
-        "Strategic talent attraction",
-        "Employee engagement programs",
-        "Retention optimization",
-        "Long-term growth planning"
-      ]
+      title: 'Talent Strategy Development — People plans that work.',
+      summary: 'Design plans to attract, engage, retain, and grow the right people so your organization thrives long-term.',
     },
     {
-      icon: BarChart3,
-      title: "Succession & Workforce Planning Design — Ready for tomorrow, today.",
-      description: "Future-proof your organization with smart, scalable plans that ensure the right people are ready for the right roles—when it matters most. We also partner with you to create plans that will minimize risk and create the biggest impact on your value agenda.",
-      features: [
-        "Future-ready workforce planning",
-        "Succession strategy development",
-        "Risk minimization frameworks",
-        "Value agenda optimization"
-      ]
+      title: 'Succession & Workforce Planning Design — Ready for tomorrow, today.',
+      summary: 'Scalable plans that ensure the right people are ready for the right roles, minimizing risk and maximizing impact.',
     },
     {
-      icon: GraduationCap,
-      title: "Training & Facilitation — Learning that sticks.",
-      description: "Interactive, engaging and practical learning experiences that build skills and shift mindsets — in the room or online.",
-      features: [
-        "Interactive learning experiences",
-        "Mindset transformation programs",
-        "Practical skill building",
-        "Virtual and in-person delivery"
-      ]
+      title: 'Training & Facilitation — Learning that sticks.',
+      summary: 'Interactive, engaging, and practical learning experiences that build skills and shift mindsets — in the room or online.',
     },
     {
-      icon: Shield,
-      title: "Competency Model Development — Defining what great looks like.",
-      description: "We partner with you to define and highlight the skills, behaviors, and mindsets that drive success in your organization – building clear actionable frameworks that guide hiring, development and performance.",
-      features: [
-        "Success competency frameworks",
-        "Behavioral assessment models",
-        "Hiring guidance systems",
-        "Development roadmaps"
-      ]
+      title: 'Competency Model Development — Defining what great looks like.',
+      summary: 'Define the skills, behaviors, and mindsets that drive success to guide hiring, development, and performance.',
     },
     {
-      icon: Search,
-      title: "Targeted Talent Acquisition — The right people, right away.",
-      description: "Find and attract top talent that aligns with your culture and delivers on your strategy. Strategic, data-informed and deeply human.",
-      features: [
-        "Culture-aligned recruitment",
-        "Strategic talent sourcing",
-        "Data-informed selection",
-        "Human-centered hiring"
-      ]
-    }
+      title: 'Targeted Talent Acquisition — The right people, right away.',
+      summary: 'Find and attract top talent that aligns with your culture and delivers on your strategy — strategic, data-informed, and human.',
+    },
+  ];
+
+  // More reliable Unsplash images with verified IDs
+  const serviceImages: string[] = [
+    'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=1200&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=1200&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=800&fit=crop&crop=center',
   ];
 
   const testimonialHighlight = {
@@ -113,40 +78,34 @@ const ServicesSection = () => {
         </div>
 
         {/* Services Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-          {services.map((service, index) => (
-            <div
-              key={index}
-              className="card-feature group hover-glow"
-              data-animate
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                  <service.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-accent">{service.title}</h3>
-                </div>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-20">
+          {services.map((service, idx) => (
+            <Card key={service.title} className="group h-full overflow-hidden hover-glow" data-animate>
+              <div className="relative h-40 w-full overflow-hidden">
+                <Image
+                  src={serviceImages[idx % serviceImages.length]}
+                  alt={service.title}
+                  fill
+                  className="object-cover transition-smooth group-hover:scale-105"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    if (target.parentElement) {
+                      target.parentElement.style.backgroundColor = '#f3f4f6';
+                    }
+                  }}
+                />
               </div>
-
-              <p className="text-muted-foreground mb-6 leading-relaxed">
-                {service.description}
-              </p>
-
-              <div className="space-y-3 mb-8">
-                {service.features.map((feature, featureIndex) => (
-                  <div key={featureIndex} className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-foreground text-sm">{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              <a href="#contact" className="btn-outline w-full group-hover:bg-primary group-hover:text-white transition-all duration-300 text-center">
-                Let's talk
-              </a>
-            </div>
+              <CardHeader>
+                <CardTitle className="text-lg">{service.title}</CardTitle>
+                <CardDescription>{service.summary}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="#contact" className="text-primary hover:underline">
+                  Let's talk
+                </Link>
+              </CardContent>
+            </Card>
           ))}
         </div>
 

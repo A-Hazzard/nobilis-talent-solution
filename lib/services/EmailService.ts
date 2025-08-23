@@ -302,7 +302,7 @@ export class EmailService {
         <p>In the meantime, you might find these resources helpful:</p>
         <ul>
           <li><a href="${process.env.NEXT_PUBLIC_APP_URL}/resources">Free Leadership Resources</a></li>
-          <li><a href="${process.env.NEXT_PUBLIC_APP_URL}/services">Our Services</a></li>
+
           <li><a href="${process.env.NEXT_PUBLIC_APP_URL}/blog">Leadership Blog</a></li>
         </ul>
         

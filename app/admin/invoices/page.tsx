@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ResponsiveTable, ResponsiveText, ResponsiveSecondaryText } from '@/components/ui/responsive-table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { logAuditAction } from '@/lib/utils/auditUtils';
 
 type PaymentStatus = 'pending' | 'paid' | 'expired' | 'cancelled';
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
@@ -37,6 +38,7 @@ type PendingPayment = {
   clientEmail: string;
   clientName: string;
   baseAmount: number;
+  bonusAmount?: number;
   description: string;
   status: PaymentStatus;
   createdAt: string;
@@ -213,6 +215,24 @@ export default function InvoicesPage() {
         return { ...p, status: newStatus as PaymentStatus, updatedAt: new Date().toISOString() } as PendingPayment;
       }));
 
+      // Log audit action
+      await logAuditAction({
+        action: 'update',
+        entity: 'resource', // Using 'resource' for invoices/payments
+        entityId: payment.id,
+        timestamp: Date.now(),
+        details: {
+          title: `${payment.type === 'invoice' ? 'Invoice' : 'Payment'} status updated`,
+          paymentId: payment.id,
+          paymentType: payment.type,
+          clientName: payment.clientName,
+          clientEmail: payment.clientEmail,
+          previousStatus: payment.status,
+          newStatus: newStatus,
+          amount: payment.type === 'invoice' ? (payment as Invoice).total : (payment as PendingPayment).baseAmount + ((payment as PendingPayment).bonusAmount || 0),
+        },
+      });
+
       toast.success(`Status updated to ${newStatus}`);
     } catch (error) {
       console.error('Error updating payment status:', error);
@@ -264,6 +284,24 @@ export default function InvoicesPage() {
           }
           return p;
         }));
+        
+        // Log audit action
+        await logAuditAction({
+          action: 'update',
+          entity: 'resource', // Using 'resource' for invoices/payments
+          entityId: selectedPayment.id,
+          timestamp: Date.now(),
+          details: {
+            title: `Invoice sent: ${selectedPayment.type === 'invoice' ? (selectedPayment as Invoice).invoiceNumber : selectedPayment.id}`,
+            paymentId: selectedPayment.id,
+            paymentType: selectedPayment.type,
+            clientName: selectedPayment.clientName,
+            clientEmail: selectedPayment.clientEmail,
+            action: 'email_sent',
+            emailMessage: emailMessage,
+          },
+        });
+        
         toast.success('Invoice sent successfully');
         setIsEmailModalOpen(false);
         setEmailMessage('');
@@ -372,7 +410,7 @@ export default function InvoicesPage() {
 
   const getPaymentAmount = (payment: Payment) => {
     if (payment.type === 'pending-payment') {
-      return payment.baseAmount;
+      return payment.baseAmount + (payment.bonusAmount || 0);
     } else {
       return payment.total;
     }
@@ -489,141 +527,226 @@ export default function InvoicesPage() {
               <p className="text-gray-500">No payments match your current filters.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>ID/Number</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPayments.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {payment.type === 'pending-payment' ? (
-                            <CreditCard className="w-4 h-4 text-blue-500" />
-                          ) : (
-                            <FileText className="w-4 h-4 text-green-500" />
-                          )}
-                          <span className="text-sm font-medium">
-                            {payment.type === 'pending-payment' ? 'Payment Link' : 'Invoice'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {getPaymentIdentifier(payment)}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{payment.clientName}</div>
-                          <div className="text-sm text-gray-500">{payment.clientEmail}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{formatCurrency(getPaymentAmount(payment))}</TableCell>
-                      <TableCell>{getStatusBadge(payment)}</TableCell>
-                      <TableCell>{formatDate(payment.createdAt)}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedPayment(payment);
-                                setIsViewModalOpen(true);
-                              }}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Details
-                            </DropdownMenuItem>
-                            {payment.type === 'invoice' && (
-                              <DropdownMenuItem onClick={() => handleDownload(payment as Invoice)}>
-                                <Download className="mr-2 h-4 w-4" />
-                                Download PDF
-                              </DropdownMenuItem>
-                            )}
-                            {payment.type === 'invoice' && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedPayment(payment);
-                                  setIsEmailModalOpen(true);
-                                }}
-                              >
-                                <Mail className="mr-2 h-4 w-4" />
-                                Send Email
-                              </DropdownMenuItem>
-                            )}
-                            <Separator className="my-1" />
-                            {payment.type === 'pending-payment' && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(payment, 'paid')}
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Mark as Paid
-                              </DropdownMenuItem>
-                            )}
-                            {payment.type === 'pending-payment' && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(payment, 'expired')}
-                                className="text-red-600"
-                              >
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Mark as Expired
-                              </DropdownMenuItem>
-                            )}
-                            {payment.type === 'pending-payment' && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(payment, 'cancelled')}
-                                className="text-red-600"
-                              >
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Cancel Payment
-                              </DropdownMenuItem>
-                            )}
-                            {payment.type === 'invoice' && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(payment, 'paid')}
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Mark as Paid
-                              </DropdownMenuItem>
-                            )}
-                            {payment.type === 'invoice' && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(payment, 'overdue')}
-                                className="text-red-600"
-                              >
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Mark as Overdue
-                              </DropdownMenuItem>
-                            )}
-                            {payment.type === 'invoice' && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(payment, 'cancelled')}
-                                className="text-red-600"
-                              >
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Cancel Invoice
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <ResponsiveTable
+              data={filteredPayments}
+              columns={[
+                {
+                  key: 'type',
+                  label: 'Type',
+                  render: (payment: Payment) => (
+                    <div className="flex items-center gap-2">
+                      {payment.type === 'pending-payment' ? (
+                        <CreditCard className="w-4 h-4 text-blue-500" />
+                      ) : (
+                        <FileText className="w-4 h-4 text-green-500" />
+                      )}
+                      <span className="text-sm font-medium">
+                        {payment.type === 'pending-payment' ? 'Payment Link' : 'Invoice'}
+                      </span>
+                    </div>
+                  ),
+                  mobileRender: (payment: Payment) => (
+                    <div className="flex items-center gap-2">
+                      {payment.type === 'pending-payment' ? (
+                        <CreditCard className="w-4 h-4 text-blue-500" />
+                      ) : (
+                        <FileText className="w-4 h-4 text-green-500" />
+                      )}
+                      <ResponsiveText className="font-medium">
+                        {payment.type === 'pending-payment' ? 'Payment Link' : 'Invoice'}
+                      </ResponsiveText>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'identifier',
+                  label: 'ID/Number',
+                  render: (payment: Payment) => (
+                    <span className="font-medium">{getPaymentIdentifier(payment)}</span>
+                  ),
+                  mobileRender: (payment: Payment) => (
+                    <ResponsiveText className="font-medium">{getPaymentIdentifier(payment)}</ResponsiveText>
+                  ),
+                },
+                {
+                  key: 'client',
+                  label: 'Client',
+                  render: (payment: Payment) => (
+                    <div>
+                      <div className="font-medium">{payment.clientName}</div>
+                      <div className="text-sm text-gray-500">{payment.clientEmail}</div>
+                    </div>
+                  ),
+                  mobileRender: (payment: Payment) => (
+                    <div className="space-y-1">
+                      <ResponsiveText className="font-medium">{payment.clientName}</ResponsiveText>
+                      <ResponsiveSecondaryText>{payment.clientEmail}</ResponsiveSecondaryText>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'amount',
+                  label: 'Amount',
+                  render: (payment: Payment) => formatCurrency(getPaymentAmount(payment)),
+                  mobileRender: (payment: Payment) => (
+                    <ResponsiveText className="font-semibold">{formatCurrency(getPaymentAmount(payment))}</ResponsiveText>
+                  ),
+                },
+                {
+                  key: 'status',
+                  label: 'Status',
+                  render: (payment: Payment) => getStatusBadge(payment),
+                  mobileRender: (payment: Payment) => getStatusBadge(payment),
+                },
+                {
+                  key: 'created',
+                  label: 'Created',
+                  render: (payment: Payment) => formatDate(payment.createdAt),
+                  mobileRender: (payment: Payment) => (
+                    <ResponsiveSecondaryText>{formatDate(payment.createdAt)}</ResponsiveSecondaryText>
+                  ),
+                  hideOnMobile: true,
+                },
+                {
+                  key: 'actions',
+                  label: 'Actions',
+                  render: (payment: Payment) => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedPayment(payment);
+                            setIsViewModalOpen(true);
+                          }}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        {payment.type === 'invoice' && (
+                          <DropdownMenuItem onClick={() => handleDownload(payment as Invoice)}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download PDF
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'invoice' && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedPayment(payment);
+                              setIsEmailModalOpen(true);
+                            }}
+                          >
+                            <Mail className="mr-2 h-4 w-4" />
+                            Send Email
+                          </DropdownMenuItem>
+                        )}
+                        <Separator className="my-1" />
+                        {payment.type === 'pending-payment' && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(payment, 'paid')}
+                          >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Mark as Paid
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'pending-payment' && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(payment, 'expired')}
+                            className="text-red-600"
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Mark as Expired
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'pending-payment' && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(payment, 'cancelled')}
+                            className="text-red-600"
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Cancel Payment
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'invoice' && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(payment, 'paid')}
+                          >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Mark as Paid
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'invoice' && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(payment, 'overdue')}
+                            className="text-red-600"
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Mark as Overdue
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'invoice' && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(payment, 'cancelled')}
+                            className="text-red-600"
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Cancel Invoice
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ),
+                  mobileRender: (payment: Payment) => (
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPayment(payment);
+                          setIsViewModalOpen(true);
+                        }}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
+                      </Button>
+                      {payment.type === 'invoice' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(payment as Invoice);
+                          }}
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          PDF
+                        </Button>
+                      )}
+                      {payment.type === 'pending-payment' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStatusUpdate(payment, 'paid');
+                          }}
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Paid
+                        </Button>
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+              title={`Payments (${filteredPayments.length})`}
+              className="space-y-4"
+            />
           )}
         </CardContent>
       </Card>
@@ -663,6 +786,11 @@ export default function InvoicesPage() {
                 <div>
                   <Label className="text-sm font-medium">Amount</Label>
                   <p className="text-lg font-bold">{formatCurrency(getPaymentAmount(selectedPayment))}</p>
+                  {selectedPayment.type === 'pending-payment' && selectedPayment.bonusAmount && selectedPayment.bonusAmount > 0 && (
+                    <p className="text-sm text-green-600">
+                      Base: {formatCurrency(selectedPayment.baseAmount)} + Bonus: {formatCurrency(selectedPayment.bonusAmount)}
+                    </p>
+                  )}
                 </div>
               </div>
 

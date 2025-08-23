@@ -18,18 +18,22 @@ export class FakeDataService {
   generateFakeAnalytics(): Analytics {
     const totalLeads = this.getRandomNumber(150, 500);
     const leadsThisMonth = this.getRandomNumber(20, 80);
-    const conversionRate = this.getRandomNumber(15, 35);
     const totalRevenue = this.getRandomNumber(50000, 200000);
     const revenueThisMonth = this.getRandomNumber(5000, 25000);
+    const totalBonuses = this.getRandomNumber(5000, 25000);
+    const bonusesThisMonth = this.getRandomNumber(500, 5000);
+    const totalInvoices = this.getRandomNumber(50, 200);
     const activeUsers = this.getRandomNumber(50, 200);
     const resourceDownloads = this.getRandomNumber(300, 1200);
 
     return {
       totalLeads,
       leadsThisMonth,
-      conversionRate,
       totalRevenue,
       revenueThisMonth,
+      totalBonuses,
+      bonusesThisMonth,
+      totalInvoices,
       activeUsers,
       resourceDownloads,
       topResources: this.generateFakeTopResources(),

@@ -1,19 +1,18 @@
 'use client';
 import * as React from 'react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  ResponsiveTable,
+  ResponsiveBadge,
+  ResponsiveAvatar,
+  ResponsiveText,
+  ResponsiveSecondaryText,
+} from '@/components/ui/responsive-table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,138 +42,241 @@ export function LeadsTable({
   formatDate,
 }: LeadsTableProps) {
   const [detailLead, setDetailLead] = React.useState<Lead | null>(null);
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>All Leads ({leads.length})</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Lead</TableHead>
-              <TableHead>Organization</TableHead>
-              <TableHead>Job Title</TableHead>
-              <TableHead>Goals</TableHead>
-              <TableHead>Details</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {leads.map((lead) => (
-              <TableRow key={lead.id} data-lead-id={lead.id} onClick={() => setDetailLead(lead)} className="cursor-pointer hover:bg-muted/40">
-                <TableCell>
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>
-                        {lead.firstName.charAt(0)}{lead.lastName.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {lead.firstName} {lead.lastName}
-                      </p>
-                      <p className="text-sm text-gray-500">{lead.email}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="text-xs text-gray-600 space-y-1">
-                    {lead.organizationType && <div><span className="font-medium">Type:</span> {lead.organizationType}</div>}
-                    {lead.industryFocus && <div><span className="font-medium">Industry:</span> {lead.industryFocus}</div>}
-                    {lead.teamSize && <div><span className="font-medium">Team:</span> {lead.teamSize}</div>}
-                    {lead.timeline && <div><span className="font-medium">Timeline:</span> {lead.timeline}</div>}
-                    {lead.budget && <div><span className="font-medium">Budget:</span> {lead.budget}</div>}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {lead.organization ? (
-                    <Badge variant="outline">{lead.organization}</Badge>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {lead.jobTitle ? (
-                    <span className="text-sm">{lead.jobTitle}</span>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {Array.isArray(lead.primaryGoals) && lead.primaryGoals.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {lead.primaryGoals.slice(0, 3).map((g, idx) => (
-                        <Badge key={idx} variant="secondary">{g}</Badge>
-                      ))}
-                      {lead.primaryGoals.length > 3 && (
-                        <span className="text-xs text-gray-500">+{lead.primaryGoals.length - 3}</span>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-3 w-3 text-gray-400" />
-                      <span className="text-sm">{lead.email}</span>
-                    </div>
-                    {lead.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-3 w-3 text-gray-400" />
-                        <span className="text-sm">{lead.phone}</span>
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="default">Active</Badge>
-                </TableCell>
-                <TableCell>
-                  {formatDate(lead.createdAt)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEdit(lead)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onGeneratePaymentLink(lead)}>
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Generate Payment Link
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <a href={`mailto:${lead.email}`}>
-                          <Mail className="h-4 w-4 mr-2" />
-                          Send Email
-                        </a>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="text-red-600"
-                        onClick={() => onDelete(lead.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
+  const columns = [
+    {
+      key: 'lead',
+      label: 'Lead',
+      render: (lead: Lead) => (
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-10 w-10">
+            <AvatarFallback>
+              {lead.firstName.charAt(0)}{lead.lastName.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="font-medium text-gray-900">
+              {lead.firstName} {lead.lastName}
+            </p>
+            <p className="text-sm text-gray-500">{lead.email}</p>
+          </div>
+        </div>
+      ),
+      mobileRender: (_lead: Lead) => (
+        <div className="flex items-center space-x-3">
+          <ResponsiveAvatar fallback={`${_lead.firstName.charAt(0)}${_lead.lastName.charAt(0)}`} />
+          <div className="min-w-0 flex-1">
+            <ResponsiveText className="font-medium">
+              {_lead.firstName} {_lead.lastName}
+            </ResponsiveText>
+            <ResponsiveSecondaryText>{_lead.email}</ResponsiveSecondaryText>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'organization',
+      label: 'Organization',
+      render: (lead: Lead) => (
+        lead.organization ? (
+          <Badge variant="outline">{lead.organization}</Badge>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      ),
+      mobileRender: (_lead: Lead) => (
+        _lead.organization ? (
+          <ResponsiveBadge variant="outline">{_lead.organization}</ResponsiveBadge>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      ),
+    },
+    {
+      key: 'jobTitle',
+      label: 'Job Title',
+      render: (lead: Lead) => (
+        lead.jobTitle ? (
+          <span className="text-sm">{lead.jobTitle}</span>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      ),
+      mobileRender: (lead: Lead) => (
+        lead.jobTitle ? (
+          <ResponsiveText>{lead.jobTitle}</ResponsiveText>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      ),
+    },
+    {
+      key: 'goals',
+      label: 'Goals',
+      render: (lead: Lead) => (
+        Array.isArray(lead.primaryGoals) && lead.primaryGoals.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {lead.primaryGoals.slice(0, 3).map((g, idx) => (
+              <Badge key={idx} variant="secondary">{g}</Badge>
             ))}
-          </TableBody>
-        </Table>
-      </CardContent>
+            {lead.primaryGoals.length > 3 && (
+              <span className="text-xs text-gray-500">+{lead.primaryGoals.length - 3}</span>
+            )}
+          </div>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      ),
+      mobileRender: (lead: Lead) => (
+        Array.isArray(lead.primaryGoals) && lead.primaryGoals.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {lead.primaryGoals.slice(0, 2).map((g, idx) => (
+              <ResponsiveBadge key={idx} variant="secondary">{g}</ResponsiveBadge>
+            ))}
+            {lead.primaryGoals.length > 2 && (
+              <span className="text-xs text-gray-500">+{lead.primaryGoals.length - 2}</span>
+            )}
+          </div>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      ),
+    },
+    {
+      key: 'contact',
+      label: 'Contact',
+      render: (lead: Lead) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Mail className="h-3 w-3 text-gray-400" />
+            <span className="text-sm">{lead.email}</span>
+          </div>
+          {lead.phone && (
+            <div className="flex items-center gap-2">
+              <Phone className="h-3 w-3 text-gray-400" />
+              <span className="text-sm">{lead.phone}</span>
+            </div>
+          )}
+        </div>
+      ),
+      mobileRender: (lead: Lead) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <Mail className="h-3 w-3 text-gray-400" />
+            <ResponsiveSecondaryText>{lead.email}</ResponsiveSecondaryText>
+          </div>
+          {lead.phone && (
+            <div className="flex items-center space-x-2">
+              <Phone className="h-3 w-3 text-gray-400" />
+              <ResponsiveText>{lead.phone}</ResponsiveText>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (_lead: Lead) => (
+        <Badge variant="default">Active</Badge>
+      ),
+      mobileRender: (_lead: Lead) => (
+        <ResponsiveBadge variant="default">Active</ResponsiveBadge>
+      ),
+    },
+    {
+      key: 'created',
+      label: 'Created',
+      render: (lead: Lead) => (
+        <span className="text-sm text-gray-600">{formatDate(lead.createdAt)}</span>
+      ),
+      mobileRender: (lead: Lead) => (
+        <ResponsiveSecondaryText>{formatDate(lead.createdAt)}</ResponsiveSecondaryText>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (lead: Lead) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(lead)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onGeneratePaymentLink(lead)}>
+              <CreditCard className="h-4 w-4 mr-2" />
+              Generate Payment Link
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a href={`mailto:${lead.email}`}>
+                <Mail className="h-4 w-4 mr-2" />
+                Send Email
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="text-red-600"
+              onClick={() => onDelete(lead.id)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+      mobileRender: (lead: Lead) => (
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(lead);
+            }}
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            Edit
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onGeneratePaymentLink(lead);
+            }}
+          >
+            <CreditCard className="h-3 w-3 mr-1" />
+            Payment
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(lead.id);
+            }}
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <ResponsiveTable
+        data={leads}
+        columns={columns}
+        title={`All Leads (${leads.length})`}
+        className="space-y-4"
+        onRowClick={(lead) => setDetailLead(lead)}
+      />
       <Dialog open={!!detailLead} onOpenChange={() => setDetailLead(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -217,6 +319,6 @@ export function LeadsTable({
           )}
         </DialogContent>
       </Dialog>
-    </Card>
+    </>
   );
 } 

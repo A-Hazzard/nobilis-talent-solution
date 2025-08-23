@@ -4,6 +4,7 @@ import type { EventFormData, CalendarState, CalendarActions } from '@/lib/types/
 import { CalendarService } from '@/lib/services/CalendarService';
 import { CalendlyService } from '@/lib/services/CalendlyService';
 import { CalendarUtils } from '@/lib/utils/calendarUtils';
+import { logAuditAction } from '@/lib/utils/auditUtils';
 
 /**
  * Custom hook for calendar state management
@@ -263,11 +264,42 @@ export function useCalendar(): [CalendarState, CalendarActions] {
           id: editingEvent.id,
           ...eventData,
         });
+        
+        // Log audit action for update
+        await logAuditAction({
+          action: 'update',
+          entity: 'calendar',
+          entityId: editingEvent.id,
+          timestamp: Date.now(),
+          details: {
+            title: `Calendar event updated: ${eventData.title}`,
+            eventTitle: eventData.title,
+            eventDate: eventData.date,
+            eventType: eventData.type,
+            previousTitle: editingEvent.title,
+          },
+        });
       } else {
-        await calendarService.createEvent({
+        const response = await calendarService.createEvent({
           ...eventData,
           createdBy: 'local',
         });
+        
+        if (response.data) {
+          // Log audit action for create
+          await logAuditAction({
+            action: 'create',
+            entity: 'calendar',
+            entityId: response.data.id,
+            timestamp: Date.now(),
+            details: {
+              title: `Calendar event created: ${eventData.title}`,
+              eventTitle: eventData.title,
+              eventDate: eventData.date,
+              eventType: eventData.type,
+            },
+          });
+        }
       }
 
       handleCloseModal();
@@ -280,12 +312,32 @@ export function useCalendar(): [CalendarState, CalendarActions] {
 
   const handleDeleteEvent = useCallback(async (eventId: string) => {
     try {
+      // Get event details before deletion for audit log
+      const eventToDelete = events.find(event => event.id === eventId);
+      
       await calendarService.deleteEvent(eventId);
+      
+      // Log audit action
+      if (eventToDelete) {
+        await logAuditAction({
+          action: 'delete',
+          entity: 'calendar',
+          entityId: eventId,
+          timestamp: Date.now(),
+          details: {
+            title: `Calendar event deleted: ${eventToDelete.title}`,
+            eventTitle: eventToDelete.title,
+            eventDate: eventToDelete.date,
+            eventType: eventToDelete.type,
+          },
+        });
+      }
+      
       loadEvents();
     } catch (error) {
       console.error('Error deleting event:', error);
     }
-  }, [calendarService, loadEvents]);
+  }, [calendarService, loadEvents, events]);
 
   const handleFormChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

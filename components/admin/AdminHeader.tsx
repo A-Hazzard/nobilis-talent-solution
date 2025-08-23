@@ -15,6 +15,8 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, User, Menu, Home } from 'lucide-react';
 import ProfileModal from './ProfileModal';
+import Image from 'next/image';
+import logo from '@/public/assets/logo-transparent.png';
 
 interface AdminHeaderProps {
   onMenuClick: () => void;
@@ -61,9 +63,12 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="text-lg lg:text-xl font-semibold text-gray-900">
-              Nobilis Talent Solutions Admin
-            </h1>
+            <div className="flex items-center">
+              <Image src={logo} alt="Nobilis Talent Solutions" width={32} height={32} className="mr-3" />
+              <h1 className="text-lg lg:text-xl font-semibold text-gray-900">
+                Nobilis Talent Solutions
+              </h1>
+            </div>
           </div>
           <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
         </div>
@@ -84,9 +89,12 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="text-lg lg:text-xl font-semibold text-gray-900">
-              Nobilis Talent Solutions Admin
-            </h1>
+            <div className="flex items-center">
+              <Image src={logo} alt="Nobilis Talent Solutions" width={32} height={32} className="mr-3" />
+              <h1 className="text-lg lg:text-xl font-semibold text-gray-900">
+                Nobilis Talent Solutions
+              </h1>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">

@@ -1,12 +1,6 @@
-export type FirebaseUser = {
-  uid: string;
-  email: string;
-  displayName: string;
-  photoURL?: string;
-  emailVerified: boolean;
-  createdAt: Date;
-  lastLoginAt: Date;
-};
+import { User as FirebaseAuthUser } from 'firebase/auth';
+
+export type FirebaseUser = FirebaseAuthUser;
 
 export type FirebaseAuthError = {
   code: string;

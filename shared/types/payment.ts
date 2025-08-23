@@ -66,6 +66,7 @@ export type PendingPayment = {
   clientEmail: string;
   clientName: string;
   baseAmount: number;
+  bonusAmount?: number; // Optional tip/bonus amount
   description: string;
   status: 'pending' | 'completed' | 'cancelled' | 'expired';
   createdAt: Date;

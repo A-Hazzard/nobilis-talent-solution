@@ -210,7 +210,7 @@ export const testimonialsApi = {
  */
 export const analyticsApi = {
   async getDashboard(period: 'week' | 'month' | 'year' = 'month') {
-    return apiRequest<Analytics>(`/analytics/dashboard?period=${period}`);
+    return apiRequest<{ analytics: Analytics; period: 'week' | 'month' | 'year' }>(`/analytics/dashboard?period=${period}`);
   },
 
   async getLeadSources() {

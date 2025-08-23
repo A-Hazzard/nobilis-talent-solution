@@ -239,63 +239,7 @@ export default function AuditLogsPage() {
     }
   }, [isDemoMode, state.fakeLogs, state.searchTerm, state.entityTypeFilter, state.actionFilter, toast]);
 
-  const handleCreateSampleData = useCallback(async () => {
-    try {
-      setState(prev => ({ ...prev, isLoading: true }));
-      
-      if (isDemoMode) {
-        // Generate new fake data in demo mode
-        const newFakeLogs = generateFakeAuditLogs({ count: 50 });
-        setState(prev => ({ 
-          ...prev, 
-          fakeLogs: [...prev.fakeLogs, ...newFakeLogs],
-          isLoading: false 
-        }));
-        
-        toast({
-          title: 'Demo Data Created',
-          description: `Successfully created ${newFakeLogs.length} additional demo audit logs.`,
-        });
-        
-        // Reload the audit logs to show the new data
-        await loadAuditLogs();
-      } else {
-        // Create real sample data in normal mode
-        const response = await fetch('/api/audit/test', {
-          method: 'POST',
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error Response:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
 
-        if (result.success) {
-          toast({
-            title: 'Sample Data Created',
-            description: `Successfully created ${result.count} sample audit logs.`,
-          });
-          
-          // Reload the audit logs to show the new data
-          await loadAuditLogs();
-        } else {
-          throw new Error(result.error || 'Failed to create sample data');
-        }
-      }
-    } catch (error) {
-      console.error('Error creating sample data:', error);
-      toast({
-        title: 'Sample Data Creation Failed',
-        description: 'Failed to create sample audit logs. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
-    }
-  }, [isDemoMode, loadAuditLogs, toast]);
 
   // Load data when filters change
   useEffect(() => {
@@ -316,34 +260,27 @@ export default function AuditLogsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Audit Logs</h1>
-          <p className="text-gray-600">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">Audit Logs</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1 break-words">
             {isDemoMode 
               ? 'Demo mode: Showing sample audit data for testing and demonstration'
               : 'Track all admin activities and system changes'
             }
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-shrink-0">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={handleExport}
             disabled={state.isLoading}
+            className="text-xs sm:text-sm"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Export Excel
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleCreateSampleData}
-            disabled={state.isLoading}
-          >
-            <Activity className="h-4 w-4 mr-2" />
-            {isDemoMode ? 'Add Demo Data' : 'Create Sample Data'}
+            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Export Excel</span>
+            <span className="sm:hidden">Export</span>
           </Button>
         </div>
       </div>
@@ -453,16 +390,7 @@ export default function AuditLogsPage() {
                   : 'No audit logs found'
                 }
               </p>
-              {isDemoMode && (
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={handleCreateSampleData}
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  Generate Demo Data
-                </Button>
-              )}
+
             </div>
           ) : (
             <div className="space-y-4">
@@ -471,24 +399,26 @@ export default function AuditLogsPage() {
                 const actionIcon = getActionIcon(log.action);
                 
                 return (
-                  <div key={log.id} className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div key={log.id} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                     {/* Entity Icon */}
                     <div className={`flex-shrink-0 p-2 rounded-lg ${entityIcon.bgColor}`}>
-                      <entityIcon.Icon className={`h-5 w-5 ${entityIcon.color}`} />
+                      <entityIcon.Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${entityIcon.color}`} />
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                         {/* Action Badge with Icon */}
-                        <Badge className={`flex items-center gap-1 ${getActionBadgeColors(log.action)}`}>
+                        <Badge className={`flex items-center gap-1 text-xs ${getActionBadgeColors(log.action)}`}>
                           <actionIcon.Icon className="h-3 w-3" />
-                          {log.action.toUpperCase()}
+                          <span className="hidden sm:inline">{log.action.toUpperCase()}</span>
+                          <span className="sm:hidden capitalize">{log.action}</span>
                         </Badge>
                         
                         {/* Entity Type Badge */}
-                        <Badge className={`flex items-center gap-1 ${getEntityTypeBadgeColors(log.entity)}`}>
+                        <Badge className={`flex items-center gap-1 text-xs ${getEntityTypeBadgeColors(log.entity)}`}>
                           <entityIcon.Icon className="h-3 w-3" />
-                          {log.entity.toUpperCase()}
+                          <span className="hidden sm:inline">{log.entity.toUpperCase()}</span>
+                          <span className="sm:hidden capitalize">{log.entity}</span>
                         </Badge>
                         
                         {/* Demo indicator */}
@@ -498,21 +428,57 @@ export default function AuditLogsPage() {
                           </Badge>
                         )}
                         
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500 break-words">
                           {formatTimeAgo(new Date(log.timestamp))}
                         </span>
                       </div>
                         
                       <div className="space-y-1">
-                        <p className="font-medium text-gray-900">
-                          {typeof log.details === 'string' ? log.details : log.details?.title || log.entityId || 'Untitled'}
+                        <p className="font-medium text-gray-900 text-sm sm:text-base break-words">
+                          {(() => {
+                            // Parse details if it's a JSON string
+                            let parsedDetails = log.details;
+                            if (typeof log.details === 'string') {
+                              try {
+                                parsedDetails = JSON.parse(log.details);
+                                return parsedDetails?.title || log.entityId || 'Untitled';
+                              } catch {
+                                return log.details || log.entityId || 'Untitled';
+                              }
+                            }
+                            return parsedDetails?.title || log.entityId || 'Untitled';
+                          })()}
                         </p>
-                        {typeof log.details === 'object' && log.details?.description && (
-                          <p className="text-sm text-gray-600">{log.details.description}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>By: {log.userEmail}</span>
-                          {typeof log.details === 'object' && log.details?.ipAddress && <span>IP: {log.details.ipAddress}</span>}
+                        {(() => {
+                          // Parse details for description
+                          let parsedDetails = log.details;
+                          if (typeof log.details === 'string') {
+                            try {
+                              parsedDetails = JSON.parse(log.details);
+                            } catch {
+                              return null;
+                            }
+                          }
+                          return parsedDetails?.description ? (
+                            <p className="text-xs sm:text-sm text-gray-600 break-words">{parsedDetails.description}</p>
+                          ) : null;
+                        })()}
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
+                          <span className="break-all">By: {log.userEmail}</span>
+                          {(() => {
+                            // Parse details for IP address
+                            let parsedDetails = log.details;
+                            if (typeof log.details === 'string') {
+                              try {
+                                parsedDetails = JSON.parse(log.details);
+                              } catch {
+                                return null;
+                              }
+                            }
+                            return parsedDetails?.ipAddress ? (
+                              <span className="break-all">IP: {parsedDetails.ipAddress}</span>
+                            ) : null;
+                          })()}
                         </div>
                       </div>
                     </div>

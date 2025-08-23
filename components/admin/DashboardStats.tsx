@@ -1,91 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, TrendingUp, Target, DollarSign } from 'lucide-react';
-import { AnalyticsService } from '@/lib/services/AnalyticsService';
-import { FakeDataService } from '@/lib/services/FakeDataService';
+import { Users, DollarSign, Gift, FileText } from 'lucide-react';
+import { useDashboard } from '@/lib/hooks/useDashboard';
 import { useDashboardStore } from '@/lib/stores/dashboardStore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-
-type StatsData = {
-  totalLeads: number;
-  newLeads: number;
-  conversionRate: number;
-  avgResponseTime: number;
-  totalRevenue: number;
-  resourceDownloads: number;
-};
 
 interface DashboardStatsProps {
   period?: 'week' | 'month' | 'year';
 }
 
 export default function DashboardStats({ period = 'month' }: DashboardStatsProps) {
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  const { isFakeDataEnabled } = useDashboardStore();
-  const fakeDataService = FakeDataService.getInstance();
+  const [dashboard] = useDashboard();
+  const { isFakeDataEnabled: _isFakeDataEnabled } = useDashboardStore();
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        if (isFakeDataEnabled) {
-          // Use fake data
-          const fakeStats = fakeDataService.generateFakeStats();
-          setStats({
-            totalLeads: fakeStats.totalLeads,
-            newLeads: fakeStats.newLeads,
-            conversionRate: fakeStats.conversionRate,
-            avgResponseTime: fakeStats.avgResponseTime,
-            totalRevenue: fakeStats.totalRevenue,
-            resourceDownloads: fakeStats.resourceDownloads,
-          });
-        } else {
-          // Use real data with period
-          const analyticsService = new AnalyticsService();
-          const { data, error: analyticsError } = await analyticsService.getDashboardAnalytics(period);
-
-          if (analyticsError) {
-            throw new Error(analyticsError);
-          }
-
-          // Calculate additional stats based on period
-          let newLeads = data.leadsThisMonth;
-          if (period === 'week') {
-            newLeads = Math.floor(data.leadsThisMonth / 4); // Approximate weekly leads
-          } else if (period === 'year') {
-            newLeads = data.leadsThisMonth * 12; // Approximate yearly leads
-          }
-          
-          const avgResponseTime = 2.5; // Mock data - would come from actual response time tracking
-
-          setStats({
-            totalLeads: data.totalLeads,
-            newLeads,
-            conversionRate: data.conversionRate,
-            avgResponseTime,
-            totalRevenue: data.totalRevenue,
-            resourceDownloads: data.resourceDownloads,
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load statistics');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [isFakeDataEnabled, period]);
+  const { isLoading, error, analytics } = dashboard;
 
   if (isLoading) {
     return (
@@ -132,7 +63,7 @@ export default function DashboardStats({ period = 'month' }: DashboardStatsProps
     );
   }
 
-  if (!stats) {
+  if (!analytics) {
     return (
       <div className="space-y-4">
         <Alert>
@@ -159,7 +90,7 @@ export default function DashboardStats({ period = 'month' }: DashboardStatsProps
     );
   }
 
-  const getPeriodDescription = () => {
+  const _getPeriodDescription = () => {
     switch (period) {
       case 'week':
         return 'This week';
@@ -172,38 +103,44 @@ export default function DashboardStats({ period = 'month' }: DashboardStatsProps
     }
   };
 
+  // Helper function to safely format numbers
+  const safeFormatNumber = (value: number | undefined | null): string => {
+    const num = Number(value || 0);
+    return isNaN(num) ? '0' : num.toLocaleString();
+  };
+
   const statCards = [
     {
       title: 'Total Leads',
-      value: stats.totalLeads,
+      value: analytics.totalLeads || 0,
       description: 'All time leads',
       icon: Users,
-      trend: stats.newLeads > 0 ? `+${stats.newLeads}` : '0',
-      trendUp: stats.newLeads > 0,
-    },
-    {
-      title: 'New Leads',
-      value: stats.newLeads,
-      description: getPeriodDescription(),
-      icon: TrendingUp,
-      trend: stats.newLeads > 0 ? '+5%' : '0%',
-      trendUp: stats.newLeads > 0,
-    },
-    {
-      title: 'Conversion Rate',
-      value: `${stats.conversionRate}%`,
-      description: 'Lead to customer',
-      icon: Target,
-      trend: stats.conversionRate > 0 ? '+2.1%' : '0%',
-      trendUp: stats.conversionRate > 0,
+      trend: (analytics.leadsThisMonth || 0) > 0 ? `+${analytics.leadsThisMonth || 0}` : '0',
+      trendUp: (analytics.leadsThisMonth || 0) > 0,
     },
     {
       title: 'Total Revenue',
-      value: `$${stats.totalRevenue.toLocaleString()}`,
+      value: `$${safeFormatNumber(analytics.totalRevenue)}`,
       description: 'All time revenue',
       icon: DollarSign,
-      trend: stats.totalRevenue > 0 ? `+$${(stats.totalRevenue * 0.1).toLocaleString()}` : '$0',
-      trendUp: stats.totalRevenue > 0,
+      trend: (analytics.revenueThisMonth || 0) > 0 ? `+$${safeFormatNumber(analytics.revenueThisMonth)}` : '$0',
+      trendUp: (analytics.revenueThisMonth || 0) > 0,
+    },
+    {
+      title: 'Total Bonuses',
+      value: `$${safeFormatNumber(analytics.totalBonuses)}`,
+      description: 'All time bonuses',
+      icon: Gift,
+      trend: (analytics.bonusesThisMonth || 0) > 0 ? `+$${safeFormatNumber(analytics.bonusesThisMonth)}` : '$0',
+      trendUp: (analytics.bonusesThisMonth || 0) > 0,
+    },
+    {
+      title: 'Paid Invoices',
+      value: analytics.totalInvoices || 0,
+      description: 'All time paid invoices',
+      icon: FileText,
+      trend: (analytics.totalInvoices || 0) > 0 ? `${analytics.totalInvoices || 0} paid` : '0',
+      trendUp: (analytics.totalInvoices || 0) > 0,
     },
   ];
 

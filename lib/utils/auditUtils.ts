@@ -386,7 +386,26 @@ export function formatAuditTimestamp(timestamp: number): string {
 }
 
 /**
- * Log an audit action with current user context
+ * Get client IP address (best effort)
+ */
+const getClientIP = (): string => {
+  if (typeof window === 'undefined') return 'server';
+  
+  // Try to get IP from various sources (this is client-side, so limited)
+  // In production, IP should be captured server-side in API routes
+  return 'client-side';
+};
+
+/**
+ * Get user agent string
+ */
+const getUserAgent = (): string => {
+  if (typeof window === 'undefined') return 'server';
+  return navigator.userAgent || 'unknown';
+};
+
+/**
+ * Log an audit action with current user context and enhanced details
  */
 export const logAuditAction = async (data: Omit<AuditLog, 'id' | 'createdAt' | 'userId' | 'userEmail'>): Promise<void> => {
   const currentUser = getCurrentUser();
@@ -395,11 +414,21 @@ export const logAuditAction = async (data: Omit<AuditLog, 'id' | 'createdAt' | '
     return;
   }
   
+  // Ensure details object exists and add system information
+  const enhancedDetails = {
+    ...data.details,
+    ipAddress: getClientIP(),
+    userAgent: getUserAgent(),
+    timestamp: new Date().toISOString(),
+    description: data.details?.title || `${data.action} ${data.entity}`,
+  };
+  
   const auditService = AuditService.getInstance();
   await auditService.logAction({
     ...data,
     userId: currentUser.id,
     userEmail: currentUser.email,
+    details: enhancedDetails,
   });
 };
 

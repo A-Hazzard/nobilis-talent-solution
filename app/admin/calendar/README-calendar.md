@@ -84,9 +84,7 @@ This page provides a fully functional calendar view and upcoming events list for
 - [x] Local storage persistence
 - [x] Empty states and error handling
 - [x] Form validation and error messages
-- [ ] (Future) Firestore integration
-- [ ] (Future) Event notifications
-- [ ] (Future) Recurring events
+
 
 ---
 

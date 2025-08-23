@@ -32,14 +32,14 @@ export async function POST(request: NextRequest) {
     // Map to User type
     const user: User = {
       id: firebaseUser.uid,
-      email: firebaseUser.email,
+      email: firebaseUser.email || '',
       firstName: userProfile.firstName,
       lastName: userProfile.lastName,
       phone: userProfile.phone,
       organization: userProfile.organization,
       role: firebaseUser.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : (userProfile.role || 'user'),
       createdAt: userProfile.createdAt,
-      lastLoginAt: firebaseUser.lastLoginAt,
+      lastLoginAt: new Date(firebaseUser.metadata.lastSignInTime || Date.now()),
       isActive: userProfile.isActive,
     };
 

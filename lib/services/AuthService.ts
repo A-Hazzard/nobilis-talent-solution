@@ -10,7 +10,8 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
-import type { FirebaseUser as AppUser, FirebaseAuthError } from '@/shared/types/firebase';
+import type { FirebaseAuthError } from '@/shared/types/firebase';
+import type { User as AppUser } from '@/shared/types/entities';
 import type { UserProfile } from '@/lib/types/services';
 import { validateSignupForm, validateLoginForm } from '@/lib/utils/validation';
 import { logAdminLogin } from '@/lib/utils/auditUtils';
@@ -27,7 +28,7 @@ export class AuthService {
     return AuthService.instance;
   }
 
-  async signInWithEmail(email: string, password: string): Promise<{ user: AppUser | null; error: FirebaseAuthError | null }> {
+  async signInWithEmail(email: string, password: string): Promise<{ user: FirebaseUser | null; error: FirebaseAuthError | null }> {
     try {
       // Validate inputs
       const validation = validateLoginForm(email, password);
@@ -43,7 +44,6 @@ export class AuthService {
       }
 
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = this.mapFirebaseUser(userCredential.user);
       
       // Update last login time
       await this.updateLastLogin(userCredential.user.uid);
@@ -53,7 +53,7 @@ export class AuthService {
         await logAdminLogin();
       }
       
-      return { user, error: null };
+      return { user: userCredential.user, error: null };
     } catch (error: any) {
       console.error('Sign in error:', error);
       
@@ -95,7 +95,7 @@ export class AuthService {
     lastName: string,
     organization: string,
     phone: string
-  ): Promise<{ user: AppUser | null; error: FirebaseAuthError | null }> {
+  ): Promise<{ user: FirebaseUser | null; error: FirebaseAuthError | null }> {
     try {
       // Validate inputs
       const validation = validateSignupForm({
@@ -135,8 +135,7 @@ export class AuthService {
         displayName: `${firstName} ${lastName}`,
       });
 
-      const user = this.mapFirebaseUser(userCredential.user);
-      return { user, error: null };
+      return { user: userCredential.user, error: null };
     } catch (error: any) {
       console.error('Sign up error:', error);
       
@@ -178,19 +177,16 @@ export class AuthService {
     }
   }
 
-  onAuthStateChanged(callback: (user: AppUser | null) => void): () => void {
+  onAuthStateChanged(callback: (user: FirebaseUser | null) => void): () => void {
     console.log('AuthService: Setting up onAuthStateChanged listener');
     return onAuthStateChanged(auth, (firebaseUser) => {
       console.log('AuthService: Firebase auth state changed:', firebaseUser);
-      const user = firebaseUser ? this.mapFirebaseUser(firebaseUser) : null;
-      console.log('AuthService: Mapped user for callback:', user);
-      callback(user);
+      callback(firebaseUser);
     });
   }
 
-  getCurrentUser(): AppUser | null {
-    const firebaseUser = auth.currentUser;
-    return firebaseUser ? this.mapFirebaseUser(firebaseUser) : null;
+  getCurrentUser(): FirebaseUser | null {
+    return auth.currentUser;
   }
 
   async getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -206,7 +202,7 @@ export class AuthService {
     }
   }
 
-  async signInWithGoogle(): Promise<{ user: AppUser | null; error: FirebaseAuthError | null; isNewUser?: boolean }> {
+  async signInWithGoogle(): Promise<{ user: FirebaseUser | null; error: FirebaseAuthError | null; isNewUser?: boolean }> {
     try {
       console.log('AuthService: Starting Google sign-in...');
       const provider = new GoogleAuthProvider();
@@ -248,15 +244,13 @@ export class AuthService {
       // Update last login
       await this.updateLastLogin(firebaseUser.uid);
       
-      const user = this.mapFirebaseUser(firebaseUser);
-      
       // Log admin login if applicable
       if (userProfile?.role === 'admin') {
         await logAdminLogin(firebaseUser.uid, firebaseUser.email || '');
       }
       
       console.log('AuthService: Google sign-in successful');
-      return { user, error: null, isNewUser };
+      return { user: firebaseUser, error: null, isNewUser };
       
     } catch (error: any) {
       console.error('AuthService: Google sign-in error:', error);
@@ -274,13 +268,14 @@ export class AuthService {
 
   private mapFirebaseUser(firebaseUser: FirebaseUser): AppUser {
     return {
-      uid: firebaseUser.uid,
+      id: firebaseUser.uid,
       email: firebaseUser.email || '',
-      displayName: firebaseUser.displayName || '',
-      photoURL: firebaseUser.photoURL || undefined,
-      emailVerified: firebaseUser.emailVerified,
+      firstName: firebaseUser.displayName?.split(' ')[0] || '',
+      lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+      role: firebaseUser.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user',
       createdAt: new Date(firebaseUser.metadata.creationTime || Date.now()),
       lastLoginAt: new Date(firebaseUser.metadata.lastSignInTime || Date.now()),
+      isActive: true,
     };
   }
 

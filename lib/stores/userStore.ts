@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { User } from '@/shared/types/entities';
 import type { FirebaseUser, FirebaseAuthError } from '@/shared/types/firebase';
 import { AuthService } from '@/lib/services/AuthService';
+import { initializeAuthWithCookies, clearAuthCookies } from '@/lib/utils/authUtils';
 
 interface UserState {
   // User data
@@ -81,15 +82,15 @@ export const useUserStore = create<UserState>()(
                 // Map Firebase user to our User type with real data
                 const mappedUser: User = {
                   id: user.uid,
-                  email: user.email,
+                  email: user.email || '',
                   firstName: userProfile?.firstName || user.displayName?.split(' ')[0] || '',
                   lastName: userProfile?.lastName || user.displayName?.split(' ').slice(1).join(' ') || '',
                   displayName: userProfile?.displayName,
                   phone: userProfile?.phone,
                   organization: userProfile?.organization,
                   role: userProfile?.role || (user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
-                  createdAt: userProfile?.createdAt || user.createdAt,
-                  lastLoginAt: userProfile?.lastLoginAt || user.lastLoginAt,
+                  createdAt: userProfile?.createdAt || new Date(user.metadata.creationTime || Date.now()),
+                  lastLoginAt: userProfile?.lastLoginAt || new Date(user.metadata.lastSignInTime || Date.now()),
                   isActive: userProfile?.isActive ?? true,
                   
                   // Email verification
@@ -120,12 +121,12 @@ export const useUserStore = create<UserState>()(
                 // Fallback to Firebase Auth data only
                 const mappedUser: User = {
                   id: user.uid,
-                  email: user.email,
+                  email: user.email || '',
                   firstName: user.displayName?.split(' ')[0] || '',
                   lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
                   role: user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user',
-                  createdAt: user.createdAt,
-                  lastLoginAt: user.lastLoginAt,
+                  createdAt: new Date(user.metadata.creationTime || Date.now()),
+                  lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
                   isActive: true,
                   emailVerified: false, // Default to false for new users
                   onboardingCompleted: false, // Default to false for new users
@@ -171,14 +172,14 @@ export const useUserStore = create<UserState>()(
               // Map Firebase user to our User type with real data
               const mappedUser: User = {
                 id: user.uid,
-                email: user.email,
+                email: user.email || '',
                 firstName,
                 lastName,
                 phone,
                 organization,
                 role: userProfile?.role || (user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
-                createdAt: userProfile?.createdAt || user.createdAt,
-                lastLoginAt: userProfile?.lastLoginAt || user.lastLoginAt,
+                createdAt: userProfile?.createdAt || new Date(user.metadata.creationTime || Date.now()),
+                lastLoginAt: userProfile?.lastLoginAt || new Date(user.metadata.lastSignInTime || Date.now()),
                 isActive: userProfile?.isActive ?? true,
                 emailVerified: false, // New users need email verification
                 onboardingCompleted: false, // New users need onboarding
@@ -239,14 +240,14 @@ export const useUserStore = create<UserState>()(
               // Map Firebase user to our User type with real data
               const mappedUser: User = {
                 id: user.uid,
-                email: user.email,
+                email: user.email || '',
                 firstName: userProfile?.firstName || firstName,
                 lastName: userProfile?.lastName || lastName,
                 phone: userProfile?.phone || '',
                 organization: userProfile?.organization || '',
                 role: userProfile?.role || (user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
-                createdAt: userProfile?.createdAt || user.createdAt,
-                lastLoginAt: userProfile?.lastLoginAt || user.lastLoginAt,
+                createdAt: userProfile?.createdAt || new Date(user.metadata.creationTime || Date.now()),
+                lastLoginAt: userProfile?.lastLoginAt || new Date(user.metadata.lastSignInTime || Date.now()),
                 isActive: userProfile?.isActive ?? true,
               };
               
@@ -285,6 +286,9 @@ export const useUserStore = create<UserState>()(
               return { error };
             }
             
+            // Clear auth cookies
+            clearAuthCookies();
+            
             set({
               user: null,
               firebaseUser: null,
@@ -318,8 +322,8 @@ export const useUserStore = create<UserState>()(
             });
           }, 5000); // 5 second timeout
           
-          const authService = AuthService.getInstance();
-          const unsubscribe = authService.onAuthStateChanged((firebaseUser) => {
+          // Use cookie-based auth initialization
+          const unsubscribe = initializeAuthWithCookies((firebaseUser) => {
             console.log('UserStore: onAuthStateChanged called with user:', firebaseUser);
             clearTimeout(timeoutId); // Clear timeout when auth state changes
             
@@ -328,20 +332,21 @@ export const useUserStore = create<UserState>()(
               // Handle async user profile fetching properly
               const fetchUserProfile = async () => {
                 try {
+                  const authService = AuthService.getInstance();
                   const userProfile = await authService.getUserProfile(firebaseUser.uid);
                   console.log('UserStore: User profile fetched:', userProfile);
                   
                   // Map Firebase user to our User type with real data
                   const mappedUser: User = {
                     id: firebaseUser.uid,
-                    email: firebaseUser.email,
+                    email: firebaseUser.email || '',
                     firstName: userProfile?.firstName || firebaseUser.displayName?.split(' ')[0] || '',
                     lastName: userProfile?.lastName || firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
                     phone: userProfile?.phone,
                     organization: userProfile?.organization,
                     role: userProfile?.role || (firebaseUser.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
-                    createdAt: userProfile?.createdAt || firebaseUser.createdAt,
-                    lastLoginAt: userProfile?.lastLoginAt || firebaseUser.lastLoginAt,
+                    createdAt: userProfile?.createdAt || new Date(firebaseUser.metadata.creationTime || Date.now()),
+                    lastLoginAt: userProfile?.lastLoginAt || new Date(firebaseUser.metadata.lastSignInTime || Date.now()),
                     isActive: userProfile?.isActive ?? true,
                   };
                   
@@ -357,12 +362,12 @@ export const useUserStore = create<UserState>()(
                   // Fallback to Firebase Auth data only
                   const mappedUser: User = {
                     id: firebaseUser.uid,
-                    email: firebaseUser.email,
+                    email: firebaseUser.email || '',
                     firstName: firebaseUser.displayName?.split(' ')[0] || '',
                     lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
                     role: firebaseUser.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user',
-                    createdAt: firebaseUser.createdAt,
-                    lastLoginAt: firebaseUser.lastLoginAt,
+                    createdAt: new Date(firebaseUser.metadata.creationTime || Date.now()),
+                    lastLoginAt: new Date(firebaseUser.metadata.lastSignInTime || Date.now()),
                     isActive: true,
                   };
                   

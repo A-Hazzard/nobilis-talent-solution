@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Analytics } from '@/shared/types/entities';
 import type { DashboardState, DashboardActions } from '@/lib/types/hooks';
 import { analyticsApi } from '@/lib/helpers/api';
 import { FakeDataService } from '@/lib/services/FakeDataService';
@@ -29,7 +28,10 @@ export function useDashboard(): [DashboardState, DashboardActions] {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      if (isFakeDataEnabled) {
+      // Check if we should use fake data (either fake data enabled or demo mode)
+      const shouldUseFakeData = isFakeDataEnabled;
+      
+      if (shouldUseFakeData) {
         // Use fake data
         const fakeAnalytics = fakeDataService.generateFakeAnalytics();
         const fakeRecentActivity = fakeDataService.generateFakeRecentActivity();
@@ -45,7 +47,7 @@ export function useDashboard(): [DashboardState, DashboardActions] {
         if (response.success && response.data) {
           setState(prev => ({
             ...prev,
-            analytics: response.data as Analytics,
+            analytics: response.data!.analytics,
             recentActivity: [],
           }));
         } else {
@@ -56,9 +58,11 @@ export function useDashboard(): [DashboardState, DashboardActions] {
             analytics: {
               totalLeads: 0,
               leadsThisMonth: 0,
-              conversionRate: 0,
               totalRevenue: 0,
               revenueThisMonth: 0,
+              totalBonuses: 0,
+              bonusesThisMonth: 0,
+              totalInvoices: 0,
               activeUsers: 0,
               resourceDownloads: 0,
               topResources: [],
@@ -68,45 +72,61 @@ export function useDashboard(): [DashboardState, DashboardActions] {
           }));
         }
 
-        // Fetch real recent activity from Firestore
+        // Fetch real recent activity from Firestore audit-logs collection (limit to 5)
         try {
-          const q = query(collection(db, 'adminLogs'), orderBy('timestamp', 'desc'), limit(10));
+          const q = query(collection(db, 'audit-logs'), orderBy('createdAt', 'desc'), limit(5));
           const snapshot = await getDocs(q);
           const recentActivity = snapshot.docs.map(doc => {
             const data = doc.data();
+            
+            // Parse details if it's a JSON string
+            let parsedDetails = null;
+            if (data.details) {
+              try {
+                parsedDetails = typeof data.details === 'string' ? JSON.parse(data.details) : data.details;
+              } catch {
+                console.warn('Failed to parse details:', data.details);
+                parsedDetails = { title: data.details };
+              }
+            }
+            
             return {
               action: data.action,
               entity: data.entity,
               entityId: data.entityId,
-              entityTitle: data.details?.title || data.entityId || '',
-              time: formatTimeAgo(new Date(data.timestamp)),
+              entityTitle: parsedDetails?.title || data.entityId || '',
+              time: formatTimeAgo(new Date(data.timestamp || data.createdAt?.toDate?.() || Date.now())),
               userEmail: data.userEmail,
-              timestamp: data.timestamp,
+              timestamp: data.timestamp || data.createdAt?.toDate?.() || Date.now(),
+              details: parsedDetails,
             };
           });
           setState(prev => ({ ...prev, recentActivity }));
-        } catch {
+        } catch (error) {
+          console.error('Error loading recent activity:', error);
           setState(prev => ({ ...prev, recentActivity: [] }));
         }
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
-      setState(prev => ({ 
-        ...prev, 
-        error: 'Failed to load dashboard data',
-        analytics: {
-          totalLeads: 0,
-          leadsThisMonth: 0,
-          conversionRate: 0,
-          totalRevenue: 0,
-          revenueThisMonth: 0,
-          activeUsers: 0,
-          resourceDownloads: 0,
-          topResources: [],
-          leadSources: [],
-        },
-        recentActivity: [],
-      }));
+              setState(prev => ({ 
+          ...prev, 
+          error: 'Failed to load dashboard data',
+          analytics: {
+            totalLeads: 0,
+            leadsThisMonth: 0,
+            totalRevenue: 0,
+            revenueThisMonth: 0,
+            totalBonuses: 0,
+            bonusesThisMonth: 0,
+            totalInvoices: 0,
+            activeUsers: 0,
+            resourceDownloads: 0,
+            topResources: [],
+            leadSources: [],
+          },
+          recentActivity: [],
+        }));
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
@@ -119,36 +139,42 @@ export function useDashboard(): [DashboardState, DashboardActions] {
   const getStats = useCallback(() => {
     if (!state.analytics) return [];
 
+    // Helper function to safely format numbers
+    const safeFormatNumber = (value: number | undefined | null): string => {
+      const num = Number(value || 0);
+      return isNaN(num) ? '0' : num.toLocaleString();
+    };
+
     return [
       {
         title: 'Total Leads',
-        value: state.analytics.totalLeads,
-        change: state.analytics.leadsThisMonth,
+        value: state.analytics.totalLeads || 0,
+        change: state.analytics.leadsThisMonth || 0,
         icon: 'users',
         color: 'text-blue-600',
         bgColor: 'bg-blue-100',
       },
       {
-        title: 'Conversion Rate',
-        value: `${state.analytics.conversionRate}%`,
-        change: '+2.5%',
-        icon: 'trending-up',
-        color: 'text-green-600',
-        bgColor: 'bg-green-100',
-      },
-      {
         title: 'Total Revenue',
-        value: `$${state.analytics.totalRevenue.toLocaleString()}`,
-        change: `$${state.analytics.revenueThisMonth.toLocaleString()}`,
+        value: `$${safeFormatNumber(state.analytics.totalRevenue)}`,
+        change: `$${safeFormatNumber(state.analytics.revenueThisMonth)}`,
         icon: 'dollar-sign',
         color: 'text-purple-600',
         bgColor: 'bg-purple-100',
       },
       {
-        title: 'Active Users',
-        value: state.analytics.activeUsers,
-        change: '+12',
-        icon: 'users',
+        title: 'Total Bonuses',
+        value: `$${safeFormatNumber(state.analytics.totalBonuses)}`,
+        change: `$${safeFormatNumber(state.analytics.bonusesThisMonth)}`,
+        icon: 'gift',
+        color: 'text-green-600',
+        bgColor: 'bg-green-100',
+      },
+      {
+        title: 'Paid Invoices',
+        value: state.analytics.totalInvoices || 0,
+        change: 'This month',
+        icon: 'file-text',
         color: 'text-orange-600',
         bgColor: 'bg-orange-100',
       },

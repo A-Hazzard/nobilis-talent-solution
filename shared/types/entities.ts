@@ -139,9 +139,11 @@ export type Testimonial = {
 export type Analytics = {
   totalLeads: number;
   leadsThisMonth: number;
-  conversionRate: number;
   totalRevenue: number;
   revenueThisMonth: number;
+  totalBonuses: number;
+  bonusesThisMonth: number;
+  totalInvoices: number;
   activeUsers: number;
   resourceDownloads: number;
   topResources: Array<{

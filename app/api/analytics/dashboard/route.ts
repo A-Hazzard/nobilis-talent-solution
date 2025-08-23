@@ -37,12 +37,14 @@ export async function GET(request: NextRequest) {
         downloads: resource.downloadCount
       }));
 
-    // Revenue from paid invoices and completed pending payments
+    // Revenue and bonus calculations from completed payments and invoices
     let totalRevenue = 0;
     let revenueThisMonth = 0;
-    let completedCount = 0;
+    let totalBonuses = 0;
+    let bonusesThisMonth = 0;
+    let totalInvoices = 0;
 
-    // Pending payments (completed)
+    // Pending payments (completed) - includes base amounts and bonuses
     try {
       const completedPaymentsQ = query(
         collection(db, 'pendingPayments'),
@@ -51,17 +53,23 @@ export async function GET(request: NextRequest) {
       const completedSnap = await getDocs(completedPaymentsQ);
       completedSnap.forEach((doc) => {
         const data: any = doc.data();
-        const amount = Number(data.baseAmount || 0);
-        totalRevenue += amount;
-        completedCount += 1;
+        const baseAmount = Number(data.baseAmount || 0);
+        const bonusAmount = Number(data.bonusAmount || 0);
+        
+        totalRevenue += baseAmount;
+        totalBonuses += bonusAmount;
+        
         const created = data.updatedAt?.toDate?.() || data.createdAt?.toDate?.() || new Date(0);
-        if (created >= thisMonth) revenueThisMonth += amount;
+        if (created >= thisMonth) {
+          revenueThisMonth += baseAmount;
+          bonusesThisMonth += bonusAmount;
+        }
       });
     } catch {
       // ignore errors; default to 0
     }
 
-    // Invoices (paid)
+    // Invoices (paid) - count all invoices and add to revenue
     try {
       const paidInvoicesQ = query(
         collection(db, 'invoices'),
@@ -72,7 +80,8 @@ export async function GET(request: NextRequest) {
         const data: any = doc.data();
         const amount = Number(data.total || 0);
         totalRevenue += amount;
-        completedCount += 1;
+        totalInvoices += 1;
+        
         const paidAt = data.paidAt?.toDate?.() || data.updatedAt?.toDate?.() || data.createdAt?.toDate?.() || new Date(0);
         if (paidAt >= thisMonth) revenueThisMonth += amount;
       });
@@ -80,18 +89,34 @@ export async function GET(request: NextRequest) {
       // ignore errors; default to 0
     }
 
-    // Cap conversion rate at 100% to avoid unrealistic percentages when
-    // payments are not directly tied to leads or when historical payments
-    // exceed current lead count
-    const rawConversion = totalLeads > 0 ? Math.round((completedCount / totalLeads) * 100) : 0;
-    const conversionRate = Math.max(0, Math.min(100, rawConversion));
+    // Count all invoices and paid invoices separately
+    try {
+      const allInvoicesQ = query(collection(db, 'invoices'));
+      const allInvoicesSnap = await getDocs(allInvoicesQ);
+      totalInvoices = allInvoicesSnap.size;
+      
+      // Count paid invoices
+      const paidInvoicesQ = query(
+        collection(db, 'invoices'),
+        where('status', '==', 'paid')
+      );
+      const paidInvoicesSnap = await getDocs(paidInvoicesQ);
+      const paidInvoicesCount = paidInvoicesSnap.size;
+      
+      // Update totalInvoices to show paid count instead of total count
+      totalInvoices = paidInvoicesCount;
+    } catch {
+      // ignore errors; default to 0
+    }
 
     const analytics = {
       totalLeads,
       leadsThisMonth,
-      conversionRate,
       totalRevenue,
       revenueThisMonth,
+      totalBonuses,
+      bonusesThisMonth,
+      totalInvoices,
       activeUsers: totalLeads,
       resourceDownloads: allResources.reduce((sum, resource) => sum + resource.downloadCount, 0),
       topResources,

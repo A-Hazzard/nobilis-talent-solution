@@ -3,15 +3,17 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import logo from '@/public/assets/logo-transparent.png';
 import { 
   LayoutDashboard, 
   Users, 
   FileText, 
   Calendar, 
   MessageSquare, 
-  Settings, 
   BarChart3,
-  Receipt
+  Receipt,
+  Activity
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -51,9 +53,9 @@ const sidebarItems = [
     icon: Receipt,
   },
   {
-    title: 'Settings',
-    href: '/admin/settings',
-    icon: Settings,
+    title: 'Audit Logs',
+    href: '/admin/audit',
+    icon: Activity,
   },
 ];
 
@@ -61,12 +63,12 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col w-64 bg-white border-r border-gray-200">
-      <div className="flex items-center h-16 px-6 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-900">Admin Panel</h1>
+    <div className="flex flex-col w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
+      <div className="flex items-center justify-center h-16 px-6 border-b border-gray-200">
+        <Image src={logo} alt="Nobilis Talent Solutions" width={40} height={40} />
       </div>
       
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {sidebarItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -82,8 +84,8 @@ export function AdminSidebar() {
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
               )}
             >
-              <Icon className="mr-3 h-5 w-5" />
-              {item.title}
+              <Icon className="mr-3 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="truncate">{item.title}</span>
             </Link>
           );
         })}

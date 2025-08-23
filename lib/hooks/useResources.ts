@@ -3,6 +3,7 @@ import type { Resource } from '@/shared/types/entities';
 import type { ResourceFormData, ResourcesState, ResourcesActions } from '@/lib/types/hooks';
 import { ResourcesService } from '@/lib/services/ResourcesService';
 import { toast } from 'sonner';
+import { logAuditAction } from '@/lib/utils/auditUtils';
 
 /**
  * Custom hook for resources state management
@@ -107,6 +108,21 @@ export function useResources(): [ResourcesState, ResourcesActions] {
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        await logAuditAction({
+          action: 'create',
+          entity: 'resource',
+          entityId: response.id,
+          timestamp: Date.now(),
+          details: {
+            title: `Resource created: ${formData.title}`,
+            resourceTitle: formData.title,
+            resourceType: formData.type,
+            resourceCategory: formData.category,
+            isPublic: formData.isPublic,
+          },
+        });
+        
         toast.success("Resource added successfully");
         setState(prev => ({ 
           ...prev, 
@@ -155,6 +171,22 @@ export function useResources(): [ResourcesState, ResourcesActions] {
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        await logAuditAction({
+          action: 'update',
+          entity: 'resource',
+          entityId: editingResource.id,
+          timestamp: Date.now(),
+          details: {
+            title: `Resource updated: ${formData.title}`,
+            resourceTitle: formData.title,
+            resourceType: formData.type,
+            resourceCategory: formData.category,
+            isPublic: formData.isPublic,
+            previousTitle: editingResource.title,
+          },
+        });
+        
         toast.success("Resource updated successfully");
         setState(prev => ({ 
           ...prev, 
@@ -191,17 +223,36 @@ export function useResources(): [ResourcesState, ResourcesActions] {
     if (!confirm('Are you sure you want to delete this resource?')) return;
     
     try {
+      // Get resource details before deletion for audit log
+      const resourceToDelete = state.resources.find(resource => resource.id === id);
+      
       const response = await resourcesService.delete(id);
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        if (resourceToDelete) {
+          await logAuditAction({
+            action: 'delete',
+            entity: 'resource',
+            entityId: id,
+            timestamp: Date.now(),
+            details: {
+              title: `Resource deleted: ${resourceToDelete.title}`,
+              resourceTitle: resourceToDelete.title,
+              resourceType: resourceToDelete.type,
+              resourceCategory: resourceToDelete.category,
+            },
+          });
+        }
+        
         toast.success("Resource deleted successfully");
         await loadResources();
       }
     } catch {
       toast.error("Failed to delete resource");
     }
-  }, [resourcesService, loadResources]);
+  }, [resourcesService, loadResources, state.resources]);
 
   const openEditDialog = useCallback((resource: Resource) => {
     setState(prev => ({

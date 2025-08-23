@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
@@ -13,22 +13,26 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const { isLoading, isAuthenticated, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && pathname !== '/login') {
-      // Use router.push for client-side navigation
+    // Only check if we're on a protected route and not already authenticated
+    if (!isLoading && !isAuthenticated && pathname.startsWith('/admin')) {
       router.push('/login');
+      return;
     }
-  }, [isLoading, isAuthenticated, router, pathname]);
 
-  // Redirect non-admin users away from admin pages to a friendly access denied page
-  useEffect(() => {
+    // Check admin role for admin routes
     if (!isLoading && isAuthenticated && user && pathname.startsWith('/admin') && user.role !== 'admin') {
       router.push('/access-denied');
+      return;
     }
+
+    setIsChecking(false);
   }, [isLoading, isAuthenticated, user, router, pathname]);
 
-  if (isLoading) {
+  // Show loading spinner only briefly while checking
+  if (isLoading || isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -39,8 +43,14 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  if (!isAuthenticated) {
-    return null; // Will redirect to login
+  // If not authenticated and on a protected route, middleware will handle redirect
+  if (!isAuthenticated && pathname.startsWith('/admin')) {
+    return null;
+  }
+
+  // If authenticated but not admin on admin routes, show access denied
+  if (isAuthenticated && user && pathname.startsWith('/admin') && user.role !== 'admin') {
+    return null; // Will redirect to access denied
   }
 
   return <>{children}</>;

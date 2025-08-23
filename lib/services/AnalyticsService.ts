@@ -34,9 +34,7 @@ export class AnalyticsService {
         this.resourcesService.getStats(),
       ]);
 
-      // Conversion approximated: completed payments + paid invoices over total leads
-      // These are computed server-side; keep 0 here since getDashboardAnalytics uses API now.
-      const conversionRate = 0;
+
 
       // Calculate period-specific leads (mock calculation - in real app would filter by date)
       let leadsThisPeriod = Math.round(leadsStats.total * 0.3); // 30% of total for demo
@@ -67,9 +65,11 @@ export class AnalyticsService {
       const analytics: Analytics = {
         totalLeads: leadsStats.total,
         leadsThisMonth: leadsThisPeriod, // Using period-specific leads
-        conversionRate,
         totalRevenue,
         revenueThisMonth: revenueThisPeriod, // Using period-specific revenue
+        totalBonuses: 0, // Will be calculated from payments
+        bonusesThisMonth: 0, // Will be calculated from payments
+        totalInvoices: 0, // Will be calculated from invoices
         activeUsers: leadsStats.total, // Using total leads as active users
         resourceDownloads: resourcesStats.totalDownloads,
         topResources,
@@ -83,9 +83,11 @@ export class AnalyticsService {
         data: {
           totalLeads: 0,
           leadsThisMonth: 0,
-          conversionRate: 0,
           totalRevenue: 0,
           revenueThisMonth: 0,
+          totalBonuses: 0,
+          bonusesThisMonth: 0,
+          totalInvoices: 0,
           activeUsers: 0,
           resourceDownloads: 0,
           topResources: [],

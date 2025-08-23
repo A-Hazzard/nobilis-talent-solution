@@ -1,17 +1,16 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  ResponsiveTable,
+  ResponsiveBadge,
+  ResponsiveAvatar,
+  ResponsiveText,
+  ResponsiveSecondaryText,
+} from '@/components/ui/responsive-table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,105 +57,173 @@ export function TestimonialsTable({
 
 
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>All Testimonials ({testimonials.length})</CardTitle>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <div className="w-full">
-          <Table className="w-full">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[180px]">Client</TableHead>
-                <TableHead className="hidden md:table-cell w-[120px]">Company</TableHead>
-                <TableHead className="w-[80px]">Rating</TableHead>
-                <TableHead className="min-w-[250px] max-w-[400px]">Content</TableHead>
-                <TableHead className="w-[100px]">Status</TableHead>
-                <TableHead className="hidden sm:table-cell w-[100px]">Date</TableHead>
-                <TableHead className="w-[50px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {testimonials.map((testimonial) => (
-                <TableRow key={testimonial.id} data-testimonial-id={testimonial.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                        <AvatarFallback className="text-xs sm:text-sm">
-                          {testimonial.clientName.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-gray-900 truncate text-sm sm:text-base">{testimonial.clientName}</p>
-                        <p className="text-xs sm:text-sm text-gray-500 truncate md:hidden">{testimonial.company}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Badge variant="outline" className="text-xs">{testimonial.company}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      {renderStars(testimonial.rating).map((filled, i) => (
-                        <Star
-                          key={`star-${testimonial.rating}-${i}`}
-                          className={`h-3 w-3 sm:h-4 sm:w-4 ${
-                            filled ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                      <span className="text-xs sm:text-sm text-gray-500 ml-1">({testimonial.rating})</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-xs sm:text-sm text-gray-600 truncate max-w-[200px] sm:max-w-[300px] lg:max-w-[400px] xl:max-w-[500px]">
-                      {testimonial.content}
-                    </p>
-                  </TableCell>
-                  <TableCell>
-                    <div className="hidden sm:block">
-                      {renderStatusBadge(testimonial.isPublic)}
-                    </div>
-                    <div className="sm:hidden">
-                      <Badge variant={testimonial.isPublic ? "default" : "secondary"} className="text-xs">
-                        {testimonial.isPublic ? "Published" : "Draft"}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <span className="text-xs sm:text-sm text-gray-500">
-                      {formatDate(testimonial.createdAt)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(testimonial)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-red-600"
-                          onClick={() => onDelete(testimonial.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+  const columns = [
+    {
+      key: 'client',
+      label: 'Client',
+      render: (testimonial: Testimonial) => (
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+            <AvatarFallback className="text-xs sm:text-sm">
+              {testimonial.clientName.split(' ').map(n => n[0]).join('')}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-gray-900 truncate text-sm sm:text-base">{testimonial.clientName}</p>
+            <p className="text-xs sm:text-sm text-gray-500 truncate md:hidden">{testimonial.company}</p>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      ),
+      mobileRender: (testimonial: Testimonial) => (
+        <div className="flex items-center space-x-3">
+          <ResponsiveAvatar fallback={testimonial.clientName.split(' ').map(n => n[0]).join('')} />
+          <div className="min-w-0 flex-1">
+            <ResponsiveText className="font-medium">{testimonial.clientName}</ResponsiveText>
+            <ResponsiveSecondaryText>{testimonial.company}</ResponsiveSecondaryText>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'company',
+      label: 'Company',
+      render: (testimonial: Testimonial) => (
+        <Badge variant="outline" className="text-xs">{testimonial.company}</Badge>
+      ),
+      mobileRender: (testimonial: Testimonial) => (
+        <ResponsiveBadge variant="outline">{testimonial.company}</ResponsiveBadge>
+      ),
+      hideOnMobile: true,
+    },
+    {
+      key: 'rating',
+      label: 'Rating',
+      render: (testimonial: Testimonial) => (
+        <div className="flex items-center space-x-1">
+          {renderStars(testimonial.rating).map((filled, i) => (
+            <Star
+              key={`star-${testimonial.rating}-${i}`}
+              className={`h-3 w-3 sm:h-4 sm:w-4 ${
+                filled ? 'text-yellow-400 fill-current' : 'text-gray-300'
+              }`}
+            />
+          ))}
+          <span className="text-xs sm:text-sm text-gray-500 ml-1">({testimonial.rating})</span>
+        </div>
+      ),
+      mobileRender: (testimonial: Testimonial) => (
+        <div className="flex items-center space-x-1">
+          {renderStars(testimonial.rating).map((filled, i) => (
+            <Star
+              key={`star-${testimonial.rating}-${i}`}
+              className={`h-3 w-3 ${
+                filled ? 'text-yellow-400 fill-current' : 'text-gray-300'
+              }`}
+            />
+          ))}
+          <span className="text-xs text-gray-500 ml-1">({testimonial.rating})</span>
+        </div>
+      ),
+    },
+    {
+      key: 'content',
+      label: 'Content',
+      render: (testimonial: Testimonial) => (
+        <p className="text-xs sm:text-sm text-gray-600 truncate max-w-[200px] sm:max-w-[300px] lg:max-w-[400px] xl:max-w-[500px]">
+          {testimonial.content}
+        </p>
+      ),
+      mobileRender: (testimonial: Testimonial) => (
+        <ResponsiveText className="line-clamp-3">{testimonial.content}</ResponsiveText>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (testimonial: Testimonial) => (
+        <div className="hidden sm:block">
+          {renderStatusBadge(testimonial.isPublic)}
+        </div>
+      ),
+      mobileRender: (testimonial: Testimonial) => (
+        <ResponsiveBadge variant={testimonial.isPublic ? "default" : "secondary"}>
+          {testimonial.isPublic ? "Published" : "Draft"}
+        </ResponsiveBadge>
+      ),
+    },
+    {
+      key: 'date',
+      label: 'Date',
+      render: (testimonial: Testimonial) => (
+        <span className="text-xs sm:text-sm text-gray-500">
+          {formatDate(testimonial.createdAt)}
+        </span>
+      ),
+      mobileRender: (testimonial: Testimonial) => (
+        <ResponsiveSecondaryText>{formatDate(testimonial.createdAt)}</ResponsiveSecondaryText>
+      ),
+      hideOnMobile: true,
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (testimonial: Testimonial) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(testimonial)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="text-red-600"
+              onClick={() => onDelete(testimonial.id)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+      mobileRender: (testimonial: Testimonial) => (
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(testimonial);
+            }}
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            Edit
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(testimonial.id);
+            }}
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <ResponsiveTable
+      data={testimonials}
+      columns={columns}
+      title={`All Testimonials (${testimonials.length})`}
+      className="space-y-4"
+    />
   );
 } 

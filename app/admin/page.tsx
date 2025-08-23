@@ -44,16 +44,17 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome to your admin dashboard</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Welcome to your admin dashboard</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
           <Button
             variant={period === 'week' ? 'default' : 'outline'}
             size="sm"
             onClick={() => actions.setPeriod('week')}
+            className="text-xs sm:text-sm"
           >
             Week
           </Button>
@@ -61,6 +62,7 @@ export default function AdminDashboardPage() {
             variant={period === 'month' ? 'default' : 'outline'}
             size="sm"
             onClick={() => actions.setPeriod('month')}
+            className="text-xs sm:text-sm"
           >
             Month
           </Button>
@@ -68,6 +70,7 @@ export default function AdminDashboardPage() {
             variant={period === 'year' ? 'default' : 'outline'}
             size="sm"
             onClick={() => actions.setPeriod('year')}
+            className="text-xs sm:text-sm"
           >
             Year
           </Button>
@@ -103,12 +106,12 @@ export default function AdminDashboardPage() {
       {/* Charts */}
       <DashboardCharts period={period} />
 
-      {/* Recent Activity Section */}
+            {/* Recent Activity Section */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-        <div className="bg-white rounded-lg shadow p-4">
+        <h2 className="text-lg sm:text-xl font-semibold mb-4">Recent Activity</h2>
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4">
           {recentActivity.length === 0 ? (
-            <p className="text-gray-500">No recent activity found.</p>
+            <p className="text-gray-500 text-center py-4">No recent activity found.</p>
           ) : (
             <ul className="divide-y divide-gray-200">
               {recentActivity.map((activity, idx) => {
@@ -116,36 +119,38 @@ export default function AdminDashboardPage() {
                 const actionIcon = getActionIcon(activity.action);
                 
                 return (
-                  <li key={idx} className="py-3 flex items-center gap-3">
+                  <li key={idx} className="py-3 flex items-start gap-3">
                     {/* Entity Icon */}
                     <div className={`flex-shrink-0 p-2 rounded-lg ${entityIcon.bgColor}`}>
                       <entityIcon.Icon className={`h-4 w-4 ${entityIcon.color}`} />
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                         {/* Action Badge */}
                         <Badge className={`flex items-center gap-1 text-xs ${getActionBadgeColors(activity.action)}`}>
                           <actionIcon.Icon className="h-3 w-3" />
-                          {activity.action.toUpperCase()}
+                          <span className="hidden sm:inline">{activity.action.toUpperCase()}</span>
+                          <span className="sm:hidden">{activity.action}</span>
                         </Badge>
                         
                         {/* Entity Type Badge */}
                         <Badge className={`flex items-center gap-1 text-xs ${getEntityTypeBadgeColors(activity.entity)}`}>
                           <entityIcon.Icon className="h-3 w-3" />
-                          {activity.entity.toUpperCase()}
+                          <span className="hidden sm:inline">{activity.entity.toUpperCase()}</span>
+                          <span className="sm:hidden capitalize">{activity.entity}</span>
                         </Badge>
                       </div>
                       
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 break-words">
                         {getActivityDescription(activity)}
                       </p>
                       
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 mt-1 break-all">
                         {activity.time}
                       </p>
                     </div>
-                </li>
+                  </li>
                 );
               })}
             </ul>

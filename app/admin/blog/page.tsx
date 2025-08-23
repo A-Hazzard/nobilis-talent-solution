@@ -55,6 +55,7 @@ import { BlogService } from '@/lib/services/BlogService';
 import { ResourcesService } from '@/lib/services/ResourcesService';
 import { toast } from 'sonner';
 import type { BlogPost, Resource } from '@/shared/types/entities';
+import { logAuditAction } from '@/lib/utils/auditUtils';
 import dynamic from 'next/dynamic';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/lib/firebase/config';
@@ -289,6 +290,21 @@ export default function ContentPage() {
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        await logAuditAction({
+          action: 'create',
+          entity: 'blog',
+          entityId: response.id,
+          timestamp: Date.now(),
+          details: {
+            title: `Blog post created: ${formData.title}`,
+            postTitle: formData.title,
+            postCategory: formData.category,
+            postStatus: formData.status,
+            postAuthor: formData.authorName,
+          },
+        });
+        
         toast.success("Blog post created successfully");
         setIsAddDialogOpen(false);
         resetForm();
@@ -316,6 +332,22 @@ export default function ContentPage() {
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        await logAuditAction({
+          action: 'update',
+          entity: 'blog',
+          entityId: editingPost.id,
+          timestamp: Date.now(),
+          details: {
+            title: `Blog post updated: ${formData.title}`,
+            postTitle: formData.title,
+            postCategory: formData.category,
+            postStatus: formData.status,
+            postAuthor: formData.authorName,
+            previousTitle: editingPost.title,
+          },
+        });
+        
         toast.success("Blog post updated successfully");
         setIsEditDialogOpen(false);
         setEditingPost(null);
@@ -333,10 +365,29 @@ export default function ContentPage() {
     if (!confirm('Are you sure you want to delete this blog post?')) return;
     
     try {
+      // Get post details before deletion for audit log
+      const postToDelete = posts.find(post => post.id === id);
+      
       const response = await blogService.delete(id);
       if (response.error) {
         toast.error(response.error);
       } else {
+        // Log audit action
+        if (postToDelete) {
+          await logAuditAction({
+            action: 'delete',
+            entity: 'blog',
+            entityId: id,
+            timestamp: Date.now(),
+            details: {
+              title: `Blog post deleted: ${postToDelete.title}`,
+              postTitle: postToDelete.title,
+              postCategory: postToDelete.category,
+              postAuthor: postToDelete.authorName,
+            },
+          });
+        }
+        
         toast.success("Blog post deleted successfully");
         loadData();
       }

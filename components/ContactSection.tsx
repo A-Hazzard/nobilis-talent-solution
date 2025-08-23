@@ -80,7 +80,7 @@ const ContactSection = () => {
   };
   
   return (
-    <section id="contact" className="py-16 lg:py-32 bg-background">
+    <section id="contact" className="py-16 lg:py-32 bg-background overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16 animate-fade-up">
@@ -93,12 +93,12 @@ const ContactSection = () => {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 max-w-full">
           {/* Contact Form */}
-          <div className="animate-fade-up order-2 lg:order-1">
-            <div className="card-feature p-6 sm:p-8">
+          <div className="animate-fade-up order-2 lg:order-1 min-w-0">
+            <div className="card-feature p-4 sm:p-6 lg:p-8 max-w-full">
               <div className="flex items-center mb-6 lg:mb-8">
-                <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3" />
+                <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3 flex-shrink-0" />
                 <h3 className="text-xl sm:text-2xl font-bold text-accent">Book Your Strategy Session</h3>
               </div>
 
@@ -121,9 +121,9 @@ const ContactSection = () => {
                 </Alert>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 max-w-full">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                  <div className="min-w-0">
                     <Label htmlFor="firstName" className="text-accent text-sm sm:text-base">
                       First Name *
                     </Label>
@@ -134,11 +134,11 @@ const ContactSection = () => {
                       required
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="mt-1 h-12 sm:h-14 text-base"
+                      className="mt-1 h-12 sm:h-14 text-base w-full"
                       placeholder="John"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <Label htmlFor="lastName" className="text-accent text-sm sm:text-base">
                       Last Name *
                     </Label>
@@ -149,13 +149,13 @@ const ContactSection = () => {
                       required
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className="mt-1 h-12 sm:h-14 text-base"
+                      className="mt-1 h-12 sm:h-14 text-base w-full"
                       placeholder="Smith"
                     />
                   </div>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <Label htmlFor="email" className="text-accent text-sm sm:text-base">
                     Email Address *
                   </Label>
@@ -166,12 +166,12 @@ const ContactSection = () => {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="mt-1 h-12 sm:h-14 text-base"
+                    className="mt-1 h-12 sm:h-14 text-base w-full"
                     placeholder="john@company.com"
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <Label htmlFor="phone" className="text-accent text-sm sm:text-base">
                     Phone Number
                   </Label>
@@ -181,12 +181,12 @@ const ContactSection = () => {
                     type="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="mt-1 h-12 sm:h-14 text-base"
+                    className="mt-1 h-12 sm:h-14 text-base w-full"
                     placeholder="(555) 123-4567"
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <Label htmlFor="company" className="text-accent text-sm sm:text-base">
                     Company Name
                   </Label>
@@ -196,12 +196,12 @@ const ContactSection = () => {
                     type="text"
                     value={formData.company}
                     onChange={handleInputChange}
-                    className="mt-1 h-12 sm:h-14 text-base"
+                    className="mt-1 h-12 sm:h-14 text-base w-full"
                     placeholder="Your Company"
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <Label htmlFor="challenges" className="text-accent text-sm sm:text-base">
                     What leadership challenges are you facing? *
                   </Label>
@@ -212,12 +212,12 @@ const ContactSection = () => {
                     rows={4}
                     value={formData.challenges}
                     onChange={handleInputChange}
-                    className="mt-1 text-base resize-none"
+                    className="mt-1 text-base resize-none w-full"
                     placeholder="Tell us about your specific leadership challenges, team dynamics, or organizational goals..."
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <Label className="text-accent text-sm sm:text-base mb-3 block">
                     Preferred Contact Method
                   </Label>
@@ -273,10 +273,10 @@ const ContactSection = () => {
           </div>
 
           {/* Contact Information */}
-          <div className="animate-fade-up order-1 lg:order-2" style={{ animationDelay: '0.2s' }}>
+          <div className="animate-fade-up order-1 lg:order-2 min-w-0" style={{ animationDelay: '0.2s' }}>
             <div className="space-y-6 lg:space-y-8">
               {/* Contact Details */}
-              <div className="card-elevated p-6 sm:p-8">
+              <div className="card-elevated p-4 sm:p-6 lg:p-8 max-w-full">
                 <h3 className="text-xl sm:text-2xl font-bold text-accent mb-6">Get In Touch</h3>
                 
                 <div className="space-y-4 sm:space-y-6">
@@ -317,9 +317,9 @@ const ContactSection = () => {
               </div>
 
               {/* Response Time */}
-              <div className="card-elevated bg-gradient-subtle p-6 sm:p-8">
+              <div className="card-elevated bg-gradient-subtle p-4 sm:p-6 lg:p-8 max-w-full">
                 <div className="flex items-center mb-4">
-                  <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3" />
+                  <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3 flex-shrink-0" />
                   <h4 className="text-lg sm:text-xl font-bold text-accent">Quick Response</h4>
                 </div>
                 <p className="text-muted-foreground mb-4 text-sm sm:text-base">
@@ -332,7 +332,7 @@ const ContactSection = () => {
               </div>
 
               {/* Calendly Integration */}
-              <div className="card-elevated bg-primary text-white p-6 sm:p-8">
+              <div className="card-elevated bg-primary text-white p-4 sm:p-6 lg:p-8 max-w-full">
                 <h4 className="text-lg sm:text-xl font-bold mb-4">Schedule Directly</h4>
                 <p className="mb-6 opacity-90 text-sm sm:text-base">
                   Prefer to book immediately? Use our online calendar to select 

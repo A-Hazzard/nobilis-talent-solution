@@ -1,4 +1,3 @@
-import { Star } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -57,13 +56,6 @@ const ServicesSection = () => {
     'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=800&fit=crop&crop=center',
   ];
 
-  const testimonialHighlight = {
-    quote: "Kareem's leadership coaching transformed our entire management approach. Our team productivity increased by 40% within the first quarter.",
-    author: "Sarah Johnson",
-    title: "CEO, TechCorp Solutions",
-    rating: 5
-  };
-
   return (
     <section id="services" className="py-20 lg:py-32 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -107,22 +99,6 @@ const ServicesSection = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Testimonial Highlight */}
-        <div className="card-elevated bg-gradient-subtle text-center max-w-4xl mx-auto hover-glow" data-animate>
-          <div className="flex justify-center mb-6">
-            {[...Array(testimonialHighlight.rating)].map((_, i) => (
-              <Star key={i} className="w-5 h-5 sm:w-6 sm:h-6 text-secondary fill-current" />
-            ))}
-          </div>
-          <blockquote className="text-xl sm:text-2xl font-medium text-accent mb-8 leading-relaxed">
-            "{testimonialHighlight.quote}"
-          </blockquote>
-          <div className="text-center">
-            <div className="font-semibold text-accent">{testimonialHighlight.author}</div>
-            <div className="text-muted-foreground">{testimonialHighlight.title}</div>
-          </div>
         </div>
 
         {/* CTA Section */}

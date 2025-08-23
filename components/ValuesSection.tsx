@@ -35,10 +35,13 @@ const ValuesSection = () => {
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-8">Values</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {values.map((v) => (
-            <Card key={v.title} className="h-full">
-              <CardHeader>
-                <CardTitle className="text-xl">{v.title}</CardTitle>
-                <CardDescription>{v.desc}</CardDescription>
+            <Card 
+              key={v.title} 
+              className="h-full transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 hover:border-primary/30 cursor-pointer group"
+            >
+              <CardHeader className="transition-colors duration-300 group-hover:bg-primary/5">
+                <CardTitle className="text-xl transition-colors duration-300 group-hover:text-primary">{v.title}</CardTitle>
+                <CardDescription className="transition-colors duration-300 group-hover:text-foreground/80">{v.desc}</CardDescription>
               </CardHeader>
             </Card>
           ))}

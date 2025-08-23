@@ -54,7 +54,7 @@ export default function CalendarGrid({
       <CardContent>
         <div className="grid grid-cols-7 gap-1 mb-4">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div key={day} className="text-center text-sm font-semibold text-gray-700 py-3 px-2 bg-gray-50 rounded">
+            <div key={day} className="text-center text-xs sm:text-sm font-semibold text-gray-700 py-2 sm:py-3 px-1 sm:px-2 bg-gray-50 rounded">
               {day}
             </div>
           ))}
@@ -63,7 +63,7 @@ export default function CalendarGrid({
         <div className="grid grid-cols-7 gap-1">
           {calendarDays.map((day, index) => {
             if (!day) {
-              return <div key={`empty-${index}`} className="min-h-[120px] p-2 border border-gray-200 bg-gray-50" />;
+              return <div key={`empty-${index}`} className="min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border border-gray-200 bg-gray-50" />;
             }
             
             const dateString = CalendarUtils.formatDate(day, currentMonth);
@@ -73,16 +73,16 @@ export default function CalendarGrid({
             return (
               <div
                 key={`day-${dateString}`}
-                className={`min-h-[120px] p-2 border border-gray-200 ${
+                className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border border-gray-200 ${
                   isToday ? 'bg-primary/10 border-primary' : ''
                 }`}
               >
-                <div className="text-sm font-medium mb-2 text-gray-900">{day}</div>
-                <div className="space-y-1 max-h-[80px] overflow-y-auto">
+                <div className="text-xs sm:text-sm font-medium mb-1 sm:mb-2 text-gray-900">{day}</div>
+                <div className="space-y-0.5 sm:space-y-1 max-h-[60px] sm:max-h-[80px] overflow-y-auto">
                   {dayEvents.map((event) => (
                     <div
                       key={event.id}
-                      className={`text-xs p-1.5 rounded border-l-4 truncate ${
+                      className={`text-xs p-1 sm:p-1.5 rounded border-l-2 sm:border-l-4 truncate ${
                         event.status === 'canceled' 
                           ? 'border-gray-400 bg-gray-100 text-gray-500 line-through' 
                           : `${CalendarUtils.getEventTypeColor(event.type)} bg-gray-50 cursor-pointer hover:bg-gray-100`
@@ -91,7 +91,7 @@ export default function CalendarGrid({
                       title={`${event.title} - ${event.time}${event.status === 'canceled' ? ' (Canceled)' : ''}`}
                     >
                       <div className="truncate flex items-center gap-1">
-                        <span className="truncate">{event.title}</span>
+                        <span className="truncate text-xs">{event.title}</span>
                         {event.status === 'canceled' && <span className="text-xs text-gray-400 ml-1">(Canceled)</span>}
                       </div>
                     </div>

@@ -195,14 +195,119 @@ export default function ClientInfoPage() {
   };
 
   const handleExport = () => {
-    const dataStr = JSON.stringify(clientInfo, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'client-info.json';
-    link.click();
-    URL.revokeObjectURL(url);
+    // Import XLSX dynamically to avoid SSR issues
+    import('xlsx').then((XLSX) => {
+      const workbook = XLSX.utils.book_new();
+      
+      // Convert client info to Excel format
+      const data = [];
+      
+      // Add header
+      data.push(['Client Information Export']);
+      data.push(['Generated on:', new Date().toLocaleDateString()]);
+      data.push([]);
+      
+      // Add company branding information
+      data.push(['COMPANY BRANDING']);
+      data.push(['Company Name', clientInfo.companyName]);
+      data.push(['Logo', clientInfo.logo]);
+      data.push(['Primary Color', clientInfo.brandColors.primary]);
+      data.push(['Secondary Color', clientInfo.brandColors.secondary]);
+      data.push(['Accent Color', clientInfo.brandColors.accent]);
+      data.push(['Brand Guidelines', clientInfo.brandGuidelines]);
+      data.push([]);
+      
+      // Add services information
+      data.push(['SERVICES']);
+      data.push(['Service Name', 'Description', 'Price', 'Duration', 'Features']);
+      clientInfo.services.forEach((service) => {
+        data.push([
+          service.name,
+          service.description,
+          `$${service.price}`,
+          service.duration,
+          service.features.join(', ')
+        ]);
+      });
+      data.push([]);
+      
+      // Add target audience information
+      data.push(['TARGET AUDIENCE']);
+      data.push(['Primary Audience', clientInfo.targetAudience.primary]);
+      data.push(['Secondary Audience', clientInfo.targetAudience.secondary]);
+      data.push(['Demographics', clientInfo.targetAudience.demographics]);
+      data.push(['Pain Points', clientInfo.targetAudience.painPoints.join(', ')]);
+      data.push(['Goals', clientInfo.targetAudience.goals.join(', ')]);
+      data.push([]);
+      
+      // Add content strategy information
+      data.push(['CONTENT STRATEGY']);
+      data.push(['Tone', clientInfo.contentStrategy.tone]);
+      data.push(['Messaging', clientInfo.contentStrategy.messaging]);
+      data.push(['Key Messages', clientInfo.contentStrategy.keyMessages.join(', ')]);
+      data.push(['Content Types', clientInfo.contentStrategy.contentTypes.join(', ')]);
+      data.push([]);
+      
+      // Add email preferences information
+      data.push(['EMAIL PREFERENCES']);
+      data.push(['Templates', clientInfo.emailPreferences.templates.join(', ')]);
+      data.push(['Branding', clientInfo.emailPreferences.branding]);
+      data.push(['Frequency', clientInfo.emailPreferences.frequency]);
+      data.push(['Automation', clientInfo.emailPreferences.automation.join(', ')]);
+      data.push([]);
+      
+      // Add payment requirements information
+      data.push(['PAYMENT REQUIREMENTS']);
+      data.push(['Methods', clientInfo.paymentRequirements.methods.join(', ')]);
+      data.push(['Currencies', clientInfo.paymentRequirements.currencies.join(', ')]);
+      data.push(['Billing', clientInfo.paymentRequirements.billing]);
+      data.push(['Refund Policy', clientInfo.paymentRequirements.refundPolicy]);
+      data.push([]);
+      
+      // Add analytics needs information
+      data.push(['ANALYTICS NEEDS']);
+      data.push(['Platforms', clientInfo.analyticsNeeds.platforms.join(', ')]);
+      data.push(['Metrics', clientInfo.analyticsNeeds.metrics.join(', ')]);
+      data.push(['Reporting', clientInfo.analyticsNeeds.reporting]);
+      data.push(['Integrations', clientInfo.analyticsNeeds.integrations.join(', ')]);
+      data.push([]);
+      
+      // Add integrations information
+      data.push(['INTEGRATIONS']);
+      data.push(['CRM', clientInfo.integrations.crm]);
+      data.push(['Calendar', clientInfo.integrations.calendar]);
+      data.push(['Email', clientInfo.integrations.email]);
+      data.push(['Payment', clientInfo.integrations.payment]);
+      data.push(['Other', clientInfo.integrations.other.join(', ')]);
+      data.push([]);
+      
+      // Add compliance information
+      data.push(['COMPLIANCE']);
+      data.push(['GDPR', clientInfo.compliance.gdpr ? 'Yes' : 'No']);
+      data.push(['HIPAA', clientInfo.compliance.hipaa ? 'Yes' : 'No']);
+      data.push(['SOX', clientInfo.compliance.sox ? 'Yes' : 'No']);
+      data.push(['Other', clientInfo.compliance.other.join(', ')]);
+      
+      // Add performance expectations
+      data.push(['PERFORMANCE EXPECTATIONS']);
+      data.push(['Load Time', clientInfo.performance.loadTime]);
+      data.push(['Uptime', clientInfo.performance.uptime]);
+      data.push(['Scalability', clientInfo.performance.scalability]);
+      data.push(['Security', clientInfo.performance.security]);
+      
+      const worksheet = XLSX.utils.aoa_to_sheet(data);
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Client Info');
+      
+      // Generate and download Excel file
+      const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'client-info.xlsx';
+      link.click();
+      URL.revokeObjectURL(url);
+    });
   };
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {

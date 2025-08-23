@@ -125,14 +125,12 @@ export class FakeDataService {
         labels: months,
         data: months.map(() => this.getRandomNumber(15, 80)),
       },
-      leadsByStatus: {
-        labels: ['New', 'Contacted', 'Qualified', 'Converted', 'Lost'],
+      revenueOverview: {
+        labels: ['Total Revenue', 'Paid Invoices', 'Total Bonuses'],
         data: [
-          this.getRandomNumber(20, 60),
-          this.getRandomNumber(15, 45),
-          this.getRandomNumber(10, 35),
-          this.getRandomNumber(5, 25),
-          this.getRandomNumber(5, 20),
+          this.getRandomNumber(50000, 200000),
+          this.getRandomNumber(30000, 150000),
+          this.getRandomNumber(5000, 25000),
         ],
       },
       leadsBySource: {

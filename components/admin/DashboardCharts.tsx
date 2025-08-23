@@ -40,7 +40,7 @@ type ChartData = {
     labels: string[];
     data: number[];
   };
-  leadsByStatus: {
+  revenueOverview: {
     labels: string[];
     data: number[];
   };
@@ -102,9 +102,9 @@ export default function DashboardCharts({ period = 'month' }: DashboardChartsPro
               labels,
               data,
             },
-            leadsByStatus: {
-              labels: ['Total Leads'],
-              data: [total],
+            revenueOverview: {
+              labels: ['Total Revenue', 'Paid Invoices', 'Total Bonuses'],
+              data: [total * 1000, Math.floor(total * 0.7 * 1000), Math.floor(total * 0.3 * 1000)],
             },
             leadsBySource: {
               labels: ['Users'],
@@ -206,8 +206,8 @@ export default function DashboardCharts({ period = 'month' }: DashboardChartsPro
           </Card>
           <Card className="lg:col-span-3">
             <CardHeader>
-              <CardTitle>Lead Status</CardTitle>
-              <CardDescription>Distribution by status</CardDescription>
+              <CardTitle>Revenue Overview</CardTitle>
+              <CardDescription>Financial performance breakdown</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[250px] lg:h-[300px] flex items-center justify-center text-muted-foreground">
@@ -258,15 +258,14 @@ export default function DashboardCharts({ period = 'month' }: DashboardChartsPro
   };
 
   const doughnutChartData = {
-    labels: chartData.leadsByStatus.labels,
+    labels: chartData.revenueOverview.labels,
     datasets: [
       {
-        data: chartData.leadsByStatus.data,
+        data: chartData.revenueOverview.data,
         backgroundColor: [
-          'rgb(59, 130, 246)',
-          'rgb(16, 185, 129)',
-          'rgb(245, 158, 11)',
-          'rgb(239, 68, 68)',
+          'rgb(59, 130, 246)', // Blue for Total Revenue
+          'rgb(16, 185, 129)', // Green for Paid Invoices
+          'rgb(245, 158, 11)', // Orange for Total Bonuses
         ],
         borderWidth: 0,
       },
@@ -300,9 +299,9 @@ export default function DashboardCharts({ period = 'month' }: DashboardChartsPro
       </Card>
       <Card className="lg:col-span-3">
         <CardHeader>
-          <CardTitle>Lead Status</CardTitle>
+          <CardTitle>Revenue Overview</CardTitle>
           <CardDescription>
-            Distribution by status
+            Financial performance breakdown
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -24,8 +24,8 @@ export default function CalendarHeader({
   onToggleInstructions,
 }: CalendarHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
         {calendlyAuthStatus === 'connecting' && (
           <Button
             variant="outline"

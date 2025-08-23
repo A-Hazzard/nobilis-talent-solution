@@ -15,6 +15,9 @@ export class EmailService {
         user: process.env.SMTP_USER || "",
         pass: process.env.SMTP_PASS || "",
       },
+      tls: {
+        rejectUnauthorized: false // This will fix the self-signed certificate issue
+      }
     });
 
     // Initialize email service
@@ -223,7 +226,7 @@ export class EmailService {
     }
   }
 
-  /**
+  /**git
    * Send welcome email
    */
   async sendWelcomeEmail(

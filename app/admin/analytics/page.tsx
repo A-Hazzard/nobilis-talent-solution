@@ -33,7 +33,7 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<DownloadAnalytics | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [recentViews, setRecentViews] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, _setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -49,7 +49,7 @@ export default function AnalyticsPage() {
   const loadAnalytics = async () => {
     try {
       const analyticsService = DownloadAnalyticsService.getInstance();
-      const response = await analyticsService.getAnalytics();
+      const response = await analyticsService.getAnalytics(timeRange);
       
       if (response.success && response.data) {
         setAnalytics(response.data);
@@ -57,7 +57,7 @@ export default function AnalyticsPage() {
     } catch (error) {
       console.error('Error loading analytics:', error);
     } finally {
-      setIsLoading(false);
+      _setIsLoading(false);
     }
   };
 
@@ -169,7 +169,7 @@ export default function AnalyticsPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `analytics-export-${timeRange}-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `analytics-export-${timeRange}-${new Date().toISOString().split('T')[0]}.xlsx`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -209,29 +209,29 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600">Track resource performance and user engagement</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Select value={timeRange} onValueChange={(value: '7d' | '30d' | '90d') => setTimeRange(value)}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Filter className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </div>
+             {/* Header */}
+       <div className="space-y-4">
+         <div>
+           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+           <p className="text-gray-600">Track resource performance and user engagement</p>
+         </div>
+         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+           <Select value={timeRange} onValueChange={(value: '7d' | '30d' | '90d') => setTimeRange(value)}>
+             <SelectTrigger className="w-full sm:w-32">
+               <SelectValue />
+             </SelectTrigger>
+             <SelectContent>
+               <SelectItem value="7d">Last 7 days</SelectItem>
+               <SelectItem value="30d">Last 30 days</SelectItem>
+               <SelectItem value="90d">Last 90 days</SelectItem>
+             </SelectContent>
+           </Select>
+           <Button variant="outline" size="sm" onClick={handleExport}>
+             <Filter className="h-4 w-4 mr-2" />
+             Export
+           </Button>
+         </div>
+       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -390,42 +390,42 @@ export default function AnalyticsPage() {
           </Card>
         </TabsContent>
 
-        {/* Top Resources Tab */}
-        <TabsContent value="resources" className="space-y-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="leadership">Leadership</SelectItem>
-                <SelectItem value="team-building">Team Building</SelectItem>
-                <SelectItem value="strategy">Strategy</SelectItem>
-                <SelectItem value="communication">Communication</SelectItem>
-                <SelectItem value="management">Management</SelectItem>
-                <SelectItem value="productivity">Productivity</SelectItem>
-                <SelectItem value="innovation">Innovation</SelectItem>
-                <SelectItem value="culture">Culture</SelectItem>
-              </SelectContent>
-            </Select>
+                 {/* Top Resources Tab */}
+         <TabsContent value="resources" className="space-y-6">
+           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+               <SelectTrigger className="w-full sm:w-48">
+                 <SelectValue placeholder="All Categories" />
+               </SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="all">All Categories</SelectItem>
+                 <SelectItem value="leadership">Leadership</SelectItem>
+                 <SelectItem value="team-building">Team Building</SelectItem>
+                 <SelectItem value="strategy">Strategy</SelectItem>
+                 <SelectItem value="communication">Communication</SelectItem>
+                 <SelectItem value="management">Management</SelectItem>
+                 <SelectItem value="productivity">Productivity</SelectItem>
+                 <SelectItem value="innovation">Innovation</SelectItem>
+                 <SelectItem value="culture">Culture</SelectItem>
+               </SelectContent>
+             </Select>
 
-            <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="pdf">PDF</SelectItem>
-                <SelectItem value="video">Video</SelectItem>
-                <SelectItem value="article">Article</SelectItem>
-                <SelectItem value="whitepaper">Whitepaper</SelectItem>
-                <SelectItem value="template">Template</SelectItem>
-                <SelectItem value="audio">Audio</SelectItem>
-                <SelectItem value="image">Image</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+             <Select value={selectedType} onValueChange={setSelectedType}>
+               <SelectTrigger className="w-full sm:w-48">
+                 <SelectValue placeholder="All Types" />
+               </SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="all">All Types</SelectItem>
+                 <SelectItem value="pdf">PDF</SelectItem>
+                 <SelectItem value="video">Video</SelectItem>
+                 <SelectItem value="article">Article</SelectItem>
+                 <SelectItem value="whitepaper">Whitepaper</SelectItem>
+                 <SelectItem value="template">Template</SelectItem>
+                 <SelectItem value="audio">Audio</SelectItem>
+                 <SelectItem value="image">Image</SelectItem>
+               </SelectContent>
+             </Select>
+           </div>
 
           <Card>
             <CardContent className="p-6">

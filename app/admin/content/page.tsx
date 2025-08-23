@@ -479,18 +479,19 @@ export default function ContentPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="space-y-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Content Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Content Management</h1>
           <p className="text-gray-600">Manage your blog posts and downloadable resources</p>
         </div>
+        <div className="flex justify-end sm:justify-start">
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Content
+          </Button>
+        </div>
+        
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Content
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Content</DialogTitle>

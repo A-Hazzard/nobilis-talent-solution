@@ -89,22 +89,25 @@ export async function GET(request: NextRequest) {
       // ignore errors; default to 0
     }
 
-    // Count all invoices and paid invoices separately
+    // Count paid invoices and completed pending payments
     try {
-      const allInvoicesQ = query(collection(db, 'invoices'));
-      const allInvoicesSnap = await getDocs(allInvoicesQ);
-      totalInvoices = allInvoicesSnap.size;
-      
       // Count paid invoices
       const paidInvoicesQ = query(
         collection(db, 'invoices'),
         where('status', '==', 'paid')
       );
       const paidInvoicesSnap = await getDocs(paidInvoicesQ);
-      const paidInvoicesCount = paidInvoicesSnap.size;
+      let paidCount = paidInvoicesSnap.size;
+
+      // Count completed pending payments
+      const completedPaymentsQ = query(
+        collection(db, 'pendingPayments'),
+        where('status', '==', 'completed')
+      );
+      const completedPaymentsSnap = await getDocs(completedPaymentsQ);
+      paidCount += completedPaymentsSnap.size;
       
-      // Update totalInvoices to show paid count instead of total count
-      totalInvoices = paidInvoicesCount;
+      totalInvoices = paidCount;
     } catch {
       // ignore errors; default to 0
     }

@@ -13,9 +13,9 @@ interface LeadsHeaderProps {
  */
 export function LeadsHeader({ setIsAddDialogOpen }: LeadsHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Leads</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Leads</h1>
         <p className="text-gray-600">Manage potential clients and leads</p>
       </div>
       <Button onClick={() => setIsAddDialogOpen(true)}>

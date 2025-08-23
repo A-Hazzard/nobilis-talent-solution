@@ -7,6 +7,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import {
   ResponsiveTable,
   ResponsiveBadge,
   ResponsiveAvatar,
@@ -114,14 +119,28 @@ export function LeadsTable({
       label: 'Goals',
       render: (lead: Lead) => (
         Array.isArray(lead.primaryGoals) && lead.primaryGoals.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {lead.primaryGoals.slice(0, 3).map((g, idx) => (
-              <Badge key={idx} variant="secondary">{g}</Badge>
-            ))}
-            {lead.primaryGoals.length > 3 && (
-              <span className="text-xs text-gray-500">+{lead.primaryGoals.length - 3}</span>
-            )}
-          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="flex flex-wrap gap-1 cursor-pointer">
+                {lead.primaryGoals.slice(0, 2).map((g, idx) => (
+                  <Badge key={idx} variant="secondary">{g}</Badge>
+                ))}
+                {lead.primaryGoals.length > 2 && (
+                  <Badge variant="outline" className="text-xs">+{lead.primaryGoals.length - 2}</Badge>
+                )}
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">All Goals</h4>
+                <div className="flex flex-wrap gap-1">
+                  {lead.primaryGoals.map((goal, idx) => (
+                    <Badge key={idx} variant="secondary">{goal}</Badge>
+                  ))}
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         ) : (
           <span className="text-gray-400">-</span>
         )
@@ -129,11 +148,11 @@ export function LeadsTable({
       mobileRender: (lead: Lead) => (
         Array.isArray(lead.primaryGoals) && lead.primaryGoals.length > 0 ? (
           <div className="flex flex-wrap gap-1">
-            {lead.primaryGoals.slice(0, 2).map((g, idx) => (
+            {lead.primaryGoals.slice(0, 1).map((g, idx) => (
               <ResponsiveBadge key={idx} variant="secondary">{g}</ResponsiveBadge>
             ))}
-            {lead.primaryGoals.length > 2 && (
-              <span className="text-xs text-gray-500">+{lead.primaryGoals.length - 2}</span>
+            {lead.primaryGoals.length > 1 && (
+              <ResponsiveBadge variant="outline" className="text-xs">+{lead.primaryGoals.length - 1}</ResponsiveBadge>
             )}
           </div>
         ) : (

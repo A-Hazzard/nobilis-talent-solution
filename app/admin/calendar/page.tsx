@@ -142,13 +142,13 @@ export default function CalendarPage() {
         <Alert className="bg-yellow-50 border-yellow-200">
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800">
-            <div className="flex items-center justify-between">
-              <span>Calendly not connected. Click to connect manually:</span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span className="text-sm sm:text-base">Calendly not connected. Click to connect manually:</span>
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={connectCalendly}
-                className="ml-4"
+                className="w-full sm:w-auto"
               >
                 Connect Calendly
               </Button>
@@ -226,8 +226,8 @@ export default function CalendarPage() {
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">
-            <div className="flex items-center justify-between">
-              <span>✅ Connected to Calendly</span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span className="text-sm sm:text-base">✅ Connected to Calendly</span>
               {lastSyncTime && (
                 <span className="text-sm">
                   Last synced: {lastSyncTime.toLocaleTimeString()}

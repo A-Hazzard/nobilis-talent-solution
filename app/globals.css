@@ -805,3 +805,16 @@ body {
 .ProseMirror mark[style*="background-color: #e9d5ff"] {
   background-color: #e9d5ff !important;
 }
+
+/* Modal and Select z-index fixes */
+[data-radix-dialog-content] {
+  z-index: 99999 !important;
+}
+
+[data-radix-dialog-overlay] {
+  z-index: 99998 !important;
+}
+
+[data-radix-select-content] {
+  z-index: 999999 !important;
+}

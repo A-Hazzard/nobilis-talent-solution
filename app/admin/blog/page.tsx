@@ -59,8 +59,7 @@ import { logAuditAction } from '@/lib/utils/auditUtils';
 import dynamic from 'next/dynamic';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/lib/firebase/config';
-import { SEOAnalyzer } from '@/components/admin/blog/SEOAnalyzer';
-import { ContentScheduler } from '@/components/admin/blog/ContentScheduler';
+
 
 // Dynamically import RichTextEditor to avoid SSR issues
 const RichTextEditor = dynamic(
@@ -980,38 +979,7 @@ export default function ContentPage() {
                 </div>
               </div>
 
-              {/* SEO Analysis */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">SEO Analysis</Label>
-                <div className="col-span-3">
-                  <SEOAnalyzer
-                    title={formData.title}
-                    description={formData.seoDescription}
-                    content={formData.content}
-                    keywords={formData.tags}
-                  />
-                </div>
-              </div>
 
-              {/* Content Scheduling */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">Scheduling</Label>
-                <div className="col-span-3">
-                  <ContentScheduler
-                    scheduledDate={formData.scheduledDate}
-                    scheduledTime={formData.scheduledTime}
-                    isScheduled={formData.isScheduled}
-                    onScheduleChange={(date, time, isScheduled) => {
-                      setFormData({
-                        ...formData,
-                        scheduledDate: date,
-                        scheduledTime: time,
-                        isScheduled
-                      });
-                    }}
-                  />
-                </div>
-              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -1350,7 +1318,7 @@ export default function ContentPage() {
                     </div>
                   )}
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb -3">
                       <Badge variant="outline" className="capitalize">
                         {resource.type}
                       </Badge>

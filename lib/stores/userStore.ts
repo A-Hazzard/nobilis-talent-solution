@@ -5,7 +5,7 @@ import type { FirebaseUser, FirebaseAuthError } from '@/shared/types/firebase';
 import { AuthService } from '@/lib/services/AuthService';
 import { initializeAuthWithCookies, clearAuthCookies } from '@/lib/utils/authUtils';
 
-interface UserState {
+type UserState = {
   // User data
   user: User | null;
   firebaseUser: FirebaseUser | null;
@@ -17,6 +17,7 @@ interface UserState {
   setFirebaseUser: (user: FirebaseUser | null) => void;
   setLoading: (loading: boolean) => void;
   clearUser: () => void;
+  refreshUserData: () => Promise<void>;
   
   // Auth actions
   signIn: (email: string, password: string) => Promise<{ error: FirebaseAuthError | null }>;
@@ -24,11 +25,11 @@ interface UserState {
   signInWithGoogle: () => Promise<{ error: FirebaseAuthError | null; isNewUser?: boolean }>;
   signOut: () => Promise<{ error: FirebaseAuthError | null }>;
   initializeAuth: () => () => void;
-}
+};
 
 export const useUserStore = create<UserState>()(
   persist(
-    (set) => {
+    (set, get) => {
       return {
         // Initial state
         user: null,
@@ -61,6 +62,27 @@ export const useUserStore = create<UserState>()(
           });
         },
         
+        refreshUserData: async () => {
+          const state = get();
+          if (!state.firebaseUser) {
+            return;
+          }
+          
+          try {
+            const authService = AuthService.getInstance();
+            const appUser = await authService.getAppUser(state.firebaseUser.uid);
+            
+            if (appUser) {
+              set({ 
+                user: appUser, 
+                isAuthenticated: true 
+              });
+            }
+          } catch (error) {
+            console.error('Error refreshing user data:', error);
+          }
+        },
+        
         // Auth actions
         signIn: async (email: string, password: string) => {
           set({ isLoading: true });
@@ -75,49 +97,17 @@ export const useUserStore = create<UserState>()(
             }
             
             if (user) {
-              // Fetch user profile from Firestore to get real data
-              try {
-                const userProfile = await authService.getUserProfile(user.uid);
-                
-                // Map Firebase user to our User type with real data
-                const mappedUser: User = {
-                  id: user.uid,
-                  email: user.email || '',
-                  firstName: userProfile?.firstName || user.displayName?.split(' ')[0] || '',
-                  lastName: userProfile?.lastName || user.displayName?.split(' ').slice(1).join(' ') || '',
-                  displayName: userProfile?.displayName,
-                  phone: userProfile?.phone,
-                  organization: userProfile?.organization,
-                  role: userProfile?.role || (user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
-                  createdAt: userProfile?.createdAt || new Date(user.metadata.creationTime || Date.now()),
-                  lastLoginAt: userProfile?.lastLoginAt || new Date(user.metadata.lastSignInTime || Date.now()),
-                  isActive: userProfile?.isActive ?? true,
-                  
-                  // Email verification
-                  emailVerified: userProfile?.emailVerified || false,
-                  emailVerifiedAt: userProfile?.emailVerifiedAt,
-                  
-                  // Onboarding fields
-                  onboardingCompleted: userProfile?.onboardingCompleted || false,
-                  onboardingCompletedAt: userProfile?.onboardingCompletedAt,
-                  jobTitle: userProfile?.jobTitle,
-                  organizationType: userProfile?.organizationType,
-                  industryFocus: userProfile?.industryFocus,
-                  teamSize: userProfile?.teamSize,
-                  primaryGoals: userProfile?.primaryGoals,
-                  challengesDescription: userProfile?.challengesDescription,
-                  timeline: userProfile?.timeline,
-                  budget: userProfile?.budget,
-                };
-                
+              // Use the new getAppUser method for consistent data
+              const appUser = await authService.getAppUser(user.uid);
+              
+              if (appUser) {
                 set({ 
-                  user: mappedUser, 
+                  user: appUser, 
                   firebaseUser: user, 
                   isAuthenticated: true, 
                   isLoading: false 
                 });
-              } catch (profileError) {
-                console.error('Error fetching user profile during sign in:', profileError);
+              } else {
                 // Fallback to Firebase Auth data only
                 const mappedUser: User = {
                   id: user.uid,
@@ -128,8 +118,8 @@ export const useUserStore = create<UserState>()(
                   createdAt: new Date(user.metadata.creationTime || Date.now()),
                   lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
                   isActive: true,
-                  emailVerified: false, // Default to false for new users
-                  onboardingCompleted: false, // Default to false for new users
+                  emailVerified: false,
+                  onboardingCompleted: false,
                 };
                 
                 set({ 
@@ -166,31 +156,40 @@ export const useUserStore = create<UserState>()(
             }
             
             if (user) {
-              // Fetch user profile from Firestore to get real data
-              const userProfile = await authService.getUserProfile(user.uid);
+              // Use the new getAppUser method for consistent data
+              const appUser = await authService.getAppUser(user.uid);
               
-              // Map Firebase user to our User type with real data
-              const mappedUser: User = {
-                id: user.uid,
-                email: user.email || '',
-                firstName,
-                lastName,
-                phone,
-                organization,
-                role: userProfile?.role || (user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
-                createdAt: userProfile?.createdAt || new Date(user.metadata.creationTime || Date.now()),
-                lastLoginAt: userProfile?.lastLoginAt || new Date(user.metadata.lastSignInTime || Date.now()),
-                isActive: userProfile?.isActive ?? true,
-                emailVerified: false, // New users need email verification
-                onboardingCompleted: false, // New users need onboarding
-              };
-              
-              set({ 
-                user: mappedUser, 
-                firebaseUser: user, 
-                isAuthenticated: true, 
-                isLoading: false 
-              });
+              if (appUser) {
+                set({ 
+                  user: appUser, 
+                  firebaseUser: user, 
+                  isAuthenticated: true, 
+                  isLoading: false 
+                });
+              } else {
+                // Fallback to signup data
+                const mappedUser: User = {
+                  id: user.uid,
+                  email: user.email || '',
+                  firstName,
+                  lastName,
+                  phone,
+                  organization,
+                  role: user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user',
+                  createdAt: new Date(user.metadata.creationTime || Date.now()),
+                  lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
+                  isActive: true,
+                  emailVerified: false,
+                  onboardingCompleted: false,
+                };
+                
+                set({ 
+                  user: mappedUser, 
+                  firebaseUser: user, 
+                  isAuthenticated: true, 
+                  isLoading: false 
+                });
+              }
               
               // Send verification email for new users
               try {
@@ -229,34 +228,40 @@ export const useUserStore = create<UserState>()(
             }
             
             if (user) {
-              // Fetch user profile from Firestore to get real data
-              const userProfile = await authService.getUserProfile(user.uid);
+              // Use the new getAppUser method for consistent data
+              const appUser = await authService.getAppUser(user.uid);
               
-              // Parse names from display name
-              const names = user.displayName?.split(' ') || ['', ''];
-              const firstName = names[0] || '';
-              const lastName = names.slice(1).join(' ') || '';
-              
-              // Map Firebase user to our User type with real data
-              const mappedUser: User = {
-                id: user.uid,
-                email: user.email || '',
-                firstName: userProfile?.firstName || firstName,
-                lastName: userProfile?.lastName || lastName,
-                phone: userProfile?.phone || '',
-                organization: userProfile?.organization || '',
-                role: userProfile?.role || (user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
-                createdAt: userProfile?.createdAt || new Date(user.metadata.creationTime || Date.now()),
-                lastLoginAt: userProfile?.lastLoginAt || new Date(user.metadata.lastSignInTime || Date.now()),
-                isActive: userProfile?.isActive ?? true,
-              };
-              
-              set({ 
-                user: mappedUser, 
-                firebaseUser: user, 
-                isAuthenticated: true, 
-                isLoading: false 
-              });
+              if (appUser) {
+                set({ 
+                  user: appUser, 
+                  firebaseUser: user, 
+                  isAuthenticated: true, 
+                  isLoading: false 
+                });
+              } else {
+                // Fallback to Firebase Auth data
+                const names = user.displayName?.split(' ') || ['', ''];
+                const firstName = names[0] || '';
+                const lastName = names.slice(1).join(' ') || '';
+                
+                const mappedUser: User = {
+                  id: user.uid,
+                  email: user.email || '',
+                  firstName,
+                  lastName,
+                  role: user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user',
+                  createdAt: new Date(user.metadata.creationTime || Date.now()),
+                  lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
+                  isActive: true,
+                };
+                
+                set({ 
+                  user: mappedUser, 
+                  firebaseUser: user, 
+                  isAuthenticated: true, 
+                  isLoading: false 
+                });
+              }
             }
             
             return { error: null, isNewUser };
@@ -272,8 +277,6 @@ export const useUserStore = create<UserState>()(
           }
         },
 
-
-        
         signOut: async () => {
           set({ isLoading: true });
           
@@ -323,42 +326,26 @@ export const useUserStore = create<UserState>()(
           }, 5000); // 5 second timeout
           
           // Use cookie-based auth initialization
-          const unsubscribe = initializeAuthWithCookies((firebaseUser) => {
+          const unsubscribe = initializeAuthWithCookies(async (firebaseUser) => {
             console.log('UserStore: onAuthStateChanged called with user:', firebaseUser);
             clearTimeout(timeoutId); // Clear timeout when auth state changes
             
             if (firebaseUser) {
               console.log('UserStore: User found, fetching profile...');
-              // Handle async user profile fetching properly
-              const fetchUserProfile = async () => {
-                try {
-                  const authService = AuthService.getInstance();
-                  const userProfile = await authService.getUserProfile(firebaseUser.uid);
-                  console.log('UserStore: User profile fetched:', userProfile);
-                  
-                  // Map Firebase user to our User type with real data
-                  const mappedUser: User = {
-                    id: firebaseUser.uid,
-                    email: firebaseUser.email || '',
-                    firstName: userProfile?.firstName || firebaseUser.displayName?.split(' ')[0] || '',
-                    lastName: userProfile?.lastName || firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
-                    phone: userProfile?.phone,
-                    organization: userProfile?.organization,
-                    role: userProfile?.role || (firebaseUser.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user'),
-                    createdAt: userProfile?.createdAt || new Date(firebaseUser.metadata.creationTime || Date.now()),
-                    lastLoginAt: userProfile?.lastLoginAt || new Date(firebaseUser.metadata.lastSignInTime || Date.now()),
-                    isActive: userProfile?.isActive ?? true,
-                  };
-                  
+              try {
+                const authService = AuthService.getInstance();
+                const appUser = await authService.getAppUser(firebaseUser.uid);
+                console.log('UserStore: User profile fetched:', appUser);
+                
+                if (appUser) {
                   console.log('UserStore: Setting authenticated user state');
                   set({ 
-                    user: mappedUser, 
+                    user: appUser, 
                     firebaseUser, 
                     isAuthenticated: true, 
                     isLoading: false 
                   });
-                } catch (error) {
-                  console.error('UserStore: Error fetching user profile:', error);
+                } else {
                   // Fallback to Firebase Auth data only
                   const mappedUser: User = {
                     id: firebaseUser.uid,
@@ -379,9 +366,28 @@ export const useUserStore = create<UserState>()(
                     isLoading: false 
                   });
                 }
-              };
-              
-              fetchUserProfile();
+              } catch (error) {
+                console.error('UserStore: Error fetching user profile:', error);
+                // Fallback to Firebase Auth data only
+                const mappedUser: User = {
+                  id: firebaseUser.uid,
+                  email: firebaseUser.email || '',
+                  firstName: firebaseUser.displayName?.split(' ')[0] || '',
+                  lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+                  role: firebaseUser.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1' ? 'admin' : 'user',
+                  createdAt: new Date(firebaseUser.metadata.creationTime || Date.now()),
+                  lastLoginAt: new Date(firebaseUser.metadata.lastSignInTime || Date.now()),
+                  isActive: true,
+                };
+                
+                console.log('UserStore: Setting fallback user state');
+                set({ 
+                  user: mappedUser, 
+                  firebaseUser, 
+                  isAuthenticated: true, 
+                  isLoading: false 
+                });
+              }
             } else {
               console.log('UserStore: No user found, setting unauthenticated state');
               set({

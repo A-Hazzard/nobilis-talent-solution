@@ -42,7 +42,7 @@ export default function LoginPage() {
       console.log('LoginPage: User details:', user);
       console.log('LoginPage: Current pathname:', window.location.pathname);
       
-      const redirectPath = getRedirectPath(user);
+      const redirectPath = getRedirectPath(user, true); // true = login flow
       console.log('LoginPage: Executing redirect to', redirectPath);
       router.push(redirectPath);
     }

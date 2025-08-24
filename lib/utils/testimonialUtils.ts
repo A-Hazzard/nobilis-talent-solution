@@ -86,34 +86,4 @@ export class TestimonialUtils {
     return testimonials.filter(testimonial => testimonial.rating >= minRating);
   }
 
-  /**
-   * Get display statistics for testimonials section
-   * @param testimonials - Array of testimonials
-   * @returns Formatted statistics for display
-   */
-  static getDisplayStats(testimonials: Testimonial[]): Array<{
-    label: string;
-    value: string;
-  }> {
-    const stats = this.getTestimonialStats(testimonials);
-    
-    return [
-      {
-        label: 'Leaders Coached',
-        value: `${testimonials.length}+`,
-      },
-      {
-        label: 'Success Rate',
-        value: `${Math.round((stats.averageRating / 5) * 100)}%`,
-      },
-      {
-        label: 'Companies Served',
-        value: `${new Set(testimonials.map(t => t.company)).size}+`,
-      },
-      {
-        label: 'Years Experience',
-        value: '5', // Static value as per original design
-      },
-    ];
-  }
 } 

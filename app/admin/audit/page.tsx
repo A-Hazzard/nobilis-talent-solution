@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Download, Activity, Play } from 'lucide-react';
+import { Search, Filter, Download, Activity } from 'lucide-react';
 import type { AuditLog } from '@/shared/types/audit';
 import { 
   formatTimeAgo, 
@@ -17,12 +17,6 @@ import {
   exportAuditLogsToExcel
 } from '@/lib/utils/auditUtils';
 import { useToast } from '@/lib/hooks/use-toast';
-import { useDemoStore } from '@/lib/stores/demoStore';
-import { 
-  generateFakeAuditLogs, 
-  getFakeAuditLogsWithFilters, 
-  getFakeAuditLogsPaginated 
-} from '@/lib/utils/fakeAuditData';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -37,12 +31,10 @@ interface AuditLogsState {
   entityTypeFilter: string;
   actionFilter: string;
   error: string | null;
-  fakeLogs: AuditLog[]; // Store fake logs for demo mode
 }
 
 export default function AuditLogsPage() {
   const { toast } = useToast();
-  const { isDemoMode } = useDemoStore();
   const [state, setState] = useState<AuditLogsState>({
     logs: [],
     isLoading: true,
@@ -53,86 +45,55 @@ export default function AuditLogsPage() {
     entityTypeFilter: '',
     actionFilter: '',
     error: null,
-    fakeLogs: [], // Initialize empty fake logs
   });
 
-  // Generate fake logs when demo mode is enabled
-  useEffect(() => {
-    if (isDemoMode && state.fakeLogs.length === 0) {
-      const fakeLogs = generateFakeAuditLogs({ count: 100 });
-      setState(prev => ({ ...prev, fakeLogs }));
-    }
-  }, [isDemoMode, state.fakeLogs.length]);
+
 
   const loadAuditLogs = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      if (isDemoMode) {
-        // Use fake data in demo mode
-        const filteredLogs = getFakeAuditLogsWithFilters(
-          state.fakeLogs,
-          state.searchTerm,
-          state.entityTypeFilter,
-          state.actionFilter
-        );
-        
-        const paginatedResult = getFakeAuditLogsPaginated(
-          filteredLogs,
-          state.currentPage,
-          20
-        );
+      // Use real API
+      const params = new URLSearchParams({
+        page: state.currentPage.toString(),
+        limit: '20',
+      });
+
+      if (state.searchTerm) {
+        params.append('search', state.searchTerm);
+      }
+
+      if (state.entityTypeFilter && state.entityTypeFilter !== 'all') {
+        params.append('entityType', state.entityTypeFilter);
+      }
+
+      if (state.actionFilter && state.actionFilter !== 'all') {
+        params.append('action', state.actionFilter);
+      }
+
+      const response = await fetch(`/api/audit/logs?${params}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+
+      if (result.success) {
+        const { logs, total, page, limit } = result.data;
+        const totalPages = Math.ceil(total / limit);
         
         setState(prev => ({
           ...prev,
-          logs: paginatedResult.logs,
-          totalLogs: paginatedResult.total,
-          totalPages: Math.ceil(paginatedResult.total / paginatedResult.limit),
-          currentPage: paginatedResult.page,
+          logs,
+          totalLogs: total,
+          totalPages,
+          currentPage: page,
         }));
       } else {
-        // Use real API in normal mode
-        const params = new URLSearchParams({
-          page: state.currentPage.toString(),
-          limit: '20',
-        });
-
-        if (state.searchTerm) {
-          params.append('search', state.searchTerm);
-        }
-
-        if (state.entityTypeFilter && state.entityTypeFilter !== 'all') {
-          params.append('entityType', state.entityTypeFilter);
-        }
-
-        if (state.actionFilter && state.actionFilter !== 'all') {
-          params.append('action', state.actionFilter);
-        }
-
-        const response = await fetch(`/api/audit/logs?${params}`);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error Response:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-
-        if (result.success) {
-          const { logs, total, page, limit } = result.data;
-          const totalPages = Math.ceil(total / limit);
-          
-          setState(prev => ({
-            ...prev,
-            logs,
-            totalLogs: total,
-            totalPages,
-            currentPage: page,
-          }));
-        } else {
-          setState(prev => ({ ...prev, error: result.error || 'Failed to load audit logs' }));
-        }
+        setState(prev => ({ ...prev, error: result.error || 'Failed to load audit logs' }));
       }
     } catch (error) {
       console.error('Error loading audit logs:', error);
@@ -140,7 +101,7 @@ export default function AuditLogsPage() {
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [isDemoMode, state.currentPage, state.searchTerm, state.entityTypeFilter, state.actionFilter, state.fakeLogs]);
+  }, [state.currentPage, state.searchTerm, state.entityTypeFilter, state.actionFilter]);
 
   const handleSearch = useCallback((term: string) => {
     setState(prev => ({ ...prev, searchTerm: term, currentPage: 1 }));
@@ -162,16 +123,38 @@ export default function AuditLogsPage() {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
       
-      if (isDemoMode) {
-        // Export fake data in demo mode
-        const filteredLogs = getFakeAuditLogsWithFilters(
-          state.fakeLogs,
-          state.searchTerm,
-          state.entityTypeFilter,
-          state.actionFilter
-        );
+      // Export real data
+      const params = new URLSearchParams({
+        page: '1',
+        limit: '1000', // Get more logs for export
+      });
+
+      if (state.searchTerm) {
+        params.append('search', state.searchTerm);
+      }
+
+      if (state.entityTypeFilter && state.entityTypeFilter !== 'all') {
+        params.append('entityType', state.entityTypeFilter);
+      }
+
+      if (state.actionFilter && state.actionFilter !== 'all') {
+        params.append('action', state.actionFilter);
+      }
+
+      const response = await fetch(`/api/audit/logs?${params}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+
+      if (result.success) {
+        const { logs } = result.data;
         
-        await exportAuditLogsToExcel(filteredLogs, {
+        await exportAuditLogsToExcel(logs, {
           searchTerm: state.searchTerm,
           entityTypeFilter: state.entityTypeFilter,
           actionFilter: state.actionFilter,
@@ -179,53 +162,10 @@ export default function AuditLogsPage() {
 
         toast({
           title: 'Export Successful',
-          description: 'Demo audit logs have been exported to Excel successfully.',
+          description: 'Audit logs have been exported to Excel successfully.',
         });
       } else {
-        // Export real data in normal mode
-        const params = new URLSearchParams({
-          page: '1',
-          limit: '1000', // Get more logs for export
-        });
-
-        if (state.searchTerm) {
-          params.append('search', state.searchTerm);
-        }
-
-        if (state.entityTypeFilter && state.entityTypeFilter !== 'all') {
-          params.append('entityType', state.entityTypeFilter);
-        }
-
-        if (state.actionFilter && state.actionFilter !== 'all') {
-          params.append('action', state.actionFilter);
-        }
-
-        const response = await fetch(`/api/audit/logs?${params}`);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error Response:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-
-        if (result.success) {
-          const { logs } = result.data;
-          
-          await exportAuditLogsToExcel(logs, {
-            searchTerm: state.searchTerm,
-            entityTypeFilter: state.entityTypeFilter,
-            actionFilter: state.actionFilter,
-          });
-
-          toast({
-            title: 'Export Successful',
-            description: 'Audit logs have been exported to Excel successfully.',
-          });
-        } else {
-          throw new Error(result.error || 'Failed to load logs for export');
-        }
+        throw new Error(result.error || 'Failed to load logs for export');
       }
     } catch (error) {
       console.error('Error exporting audit logs:', error);
@@ -237,7 +177,7 @@ export default function AuditLogsPage() {
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [isDemoMode, state.fakeLogs, state.searchTerm, state.entityTypeFilter, state.actionFilter, toast]);
+  }, [state.searchTerm, state.entityTypeFilter, state.actionFilter, toast]);
 
 
 
@@ -264,10 +204,7 @@ export default function AuditLogsPage() {
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">Audit Logs</h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1 break-words">
-            {isDemoMode 
-              ? 'Demo mode: Showing sample audit data for testing and demonstration'
-              : 'Track all admin activities and system changes'
-            }
+            Track all admin activities and system changes
           </p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
@@ -285,26 +222,7 @@ export default function AuditLogsPage() {
         </div>
       </div>
 
-      {/* Demo Mode Indicator */}
-      {isDemoMode && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Play className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold text-blue-900">Demo Mode Active</span>
-              </div>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {state.fakeLogs.length} demo logs available
-              </Badge>
-            </div>
-            <p className="text-sm text-blue-700 mt-2">
-              You're viewing sample audit data. All search and filter features work with the demo data.
-              Toggle demo mode in the dashboard to switch between real and demo data.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Filters */}
       <Card>
@@ -370,25 +288,16 @@ export default function AuditLogsPage() {
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
             Activity Log
-            {isDemoMode && (
-              <Badge variant="secondary" className="ml-2">
-                Demo Data
-              </Badge>
-            )}
           </CardTitle>
           <p className="text-sm text-gray-600">
             Showing {state.logs.length} of {state.totalLogs} logs
-            {isDemoMode && ` (${state.fakeLogs.length} total demo logs available)`}
           </p>
         </CardHeader>
         <CardContent>
           {state.logs.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">
-                {isDemoMode 
-                  ? 'No demo audit logs match your current filters'
-                  : 'No audit logs found'
-                }
+                No audit logs found
               </p>
 
             </div>
@@ -420,13 +329,6 @@ export default function AuditLogsPage() {
                           <span className="hidden sm:inline">{log.entity.toUpperCase()}</span>
                           <span className="sm:hidden capitalize">{log.entity}</span>
                         </Badge>
-                        
-                        {/* Demo indicator */}
-                        {isDemoMode && log.id?.startsWith('fake-') && (
-                          <Badge variant="outline" className="text-xs">
-                            Demo
-                          </Badge>
-                        )}
                         
                         <span className="text-xs sm:text-sm text-gray-500 break-words">
                           {formatTimeAgo(new Date(log.timestamp))}

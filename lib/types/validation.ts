@@ -10,5 +10,7 @@ export type ValidationResult = {
 export type PasswordValidationResult = ValidationResult & {
   hasMinLength: boolean;
   hasUppercase: boolean;
+  hasLowercase: boolean;
+  hasNumber: boolean;
   hasSpecialChar: boolean;
 }; 

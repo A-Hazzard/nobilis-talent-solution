@@ -1,16 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { DashboardState, DashboardActions } from '@/lib/types/hooks';
 import { analyticsApi } from '@/lib/helpers/api';
-import { FakeDataService } from '@/lib/services/FakeDataService';
-import { useDashboardStore } from '@/lib/stores/dashboardStore';
-
 import { formatTimeAgo } from '@/lib/utils/auditUtils';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 /**
  * Custom hook for dashboard state management
- * Handles analytics data, fake data toggling, and period changes
+ * Handles analytics data and period changes
  */
 export function useDashboard(): [DashboardState, DashboardActions] {
   const [state, setState] = useState<DashboardState>({
@@ -21,91 +18,73 @@ export function useDashboard(): [DashboardState, DashboardActions] {
     error: null,
   });
 
-  const { isFakeDataEnabled } = useDashboardStore();
-  const fakeDataService = FakeDataService.getInstance();
-
   const loadDashboardData = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      // Check if we should use fake data (either fake data enabled or demo mode)
-      const shouldUseFakeData = isFakeDataEnabled;
-      
-      if (shouldUseFakeData) {
-        // Use fake data
-        const fakeAnalytics = fakeDataService.generateFakeAnalytics();
-        const fakeRecentActivity = fakeDataService.generateFakeRecentActivity();
-        
+      // Use real data only
+      const response = await analyticsApi.getDashboard(state.period);
+      if (response.success && response.data) {
         setState(prev => ({
           ...prev,
-          analytics: fakeAnalytics,
-          recentActivity: fakeRecentActivity,
+          analytics: response.data!.analytics,
+          recentActivity: [],
         }));
       } else {
-        // Use real data
-        const response = await analyticsApi.getDashboard(state.period);
-        if (response.success && response.data) {
-          setState(prev => ({
-            ...prev,
-            analytics: response.data!.analytics,
-            recentActivity: [],
-          }));
-        } else {
-          console.error('Failed to load analytics:', response.error);
-          // Set default empty analytics to prevent errors
-          setState(prev => ({
-            ...prev,
-            analytics: {
-              totalLeads: 0,
-              leadsThisMonth: 0,
-              totalRevenue: 0,
-              revenueThisMonth: 0,
-              totalBonuses: 0,
-              bonusesThisMonth: 0,
-              totalInvoices: 0,
-              activeUsers: 0,
-              resourceDownloads: 0,
-              topResources: [],
-              leadSources: [],
-            },
-            recentActivity: [],
-          }));
-        }
+        console.error('Failed to load analytics:', response.error);
+        // Set default empty analytics to prevent errors
+        setState(prev => ({
+          ...prev,
+          analytics: {
+            totalLeads: 0,
+            leadsThisMonth: 0,
+            totalRevenue: 0,
+            revenueThisMonth: 0,
+            totalBonuses: 0,
+            bonusesThisMonth: 0,
+            totalInvoices: 0,
+            activeUsers: 0,
+            resourceDownloads: 0,
+            topResources: [],
+            leadSources: [],
+          },
+          recentActivity: [],
+        }));
+      }
 
-        // Fetch real recent activity from Firestore audit-logs collection (limit to 5)
-        try {
-          const q = query(collection(db, 'audit-logs'), orderBy('createdAt', 'desc'), limit(5));
-          const snapshot = await getDocs(q);
-          const recentActivity = snapshot.docs.map(doc => {
-            const data = doc.data();
-            
-            // Parse details if it's a JSON string
-            let parsedDetails = null;
-            if (data.details) {
-              try {
-                parsedDetails = typeof data.details === 'string' ? JSON.parse(data.details) : data.details;
-              } catch {
-                console.warn('Failed to parse details:', data.details);
-                parsedDetails = { title: data.details };
-              }
+      // Fetch real recent activity from Firestore audit-logs collection (limit to 5)
+      try {
+        const q = query(collection(db, 'audit-logs'), orderBy('createdAt', 'desc'), limit(5));
+        const snapshot = await getDocs(q);
+        const recentActivity = snapshot.docs.map(doc => {
+          const data = doc.data();
+          
+          // Parse details if it's a JSON string
+          let parsedDetails = null;
+          if (data.details) {
+            try {
+              parsedDetails = typeof data.details === 'string' ? JSON.parse(data.details) : data.details;
+            } catch {
+              console.warn('Failed to parse details:', data.details);
+              parsedDetails = { title: data.details };
             }
-            
-            return {
-              action: data.action,
-              entity: data.entity,
-              entityId: data.entityId,
-              entityTitle: parsedDetails?.title || data.entityId || '',
-              time: formatTimeAgo(new Date(data.timestamp || data.createdAt?.toDate?.() || Date.now())),
-              userEmail: data.userEmail,
-              timestamp: data.timestamp || data.createdAt?.toDate?.() || Date.now(),
-              details: parsedDetails,
-            };
-          });
-          setState(prev => ({ ...prev, recentActivity }));
-        } catch (error) {
-          console.error('Error loading recent activity:', error);
-          setState(prev => ({ ...prev, recentActivity: [] }));
-        }
+          }
+          
+          return {
+            action: data.action,
+            entity: data.entity,
+            entityId: data.entityId,
+            entityTitle: parsedDetails?.title || data.entityId || '',
+            time: formatTimeAgo(new Date(data.timestamp || data.createdAt?.toDate?.() || Date.now())),
+            userEmail: data.userEmail,
+            timestamp: data.timestamp || data.createdAt?.toDate?.() || Date.now(),
+            details: parsedDetails,
+          };
+        });
+        setState(prev => ({ ...prev, recentActivity }));
+      } catch (error) {
+        console.error('Error loading recent activity:', error);
+        setState(prev => ({ ...prev, recentActivity: [] }));
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -130,7 +109,7 @@ export function useDashboard(): [DashboardState, DashboardActions] {
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [isFakeDataEnabled, state.period]);
+  }, [state.period]);
 
   const setPeriod = useCallback((newPeriod: 'week' | 'month' | 'year') => {
     setState(prev => ({ ...prev, period: newPeriod }));
@@ -181,7 +160,7 @@ export function useDashboard(): [DashboardState, DashboardActions] {
     ];
   }, [state.analytics]);
 
-  // Reload data when period changes or fake data is toggled
+  // Reload data when period changes
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);

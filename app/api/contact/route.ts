@@ -11,49 +11,16 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
 const RATE_LIMIT_MAX_REQUESTS = 5; // 5 requests per window
 
-interface ContactFormData {
-  firstName: string;
-  lastName: string;
+type ContactFormData = {
+  name: string;
   email: string;
   phone?: string;
-  company?: string;
-  challenges: string;
-  contactMethod: 'email' | 'phone';
-}
-
-/**
- * Validate contact form data
- */
-function validateContactForm(data: any): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  // Required fields
-  if (!data.firstName?.trim()) errors.push('First name is required');
-  if (!data.lastName?.trim()) errors.push('Last name is required');
-  if (!data.email?.trim()) errors.push('Email is required');
-  if (!data.challenges?.trim()) errors.push('Please describe your challenges');
-
-  // Email validation
-  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-    errors.push('Please enter a valid email address');
-  }
-
-  // Phone validation (if provided)
-  if (data.phone && !/^[\+]?[1-9][\d]{0,15}$/.test(data.phone.replace(/[\s\-\(\)]/g, ''))) {
-    errors.push('Please enter a valid phone number');
-  }
-
-  // Length validations
-  if (data.firstName && data.firstName.length < 2) errors.push('First name must be at least 2 characters');
-  if (data.lastName && data.lastName.length < 2) errors.push('Last name must be at least 2 characters');
-  if (data.challenges && data.challenges.length < 10) errors.push('Please provide more details about your challenges');
-  if (data.challenges && data.challenges.length > 1000) errors.push('Challenge description is too long (max 1000 characters)');
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
+  organization?: string;
+  message: string;
+  budget?: string;
+  timeline?: string;
+  serviceType?: string;
+};
 
 /**
  * Check rate limiting
@@ -91,17 +58,15 @@ function detectSpam(data: ContactFormData): boolean {
     data.email.includes('example@'),
     data.email.includes('spam@'),
     
-    // Check for suspicious content in challenges
-    data.challenges.toLowerCase().includes('viagra'),
-    data.challenges.toLowerCase().includes('casino'),
-    data.challenges.toLowerCase().includes('loan'),
-    data.challenges.toLowerCase().includes('make money fast'),
+    // Check for suspicious content in message
+    data.message.toLowerCase().includes('viagra'),
+    data.message.toLowerCase().includes('casino'),
+    data.message.toLowerCase().includes('loan'),
+    data.message.toLowerCase().includes('make money fast'),
     
     // Check for suspicious names
-    data.firstName.toLowerCase() === 'test',
-    data.lastName.toLowerCase() === 'test',
-    data.firstName.toLowerCase() === 'admin',
-    data.lastName.toLowerCase() === 'admin',
+    data.name.toLowerCase() === 'test',
+    data.name.toLowerCase() === 'admin',
   ];
 
   return spamIndicators.some(indicator => indicator);
@@ -127,30 +92,30 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const body = await request.json();
     
-    // Validate form data
-    const validation = validateContactForm(body);
-    if (!validation.isValid) {
+    // Basic validation
+    if (!body.name || !body.email || !body.message) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.errors },
+        { error: 'Missing required fields: name, email, and message are required' },
         { status: 400 }
       );
     }
 
     const formData: ContactFormData = {
-      firstName: body.firstName.trim(),
-      lastName: body.lastName.trim(),
+      name: body.name.trim(),
       email: body.email.trim().toLowerCase(),
       phone: body.phone?.trim(),
-      company: body.company?.trim(),
-      challenges: body.challenges.trim(),
-      contactMethod: body.contactMethod || 'email'
+      organization: body.organization?.trim(),
+      message: body.message.trim(),
+      budget: body.budget?.trim(),
+      timeline: body.timeline?.trim(),
+      serviceType: body.serviceType?.trim()
     };
 
     // Spam detection
     if (detectSpam(formData)) {
       console.warn('Potential spam detected:', { ip, email: formData.email });
       // Still save the data but mark it as potential spam
-      formData.challenges = '[POTENTIAL SPAM] ' + formData.challenges;
+      formData.message = '[POTENTIAL SPAM] ' + formData.message;
     }
 
     // Save to Firestore
@@ -174,9 +139,9 @@ export async function POST(request: NextRequest) {
       entity: 'contact',
       entityId: docRef.id,
       details: {
-        title: `Contact form submission from ${formData.firstName} ${formData.lastName}`,
-        company: formData.company,
-        contactMethod: formData.contactMethod
+        title: `Contact form submission from ${formData.name}`,
+        organization: formData.organization,
+        message: formData.message.substring(0, 100) + '...'
       },
       timestamp: Date.now()
     });
@@ -187,19 +152,25 @@ export async function POST(request: NextRequest) {
     // Send confirmation email to user
     await emailService.sendContactConfirmation({
       to: formData.email,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      company: formData.company || 'Not specified',
-      challenges: formData.challenges,
-      contactMethod: formData.contactMethod
+      firstName: formData.name.split(' ')[0] || formData.name,
+      lastName: formData.name.split(' ').slice(1).join(' ') || '',
+      company: formData.organization || 'Not specified',
+      challenges: formData.message,
+      contactMethod: 'email'
     });
 
     // Send notification email to admin
     await emailService.sendContactNotification({
       to: process.env.ADMIN_EMAIL || 'kareempayne11@gmail.com',
       contactData: {
-        ...formData,
         id: docRef.id,
+        firstName: formData.name.split(' ')[0] || formData.name,
+        lastName: formData.name.split(' ').slice(1).join(' ') || '',
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.organization,
+        challenges: formData.message,
+        contactMethod: 'email' as const,
         submittedAt: new Date().toISOString()
       }
     });

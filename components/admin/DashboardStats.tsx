@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, DollarSign, Gift, FileText } from 'lucide-react';
 import { useDashboard } from '@/lib/hooks/useDashboard';
-import { useDashboardStore } from '@/lib/stores/dashboardStore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
@@ -14,7 +13,6 @@ interface DashboardStatsProps {
 
 export default function DashboardStats({ period = 'month' }: DashboardStatsProps) {
   const [dashboard] = useDashboard();
-  const { isFakeDataEnabled: _isFakeDataEnabled } = useDashboardStore();
 
   const { isLoading, error, analytics } = dashboard;
 

@@ -38,7 +38,7 @@ const HeroSection = () => {
       <div className="absolute top-28 right-10 animate-float hidden lg:block">
         <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white">
           <Users className="w-8 h-8 mb-2" />
-          <p className="text-sm font-semibold">500+ Leaders Coached</p>
+          <p className="text-sm font-semibold">200+ Leaders Coached</p>
         </div>
       </div>
       
@@ -110,21 +110,7 @@ const HeroSection = () => {
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-white/20 hero-stagger">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-1">500+</div>
-                <div className="text-sm text-white/80">Leaders Coached</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-1">98%</div>
-                <div className="text-sm text-white/80">Success Rate</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-1">5+</div>
-                <div className="text-sm text-white/80">Years Experience</div>
-              </div>
-            </div>
+           
           </div>
         </div>
       </div>

@@ -110,7 +110,7 @@ Tailor your approach based on the project maturity indicated by tag names.
 
 **When to Transition**: Recognize when the project has evolved (or has initiated a project which existing code) beyond simple task management. Look for these indicators:
 - User mentions teammates or collaboration needs
-- Project has grown to 15+ tasks with mixed priorities
+- Project has grown to 110+ tasks with mixed priorities
 - User creates feature branches or mentions major initiatives
 - User initializes Taskmaster on an existing, complex codebase
 - User describes large features that would benefit from dedicated planning

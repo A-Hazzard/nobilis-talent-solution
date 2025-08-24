@@ -9,8 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Check, X, Eye, EyeOff, User, Mail, Lock, Building, UserCheck, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { validateSignupForm, validatePassword } from '@/lib/utils/validation';
+import { validateSignupForm } from '@/lib/utils/validation';
 import { getRedirectPath } from '@/lib/utils/authUtils';
+import { PasswordStrength } from '@/components/ui/password-strength';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -31,11 +32,7 @@ export default function SignupPage() {
     organization?: string;
     phone?: string;
   }>({});
-  const [passwordValidation, setPasswordValidation] = useState({
-    hasMinLength: false,
-    hasUppercase: false,
-    hasSpecialChar: false
-  });
+
 
   const [formData, setFormData] = useState({
     email: '',
@@ -54,7 +51,7 @@ export default function SignupPage() {
       console.log('SignupPage: User details:', user);
       console.log('SignupPage: Current pathname:', window.location.pathname);
       
-      const redirectPath = getRedirectPath(user);
+      const redirectPath = getRedirectPath(user, false); // false = signup flow
       console.log('SignupPage: Executing redirect to', redirectPath);
       router.push(redirectPath);
     }
@@ -70,15 +67,7 @@ export default function SignupPage() {
       setFieldErrors(prev => ({ ...prev, [name]: undefined }));
     }
 
-    // Real-time password validation
-    if (name === 'password') {
-      const validation = validatePassword(value);
-      setPasswordValidation({
-        hasMinLength: validation.hasMinLength,
-        hasUppercase: validation.hasUppercase,
-        hasSpecialChar: validation.hasSpecialChar
-      });
-    }
+
 
     // Real-time validation for other fields
     if (name === 'email') {
@@ -347,65 +336,8 @@ export default function SignupPage() {
                 <p className="text-sm text-red-500">{getFieldError('password')}</p>
               )}
               
-              {/* Enhanced Password strength indicator */}
-              {formData.password && (
-                <div className="space-y-3 p-3 bg-gray-50 rounded-lg border">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Password Strength</span>
-                    <span className={`text-xs font-medium ${
-                      passwordValidation.hasMinLength && passwordValidation.hasUppercase && passwordValidation.hasSpecialChar 
-                        ? 'text-green-600' 
-                        : 'text-orange-600'
-                    }`}>
-                      {passwordValidation.hasMinLength && passwordValidation.hasUppercase && passwordValidation.hasSpecialChar 
-                        ? 'Strong' 
-                        : 'Weak'}
-                    </span>
-                  </div>
-                  
-                  {/* Progress bar */}
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        passwordValidation.hasMinLength && passwordValidation.hasUppercase && passwordValidation.hasSpecialChar 
-                          ? 'bg-green-500' 
-                          : passwordValidation.hasMinLength && (passwordValidation.hasUppercase || passwordValidation.hasSpecialChar)
-                          ? 'bg-yellow-500'
-                          : 'bg-red-500'
-                      }`}
-                      style={{
-                        width: `${[
-                          passwordValidation.hasMinLength,
-                          passwordValidation.hasUppercase,
-                          passwordValidation.hasSpecialChar
-                        ].filter(Boolean).length * 33.33}%`
-                      }}
-                    ></div>
-                  </div>
-                  
-                  {/* Requirements list */}
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${passwordValidation.hasMinLength ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                      <span className={`text-xs ${passwordValidation.hasMinLength ? 'text-green-600' : 'text-gray-500'}`}>
-                        At least 8 characters
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${passwordValidation.hasUppercase ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                      <span className={`text-xs ${passwordValidation.hasUppercase ? 'text-green-600' : 'text-gray-500'}`}>
-                        1 uppercase letter
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${passwordValidation.hasSpecialChar ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                      <span className={`text-xs ${passwordValidation.hasSpecialChar ? 'text-green-600' : 'text-gray-500'}`}>
-                        1 special character
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Password strength indicator */}
+              <PasswordStrength password={formData.password} />
             </div>
 
             <div className="space-y-2">

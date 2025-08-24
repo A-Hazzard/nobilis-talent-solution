@@ -29,13 +29,31 @@ export async function getAuth(request: NextRequest): Promise<AuthResult> {
     // Initialize Firebase Admin if needed
     initializeFirebaseAdmin();
     
-    // Get the Authorization header
+    let token: string | null = null;
+    
+    // First try to get token from Authorization header
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    }
+    
+    // If no token in header, try to get from cookie
+    if (!token) {
+      const cookieHeader = request.headers.get('cookie');
+      if (cookieHeader) {
+        const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+          const [key, value] = cookie.trim().split('=');
+          acc[key] = value;
+          return acc;
+        }, {} as Record<string, string>);
+        
+        token = cookies['auth-token'] || null;
+      }
+    }
+    
+    if (!token) {
       return { user: null };
     }
-
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Check if Firebase Admin is initialized
     if (getApps().length === 0) {

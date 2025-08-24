@@ -57,7 +57,7 @@ const ServicesSection = () => {
   ];
 
   return (
-    <section id="services" className="py-20 lg:py-32 bg-background">
+    <section id="services" className="pt-20 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16" data-animate>
@@ -101,30 +101,6 @@ const ServicesSection = () => {
           ))}
         </div>
 
-        {/* CTA Section */}
-        <div className="text-center mt-16" data-animate>
-          <h3 className="text-2xl sm:text-3xl font-bold text-accent mb-6">
-            Ready to Transform Your Leadership?
-          </h3>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Schedule a free consultation to discuss your specific needs and explore 
-            how we can work together to achieve your goals.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="#contact"
-              className="btn-primary"
-            >
-              Book Free Consultation
-            </a>
-            <a
-              href="mailto:nobilis.talent@gmail.com"
-              className="btn-outline"
-            >
-              Email Directly
-            </a>
-          </div>
-        </div>
       </div>
     </section>
   );

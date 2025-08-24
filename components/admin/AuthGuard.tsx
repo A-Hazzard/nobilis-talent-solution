@@ -5,11 +5,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
-interface AuthGuardProps {
+type AuthGuardProps = {
   children: React.ReactNode;
-}
+  requiredRole?: 'admin' | 'user';
+};
 
-export default function AuthGuard({ children }: AuthGuardProps) {
+export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const { isLoading, isAuthenticated, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -24,12 +25,18 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
     // Check admin role for admin routes
     if (!isLoading && isAuthenticated && user && pathname.startsWith('/admin') && user.role !== 'admin') {
-      router.push('/access-denied');
+      router.push('/');
+      return;
+    }
+
+    // Check required role if specified
+    if (!isLoading && isAuthenticated && user && requiredRole && user.role !== requiredRole) {
+      router.push('/');
       return;
     }
 
     setIsChecking(false);
-  }, [isLoading, isAuthenticated, user, router, pathname]);
+  }, [isLoading, isAuthenticated, user, router, pathname, requiredRole]);
 
   // Show loading spinner only briefly while checking
   if (isLoading || isChecking) {
@@ -48,9 +55,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     return null;
   }
 
-  // If authenticated but not admin on admin routes, show access denied
+  // If authenticated but not admin on admin routes, redirect to home
   if (isAuthenticated && user && pathname.startsWith('/admin') && user.role !== 'admin') {
-    return null; // Will redirect to access denied
+    return null; // Will redirect to home page
   }
 
   return <>{children}</>;

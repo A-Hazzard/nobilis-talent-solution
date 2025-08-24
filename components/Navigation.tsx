@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Menu, X, LogOut, User, ChevronDown, Home, User as UserIcon, Settings, FileText, Phone } from 'lucide-react';
+import ProfileModal from '@/components/admin/ProfileModal';
 import { usePendingPayment } from '@/lib/hooks/usePendingPayment';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,17 +11,28 @@ import logo  from "@/public/assets/logo-transparent.png"
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useUserStore } from '@/lib/stores/userStore';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, isAuthenticated, signOut, isLoading: authLoading } = useAuth();
   
   // Use authenticated user's email or fallback to demo email
   const userEmail = user?.email || 'john@company.com';
-  const { hasPendingPayment, pendingPayment } = usePendingPayment(userEmail);
+  const { pendingPayment, hasPendingPayment } = usePendingPayment(userEmail);
+
+  // Debug logging
+  console.log('Navigation render:', { 
+    user, 
+    isAuthenticated, 
+    authLoading,
+    userStore: useUserStore.getState()
+  });
+
   const pathname = usePathname();
   const isHomePage = pathname === '/';
+  const isAdminPage = pathname.startsWith('/admin');
 
   // Navigation links for home page (hash links for smooth scrolling)
   const homeNavLinks = [
@@ -60,6 +72,7 @@ const Navigation = () => {
   };
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false); // for user profile dropdown
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Scroll effect for sticky navigation
   useEffect(() => {
@@ -97,6 +110,7 @@ const Navigation = () => {
     };
   }, [isOpen]);
 
+ 
   return (
     <>
       <nav
@@ -170,14 +184,29 @@ const Navigation = () => {
                       <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
                         <ul className="py-2">
                           <li>
-                            <Link
-                              href="/profile"
-                              className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary text-sm"
-                              onClick={() => setUserDropdownOpen(false)}
-                            >
-                              Profile
-                            </Link>
+                            {isAdminPage ? (
+                              <button
+                                onClick={() => {
+                                  setIsProfileModalOpen(true);
+                                  setUserDropdownOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary text-sm flex items-center space-x-2"
+                              >
+                                <User size={14} />
+                                <span>Profile</span>
+                              </button>
+                            ) : (
+                              <Link
+                                href="/profile"
+                                className="px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary text-sm flex items-center space-x-2"
+                                onClick={() => setUserDropdownOpen(false)}
+                              >
+                                <User size={14} />
+                                <span>Profile</span>
+                              </Link>
+                            )}
                           </li>
+                         
                           {user?.role === 'admin' && (
                             <li>
                               <Link
@@ -240,6 +269,113 @@ const Navigation = () => {
           </div>
         </div>
       </nav>
+
+      {/* Mobile Navigation Menu */}
+      {isOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+          <div className="absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-2xl transform transition-all duration-300 ease-out">
+            <div className="px-4 py-6 space-y-4">
+              {navLinks.map((link, index) => {
+                const IconComponent = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="block text-gray-700 hover:text-primary px-6 py-4 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium touch-manipulation active:scale-98 active:bg-gray-100 min-h-14 flex items-center justify-center text-lg space-x-3"
+                    onClick={(e) => handleLinkClick(link.href, e)}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <IconComponent size={20} />
+                    <span>{link.label}</span>
+                  </Link>
+                );
+              })}
+              
+              {/* Mobile CTA Buttons */}
+              <div className="pt-4 space-y-3">
+                {hasPendingPayment && (
+                  <a
+                    href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
+                    className="block w-full text-center btn-secondary font-semibold px-4 py-3 rounded-lg"
+                  >
+                    Pay ${pendingPayment?.baseAmount || '0'}
+                  </a>
+                )}
+                
+                {isAuthenticated ? (
+                  <div className="space-y-2">
+                    {isAdminPage ? (
+                      <button
+                        onClick={() => {
+                          setIsProfileModalOpen(true);
+                          setIsOpen(false);
+                        }}
+                        className="w-full text-center btn-outline px-4 py-3 rounded-lg"
+                      >
+                        Profile
+                      </button>
+                    ) : (
+                      <Link
+                        href="/profile"
+                        className="w-full text-center btn-outline px-4 py-3 rounded-lg flex items-center justify-center"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Profile
+                      </Link>
+                    )}
+                    
+                    {user?.role === 'admin' && (
+                      <Link
+                        href="/admin"
+                        className="block w-full text-center btn-outline px-4 py-3 rounded-lg"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setIsOpen(false);
+                      }}
+                      className="w-full text-center btn-outline px-4 py-3 rounded-lg"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href="/signup"
+                    className="block w-full text-center btn-outline px-4 py-3 rounded-lg"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                )}
+                
+                <button
+                  onClick={() => {
+                    window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank');
+                    setIsOpen(false);
+                  }}
+                  className="w-full text-center btn-primary px-4 py-3 rounded-lg"
+                >
+                  Book Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+      />
     </>
   );
 };

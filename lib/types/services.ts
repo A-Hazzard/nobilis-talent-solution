@@ -259,6 +259,7 @@ export type UserProfile = {
   isActive: boolean;
   displayName: string;
   createdAt: Date;
+  memberSince?: Date;
   lastLoginAt?: Date;
   updatedAt: Date;
   

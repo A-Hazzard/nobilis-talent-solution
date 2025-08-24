@@ -64,23 +64,10 @@ const TestimonialsSection = () => {
     }
   };
 
-  const goToTestimonial = (index: number) => {
-    if (!isTransitioning && index !== currentTestimonial) {
-      setIsTransitioning(true);
-      setSlideDirection(index > currentTestimonial ? 'left' : 'right');
-      setTimeout(() => {
-        setCurrentTestimonial(index);
-        setIsTransitioning(false);
-        setSlideDirection(null);
-      }, 300);
-    }
-  };
+
 
   // Get current testimonial or fallback
   const current = testimonials.length > 0 ? testimonials[currentTestimonial] : null;
-
-  // Get display statistics
-  const displayStats = TestimonialUtils.getDisplayStats(testimonials);
 
   // Show loading state
   if (isLoading) {
@@ -218,31 +205,10 @@ const TestimonialsSection = () => {
               </button>
             </div>
 
-            {/* Dots indicator */}
-            <div className="flex justify-center space-x-2 mt-6">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToTestimonial(index)}
-                  disabled={isTransitioning}
-                  className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 hover:scale-125 disabled:cursor-not-allowed ${
-                    index === currentTestimonial ? 'bg-primary scale-125' : 'bg-primary/30 hover:bg-primary/60'
-                  }`}
-                />
-              ))}
-            </div>
+
           </div>
         </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 animate-fade-up">
-          {displayStats.map((stat, index) => (
-            <div key={index} className="text-center transition-transform duration-300 hover:scale-105">
-              <div className="text-3xl sm:text-4xl font-bold text-primary mb-2">{stat.value}</div>
-              <div className="text-muted-foreground text-sm sm:text-base">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+       
       </div>
     </section>
   );

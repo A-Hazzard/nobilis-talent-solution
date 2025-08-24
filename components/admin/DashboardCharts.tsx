@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AnalyticsService } from '@/lib/services/AnalyticsService';
-import { FakeDataService } from '@/lib/services/FakeDataService';
-import { useDashboardStore } from '@/lib/stores/dashboardStore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import {
@@ -58,9 +56,6 @@ export default function DashboardCharts({ period = 'month' }: DashboardChartsPro
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const { isFakeDataEnabled } = useDashboardStore();
-  const fakeDataService = FakeDataService.getInstance();
 
   useEffect(() => {
     const fetchChartData = async () => {
@@ -68,50 +63,44 @@ export default function DashboardCharts({ period = 'month' }: DashboardChartsPro
         setIsLoading(true);
         setError(null);
 
-        if (isFakeDataEnabled) {
-          // Use fake data
-          const fakeChartData = fakeDataService.generateFakeDashboardChartData();
-          setChartData(fakeChartData);
-        } else {
-          // Use real data with period
-          const analyticsService = new AnalyticsService();
-          const { total, error: leadsError } = await analyticsService.getLeadsAnalytics();
+        // Use real data with period
+        const analyticsService = new AnalyticsService();
+        const { total, error: leadsError } = await analyticsService.getLeadsAnalytics();
 
-          if (leadsError) {
-            throw new Error(leadsError);
-          }
-
-          // Generate period-specific data based on total leads (mock data for now)
-          let labels: string[];
-          let data: number[];
-          
-          if (period === 'week') {
-            labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            data = labels.map(() => Math.floor(Math.random() * Math.max(total / 7, 1)) + 1);
-          } else if (period === 'year') {
-            labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            data = labels.map(() => Math.floor(Math.random() * Math.max(total / 12, 1)) + 1);
-          } else {
-            // Default to monthly
-            labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-            data = labels.map(() => Math.floor(Math.random() * Math.max(total / 6, 1)) + 1);
-          }
-
-          setChartData({
-            leadsByMonth: {
-              labels,
-              data,
-            },
-            revenueOverview: {
-              labels: ['Total Revenue', 'Paid Invoices', 'Total Bonuses'],
-              data: [total * 1000, Math.floor(total * 0.7 * 1000), Math.floor(total * 0.3 * 1000)],
-            },
-            leadsBySource: {
-              labels: ['Users'],
-              data: [total],
-            },
-          });
+        if (leadsError) {
+          throw new Error(leadsError);
         }
+
+        // Generate period-specific data based on total leads (mock data for now)
+        let labels: string[];
+        let data: number[];
+        
+        if (period === 'week') {
+          labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+          data = labels.map(() => Math.floor(Math.random() * Math.max(total / 7, 1)) + 1);
+        } else if (period === 'year') {
+          labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          data = labels.map(() => Math.floor(Math.random() * Math.max(total / 12, 1)) + 1);
+        } else {
+          // Default to monthly
+          labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+          data = labels.map(() => Math.floor(Math.random() * Math.max(total / 6, 1)) + 1);
+        }
+
+        setChartData({
+          leadsByMonth: {
+            labels,
+            data,
+          },
+          revenueOverview: {
+            labels: ['Total Revenue', 'Paid Invoices', 'Total Bonuses'],
+            data: [total * 1000, Math.floor(total * 0.7 * 1000), Math.floor(total * 0.3 * 1000)],
+          },
+          leadsBySource: {
+            labels: ['Users'],
+            data: [total],
+          },
+        });
       } catch (err) {
         console.error('Error fetching chart data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load chart data');
@@ -121,7 +110,7 @@ export default function DashboardCharts({ period = 'month' }: DashboardChartsPro
     };
 
     fetchChartData();
-  }, [isFakeDataEnabled, period]);
+  }, [period]);
 
   if (isLoading) {
     return (

@@ -43,12 +43,12 @@ export async function POST(request: NextRequest) {
       isActive: userProfile.isActive,
     };
 
-    // TODO: Generate a real JWT token if needed, for now just return a placeholder
-    const token = 'real-jwt-token';
+    // Get the Firebase ID token
+    const token = await firebaseUser.getIdToken();
 
     // Set HTTP-only cookie
     const responseHeaders = new Headers();
-    responseHeaders.append('Set-Cookie', `auth-token=${token}; HttpOnly; Secure=${process.env.NODE_ENV === 'production'}; SameSite=Strict; Max-Age=${60 * 60 * 24 * 7}; Path=/`);
+    responseHeaders.append('Set-Cookie', `auth-token=${token}; HttpOnly; Secure=${process.env.NODE_ENV === 'production'}; SameSite=Strict; Max-Age=${60 * 60}; Path=/`);
 
     const response: LoginResponse = {
       user,

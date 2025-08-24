@@ -32,7 +32,6 @@ const publicRoutes = [
   '/payment',
   '/payment/success',
   '/payment/pending',
-  '/access-denied',
 ];
 
 // Define API routes that require authentication

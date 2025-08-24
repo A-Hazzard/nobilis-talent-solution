@@ -18,9 +18,9 @@ import ProfileModal from './ProfileModal';
 import Image from 'next/image';
 import logo from '@/public/assets/logo-transparent.png';
 
-interface AdminHeaderProps {
+type AdminHeaderProps = {
   onMenuClick: () => void;
-}
+};
 
 export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const router = useRouter();

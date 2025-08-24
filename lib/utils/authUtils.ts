@@ -5,20 +5,19 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 /**
  * Determines the appropriate redirect path based on user role, email verification, and onboarding status
  * @param user - The authenticated user
+ * @param isLogin - Whether this is a login flow (true) or signup flow (false)
  * @returns The path to redirect to
  */
-export function getRedirectPath(user: User | null): string {
+export function getRedirectPath(user: User | null, isLogin: boolean = false): string {
   if (!user) {
     return '/';
   }
 
-  // Check if user needs email verification (non-admin users only)
-  if (user.role !== 'admin' && !user.emailVerified) {
-    return '/verify-email';
-  }
+  // Email verification is only required for new sign-ups, not existing users signing in
+  // The verify-email page will handle this logic internally based on whether there's a verification token
 
-  // Check if user needs onboarding (non-admin users only)
-  if (user.role !== 'admin' && !user.onboardingCompleted) {
+  // Check if user needs onboarding (only for signup flow, not login)
+  if (!isLogin && user.role !== 'admin' && !user.onboardingCompleted) {
     return '/onboarding';
   }
 

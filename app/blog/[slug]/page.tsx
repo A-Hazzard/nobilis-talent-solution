@@ -162,6 +162,36 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
     }
   };
 
+  const handleDownload = async (resourceId: string) => {
+    try {
+      const resource = resources.find(r => r.id === resourceId);
+      if (resource?.fileUrl) {
+        // Increment download count via API
+        try {
+          const response = await fetch(`/api/content/resources/${resourceId}/download`, {
+            method: 'POST',
+          });
+          
+          if (response.ok) {
+            // Update local state
+            setResources(prev => prev.map(r => 
+              r.id === resourceId 
+                ? { ...r, downloadCount: r.downloadCount + 1 }
+                : r
+            ));
+          }
+        } catch (error) {
+          console.error('Error incrementing download count:', error);
+        }
+        
+        // Open download link
+        window.open(resource.fileUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error downloading resource:', error);
+    }
+  };
+
   // Sample data fallback
   const getSamplePost = (slug: string): BlogPost => {
     if (slug === 'blog-1') {
@@ -397,15 +427,13 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                     </div>
                     {resource.fileUrl && (
                       <div className="mt-3">
-                        <a 
-                          href={resource.fileUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
+                        <button 
+                          onClick={() => handleDownload(resource.id)}
                           className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"
                         >
                           <Download className="w-4 h-4" />
                           Download Resource
-                        </a>
+                        </button>
                       </div>
                     )}
                   </CardContent>

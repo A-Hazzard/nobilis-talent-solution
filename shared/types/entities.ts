@@ -12,6 +12,7 @@ export type User = {
   organization?: string;
   role: 'admin' | 'user';
   createdAt: Date;
+  memberSince?: Date;
   lastLoginAt?: Date;
   isActive: boolean;
   

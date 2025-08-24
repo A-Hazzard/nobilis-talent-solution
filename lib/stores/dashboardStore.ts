@@ -1,36 +1,29 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface DashboardState {
-  // Fake data toggle state
-  isFakeDataEnabled: boolean;
+type DashboardState = {
+  // Dashboard state (keeping minimal structure for future use)
+  initialized: boolean;
   
   // Actions
-  toggleFakeData: () => void;
-  setFakeDataEnabled: (enabled: boolean) => void;
-}
+  setInitialized: (initialized: boolean) => void;
+};
 
 export const useDashboardStore = create<DashboardState>()(
   persist(
     (set) => ({
       // Initial state
-      isFakeDataEnabled: false,
+      initialized: false,
       
       // Actions
-      toggleFakeData: () => {
-        set((state) => ({ 
-          isFakeDataEnabled: !state.isFakeDataEnabled 
-        }));
-      },
-      
-      setFakeDataEnabled: (enabled: boolean) => {
-        set({ isFakeDataEnabled: enabled });
+      setInitialized: (initialized: boolean) => {
+        set({ initialized });
       },
     }),
     {
       name: 'dashboard-storage',
       partialize: (state) => ({
-        isFakeDataEnabled: state.isFakeDataEnabled,
+        initialized: state.initialized,
       }),
     }
   )

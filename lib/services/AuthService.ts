@@ -279,6 +279,31 @@ export class AuthService {
     };
   }
 
+  async getAppUser(uid: string): Promise<AppUser | null> {
+    try {
+      const userProfile = await this.getUserProfile(uid);
+      if (!userProfile) return null;
+
+      return {
+        id: uid,
+        email: userProfile.email,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        displayName: userProfile.displayName,
+        phone: userProfile.phone,
+        organization: userProfile.organization,
+        role: userProfile.role,
+        createdAt: userProfile.createdAt,
+        memberSince: userProfile.memberSince,
+        lastLoginAt: userProfile.lastLoginAt,
+        isActive: userProfile.isActive,
+      };
+    } catch (error) {
+      console.error('Error getting app user:', error);
+      return null;
+    }
+  }
+
   private async createUserProfile(uid: string, userData: {
     firstName: string;
     lastName: string;
@@ -288,6 +313,7 @@ export class AuthService {
     displayName: string;
   }): Promise<void> {
     try {
+      const now = new Date();
       const userProfile = {
         uid,
         firstName: userData.firstName,
@@ -298,8 +324,10 @@ export class AuthService {
         displayName: userData.displayName,
         role: 'user',
         isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: now,
+        memberSince: now, // Set memberSince to current date and time
+        lastLoginAt: now, // Set initial last login to creation time
+        updatedAt: now,
       };
 
       await setDoc(doc(db, 'users', uid), userProfile);
@@ -312,10 +340,12 @@ export class AuthService {
 
   private async updateLastLogin(uid: string): Promise<void> {
     try {
+      const now = new Date();
       await setDoc(doc(db, 'users', uid), {
-        lastLoginAt: new Date(),
-        updatedAt: new Date(),
+        lastLoginAt: now,
+        updatedAt: now,
       }, { merge: true });
+      console.log('Last login updated for user:', uid);
     } catch (error) {
       console.error('Error updating last login:', error);
     }

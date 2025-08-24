@@ -4,10 +4,8 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDashboard } from '@/lib/hooks/useDashboard';
-import { useDemoStore } from '@/lib/stores/demoStore';
 import DashboardStats from '@/components/admin/DashboardStats';
 import DashboardCharts from '@/components/admin/DashboardCharts';
-import FakeDataToggle from '@/components/admin/FakeDataToggle';
 import { 
   getEntityIcon, 
   getActionIcon, 
@@ -21,7 +19,6 @@ export const dynamic = 'force-dynamic';
 
 export default function AdminDashboardPage() {
   const [dashboard, actions] = useDashboard();
-  const { isDemoMode, toggleDemoMode } = useDemoStore();
 
   useEffect(() => {
     // Load dashboard data on mount
@@ -77,28 +74,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Demo Mode Toggle */}
-      <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <div>
-          <h3 className="font-semibold text-blue-900">Demo Mode</h3>
-          <p className="text-sm text-blue-700">
-            {isDemoMode 
-              ? 'Demo mode is enabled. You can see sample data and test features.'
-              : 'Demo mode is disabled. You can enable it to see sample data.'
-            }
-          </p>
-        </div>
-        <Button
-          variant={isDemoMode ? 'default' : 'outline'}
-          onClick={toggleDemoMode}
-          className={isDemoMode ? 'bg-blue-600 hover:bg-blue-700' : ''}
-        >
-          {isDemoMode ? 'Disable Demo' : 'Enable Demo'}
-        </Button>
-      </div>
 
-      {/* Demo Data Toggle */}
-      <FakeDataToggle />
 
       {/* Stats Cards */}
       <DashboardStats period={period} />

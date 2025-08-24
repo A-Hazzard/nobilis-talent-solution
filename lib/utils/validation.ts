@@ -30,21 +30,27 @@ export function validatePassword(password: string): PasswordValidationResult {
       error: 'Password is required',
       hasMinLength: false,
       hasUppercase: false,
+      hasLowercase: false,
+      hasNumber: false,
       hasSpecialChar: false
     };
   }
 
   const hasMinLength = password.length >= 8;
   const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
   const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
 
-  const isValid = hasMinLength && hasUppercase && hasSpecialChar;
+  const isValid = hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
 
   let error: string | undefined;
   if (!isValid) {
     const missingRequirements = [];
     if (!hasMinLength) missingRequirements.push('at least 8 characters');
     if (!hasUppercase) missingRequirements.push('1 uppercase letter');
+    if (!hasLowercase) missingRequirements.push('1 lowercase letter');
+    if (!hasNumber) missingRequirements.push('1 number');
     if (!hasSpecialChar) missingRequirements.push('1 special character');
     
     error = `Password must contain ${missingRequirements.join(', ')}`;
@@ -55,6 +61,8 @@ export function validatePassword(password: string): PasswordValidationResult {
     error,
     hasMinLength,
     hasUppercase,
+    hasLowercase,
+    hasNumber,
     hasSpecialChar
   };
 }

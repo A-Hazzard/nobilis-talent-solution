@@ -221,28 +221,28 @@ const ContactSection = () => {
                   <Label className="text-accent text-sm sm:text-base mb-3 block">
                     Preferred Contact Method
                   </Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-muted transition-colors">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                    <label className="flex items-center p-2 sm:p-3 border rounded-lg cursor-pointer hover:bg-muted transition-colors">
                       <input
                         type="radio"
                         name="contactMethod"
                         value="email"
                         checked={formData.contactMethod === 'email'}
                         onChange={handleInputChange}
-                        className="mr-3 text-primary focus:ring-primary"
+                        className="mr-2 sm:mr-3 text-primary focus:ring-primary w-4 h-4 sm:w-5 sm:h-5"
                       />
-                      <span className="text-sm sm:text-base">Email</span>
+                      <span className="text-xs sm:text-sm lg:text-base">Email</span>
                     </label>
-                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-muted transition-colors">
+                    <label className="flex items-center p-2 sm:p-3 border rounded-lg cursor-pointer hover:bg-muted transition-colors">
                       <input
                         type="radio"
                         name="contactMethod"
                         value="phone"
                         checked={formData.contactMethod === 'phone'}
                         onChange={handleInputChange}
-                        className="mr-3 text-primary focus:ring-primary"
+                        className="mr-2 sm:mr-3 text-primary focus:ring-primary w-4 h-4 sm:w-5 sm:h-5"
                       />
-                      <span className="text-sm sm:text-base">Phone</span>
+                      <span className="text-xs sm:text-sm lg:text-base">Phone</span>
                     </label>
                   </div>
                 </div>
@@ -282,7 +282,7 @@ const ContactSection = () => {
                 <div className="space-y-4 sm:space-y-6">
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                      <Phone className="w-6 h-6 text-white" />
+                      <Phone className="w-6 h-6" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-accent text-sm sm:text-base">Phone</div>
@@ -294,7 +294,7 @@ const ContactSection = () => {
 
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                      <Mail className="w-6 h-6 text-white" />
+                      <Mail className="w-6 h-6" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-accent text-sm sm:text-base">Email</div>
@@ -306,7 +306,7 @@ const ContactSection = () => {
 
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                      <Globe className="w-6 h-6 text-white" />
+                      <Globe className="w-6 h-6" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-accent text-sm sm:text-base">Availability</div>
@@ -355,17 +355,17 @@ const ContactSection = () => {
         {/* Trust Indicators */}
         <div className="mt-12 lg:mt-16 text-center animate-fade-up">
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 text-xs sm:text-sm text-muted-foreground px-4">
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
-              Confidential Consultations
+            <div className="flex items-center justify-center">
+              <div className="w-2 h-2 bg-primary rounded-full mr-2 flex-shrink-0"></div>
+              <span className="text-left">Confidential Consultations</span>
             </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
-              No Obligation
+            <div className="flex items-center justify-center">
+              <div className="w-2 h-2 bg-primary rounded-full mr-2 flex-shrink-0"></div>
+              <span className="text-left">No Obligation</span>
             </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
-              24hr Response Time
+            <div className="flex items-center justify-center">
+              <div className="w-2 h-2 bg-primary rounded-full mr-2 flex-shrink-0"></div>
+              <span className="text-left">24hr Response Time</span>
             </div>
           </div>
         </div>

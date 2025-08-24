@@ -14,7 +14,6 @@ import CalendarHeader from '@/components/admin/calendar/CalendarHeader';
 import CalendarGrid from '@/components/admin/calendar/CalendarGrid';
 import UpcomingEvents from '@/components/admin/calendar/UpcomingEvents';
 import EventForm from '@/components/admin/calendar/EventForm';
-import CalendlyModal from '@/components/admin/calendar/CalendlyModal';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -42,14 +41,11 @@ export default function CalendarPage() {
     lastSyncTime,
     syncStats,
     showInstructions,
-    showCalendlyBooking,
-    selectedEventType,
     connectionAttempts,
     maxConnectionAttempts,
   } = state;
 
   const {
-    loadEvents,
     syncCalendlyEvents,
     connectCalendly,
     handleOpenModal,
@@ -61,7 +57,6 @@ export default function CalendarPage() {
     handleTimeChange,
     changeMonth,
     openCalendlyBooking,
-    closeCalendlyBooking,
     toggleInstructions,
     checkCalendlyConnection,
   } = actions;
@@ -281,18 +276,6 @@ export default function CalendarPage() {
         onFormChange={handleFormChange}
         onTypeChange={handleTypeChange}
         onTimeChange={handleTimeChange}
-      />
-
-      <CalendlyModal
-        isOpen={showCalendlyBooking}
-        onClose={closeCalendlyBooking}
-        eventType={selectedEventType}
-        onEventScheduled={(eventDetails) => {
-          console.log('Event scheduled:', eventDetails);
-          closeCalendlyBooking();
-          // Optionally refresh events after scheduling
-          loadEvents();
-        }}
       />
     </div>
   );

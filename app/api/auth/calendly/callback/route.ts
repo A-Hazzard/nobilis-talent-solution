@@ -20,6 +20,28 @@ export async function GET(request: NextRequest) {
 
   try {
     // Exchange authorization code for access token
+    // Dynamically construct the redirect URI based on the request origin
+    const requestOrigin = request.headers.get('origin') || request.headers.get('host');
+    let redirectUri;
+    
+    if (requestOrigin) {
+      if (requestOrigin.startsWith('http')) {
+        // Already has protocol
+        redirectUri = `${requestOrigin}/api/auth/calendly/callback`;
+      } else {
+        // No protocol, determine based on host
+        const isLocalhost = requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1');
+        const protocol = isLocalhost ? 'http://' : 'https://';
+        redirectUri = `${protocol}${requestOrigin}/api/auth/calendly/callback`;
+      }
+    } else {
+      redirectUri = process.env.NEXT_PUBLIC_CALENDLY_REDIRECT_URI || 'http://localhost:3000/api/auth/calendly/callback';
+    }
+    
+    console.log('🔗 Using redirect URI for token exchange:', redirectUri);
+    console.log('🔍 Request origin:', requestOrigin);
+    console.log('🔍 Request headers:', Object.fromEntries(request.headers.entries()));
+    
     const tokenResponse = await fetch('https://auth.calendly.com/oauth/token', {
       method: 'POST',
       headers: {
@@ -30,12 +52,18 @@ export async function GET(request: NextRequest) {
         client_id: process.env.NEXT_PUBLIC_CALENDLY_CLIENT_ID!,
         client_secret: process.env.CALENDLY_CLIENT_SECRET!,
         code: code,
-        redirect_uri: process.env.NEXT_PUBLIC_CALENDLY_REDIRECT_URI!,
+        redirect_uri: redirectUri,
       }),
     });
 
     if (!tokenResponse.ok) {
-      throw new Error(`Token exchange failed: ${tokenResponse.statusText}`);
+      const errorText = await tokenResponse.text();
+      console.error('❌ Calendly token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        body: errorText
+      });
+      throw new Error(`Token exchange failed: ${tokenResponse.status} ${tokenResponse.statusText} - ${errorText}`);
     }
 
     const tokenData = await tokenResponse.json();

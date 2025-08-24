@@ -187,8 +187,6 @@ export type CalendarState = {
   lastSyncTime: Date | null;
   syncStats: { synced: number; total: number };
   showInstructions: boolean;
-  showCalendlyBooking: boolean;
-  selectedEventType: any;
   connectionAttempts: number;
   maxConnectionAttempts: number;
 };
@@ -205,7 +203,7 @@ export type CalendarActions = {
   handleTypeChange: (value: string) => void;
   handleTimeChange: (field: 'startTime' | 'endTime', value: string) => void;
   changeMonth: (direction: 'prev' | 'next') => void;
-  openCalendlyBooking: () => Promise<void>;
+  openCalendlyBooking: () => void;
   closeCalendlyBooking: () => void;
   toggleInstructions: () => void;
   checkCalendlyConnection: () => Promise<'connected' | 'disconnected' | 'error'>;

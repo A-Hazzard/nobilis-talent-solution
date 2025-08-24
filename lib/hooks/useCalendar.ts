@@ -31,8 +31,6 @@ export function useCalendar(): [CalendarState, CalendarActions] {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [syncStats, setSyncStats] = useState<{ synced: number; total: number }>({ synced: 0, total: 0 });
   const [showInstructions, setShowInstructions] = useState(false);
-  const [showCalendlyBooking, setShowCalendlyBooking] = useState(false);
-  const [selectedEventType, setSelectedEventType] = useState<any>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [maxConnectionAttempts] = useState(2);
   const [isClient, setIsClient] = useState(false);
@@ -383,24 +381,13 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     });
   }, []);
 
-  const openCalendlyBooking = useCallback(async () => {
-    try {
-      const eventTypes = await calendlyService.getEventTypes();
-      if (eventTypes.data && eventTypes.data.length > 0) {
-        setSelectedEventType(eventTypes.data[0]);
-        setShowCalendlyBooking(true);
-      } else {
-        alert('No Calendly event types found. Please create an event type in Calendly first.');
-      }
-    } catch (error) {
-      console.error('Error opening Calendly booking:', error);
-      alert('Error connecting to Calendly. Please try again.');
-    }
-  }, [calendlyService]);
+  const openCalendlyBooking = useCallback(() => {
+    // Direct redirect to Calendly scheduling page
+    window.open('https://calendly.com/app/scheduling/meeting_types/user/me', '_blank');
+  }, []);
 
   const closeCalendlyBooking = useCallback(() => {
-    setShowCalendlyBooking(false);
-    setSelectedEventType(null);
+    // No longer needed since we removed the modal
   }, []);
 
   const toggleInstructions = useCallback(() => {
@@ -496,8 +483,6 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     lastSyncTime,
     syncStats,
     showInstructions,
-    showCalendlyBooking,
-    selectedEventType,
     connectionAttempts,
     maxConnectionAttempts,
   };

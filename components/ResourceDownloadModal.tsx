@@ -142,16 +142,17 @@ export default function ResourceDownloadModal({
     }, 100);
 
     try {
-      // Track the download
+      // Perform the actual download (this will handle the count increment)
+      await onDownload(resource.id);
+      
+      // Track the download for analytics (without incrementing count again)
       await analyticsService.trackDownload(
         resource.id,
         resource.title,
         user?.id,
-        user?.email
+        user?.email,
+        { skipIncrement: true } // Skip increment since it's already done by onDownload
       );
-
-      // Perform the actual download
-      await onDownload(resource.id);
       
       // Complete the progress
       clearInterval(progressInterval);

@@ -429,11 +429,14 @@ export default function ContentPage() {
     return description.length > 120 ? description.substring(0, 120) + '...' : description;
   };
 
-  // Get featured resources (top 3 by download count)
-  const featuredResources = resources
-    .filter(resource => resource.isPublic)
-    .sort((a, b) => b.downloadCount - a.downloadCount)
-    .slice(0, 3);
+  // Get featured resources (admin-selected or top 3 by download count as fallback)
+  const adminFeaturedResources = resources.filter(resource => resource.isPublic && resource.featured);
+  const featuredResources = adminFeaturedResources.length > 0 
+    ? adminFeaturedResources.slice(0, 3)
+    : resources
+        .filter(resource => resource.isPublic)
+        .sort((a, b) => (b.downloadCount || 0) - (a.downloadCount || 0))
+        .slice(0, 3);
 
   const getTypeIcon = (type: string) => {
     if (type === 'pdf') return <FileText className="w-10 h-10 text-gray-600" />;
@@ -495,14 +498,14 @@ export default function ContentPage() {
               {/* Search and Filter Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'blog' | 'resources')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6 lg:mb-8 h-12 lg:h-14">
-              <TabsTrigger value="blog" className="text-sm sm:text-base lg:text-lg px-2 sm:px-4 lg:px-6">
-                <FileText className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 mr-1 sm:mr-2" />
+            <TabsList className="grid w-full grid-cols-2 mb-6 lg:mb-8 h-10 lg:h-12">
+              <TabsTrigger value="blog" className="text-xs sm:text-sm lg:text-base px-2 sm:px-3 lg:px-4">
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4 lg:h-4 lg:w-4 mr-1" />
                 <span className="hidden sm:inline">Blog Posts</span>
                 <span className="sm:hidden">Blog</span>
               </TabsTrigger>
-              <TabsTrigger value="resources" className="text-sm sm:text-base lg:text-lg px-2 sm:px-4 lg:px-6">
-                <Download className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 mr-1 sm:mr-2" />
+              <TabsTrigger value="resources" className="text-xs sm:text-sm lg:text-base px-2 sm:px-3 lg:px-4">
+                <Download className="h-3 w-3 sm:h-4 sm:w-4 lg:h-4 lg:w-4 mr-1" />
                 <span className="hidden sm:inline">Resources</span>
                 <span className="sm:hidden">Files</span>
               </TabsTrigger>

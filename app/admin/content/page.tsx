@@ -91,6 +91,7 @@ export default function ContentPage() {
     type: 'pdf' as Resource['type'],
     category: 'leadership' as Resource['category'],
     isPublic: true,
+    featured: false,
     tags: [] as string[],
     relatedResources: [] as string[],
     thumbnailUrl: '',
@@ -317,6 +318,7 @@ export default function ContentPage() {
       type: 'pdf',
       category: 'leadership',
       isPublic: true,
+      featured: false,
       tags: [],
       relatedResources: [],
       thumbnailUrl: '',
@@ -325,13 +327,24 @@ export default function ContentPage() {
   };
 
   const handleAddResource = async () => {
-    if (!resourceFormData.title || !resourceFormData.description) {
-      toast.error("Please fill in all required fields");
+    // Validate required fields
+    const missingFields = [];
+    if (!resourceFormData.title) missingFields.push('Title');
+    if (!resourceFormData.description) missingFields.push('Description');
+    
+    if (missingFields.length > 0) {
+      toast.error(`Missing required fields: ${missingFields.join(', ')}`);
       return;
     }
 
     if (!selectedResourceFile && resourceFormData.type !== 'video') {
       toast.error("Please select a file to upload");
+      return;
+    }
+
+    // Validate featured resources limit
+    if (resourceFormData.featured && resourceFormData.relatedResources.length > 3) {
+      toast.error("You can only feature up to 3 resources");
       return;
     }
 
@@ -362,8 +375,19 @@ export default function ContentPage() {
   const handleEditResource = async () => {
     if (!editingResource) return;
     
-    if (!resourceFormData.title || !resourceFormData.description) {
-      toast.error("Please fill in all required fields");
+    // Validate required fields
+    const missingFields = [];
+    if (!resourceFormData.title) missingFields.push('Title');
+    if (!resourceFormData.description) missingFields.push('Description');
+    
+    if (missingFields.length > 0) {
+      toast.error(`Missing required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    // Validate featured resources limit
+    if (resourceFormData.featured && resourceFormData.relatedResources.length > 3) {
+      toast.error("You can only feature up to 3 resources");
       return;
     }
 
@@ -416,6 +440,7 @@ export default function ContentPage() {
       type: resource.type,
       category: resource.category,
       isPublic: resource.isPublic,
+      featured: resource.featured || false,
       tags: resource.tags || [],
       relatedResources: resource.relatedResources || [],
       thumbnailUrl: resource.thumbnailUrl || '',
@@ -951,20 +976,7 @@ export default function ContentPage() {
                 </div>
               </div>
 
-              {/* Resource Tags */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="resourceTags" className="text-right">Tags</Label>
-                <Input
-                  id="resourceTags"
-                  value={resourceFormData.tags.join(', ')}
-                  onChange={(e) => setResourceFormData({ 
-                    ...resourceFormData, 
-                    tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-                  })}
-                  className="col-span-3"
-                  placeholder="Add tags (comma separated)"
-                />
-              </div>
+
 
               {/* Public/Private Toggle */}
               <div className="grid grid-cols-4 items-center gap-4">
@@ -983,12 +995,29 @@ export default function ContentPage() {
                 </div>
               </div>
 
+              {/* Featured Resource Toggle */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="resourceFeatured" className="text-right">Featured</Label>
+                <div className="col-span-3 flex items-center space-x-2">
+                  <input
+                    id="resourceFeatured"
+                    type="checkbox"
+                    checked={resourceFormData.featured}
+                    onChange={(e) => setResourceFormData({ ...resourceFormData, featured: e.target.checked })}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="resourceFeatured" className="text-sm">
+                    Feature this resource in the "Featured Resources" section (max 3 featured resources)
+                  </Label>
+                </div>
+              </div>
+
               {/* Related Resources Selection */}
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label className="text-right pt-2">Related Resources</Label>
                 <div className="col-span-3 space-y-2">
                   <div className="text-sm text-gray-600 mb-2">
-                    Select other resources that are related to this one
+                    Select other resources that are related to this one (max 3 selections)
                   </div>
                   <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
                     {resources.length === 0 ? (
@@ -1005,6 +1034,10 @@ export default function ContentPage() {
                               checked={resourceFormData.relatedResources.includes(resource.id)}
                               onChange={(e) => {
                                 if (e.target.checked) {
+                                  if (resourceFormData.relatedResources.length >= 3) {
+                                    toast.error("You can only select up to 3 related resources");
+                                    return;
+                                  }
                                   setResourceFormData({
                                     ...resourceFormData,
                                     relatedResources: [...resourceFormData.relatedResources, resource.id]
@@ -1342,6 +1375,23 @@ export default function ContentPage() {
                         <SelectItem value="private">Private</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  {/* Featured Resource */}
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="resource-featured" className="text-right">Featured</Label>
+                    <div className="col-span-3 flex items-center space-x-2">
+                      <input
+                        id="resource-featured"
+                        type="checkbox"
+                        checked={resourceFormData.featured}
+                        onChange={(e) => setResourceFormData({ ...resourceFormData, featured: e.target.checked })}
+                        className="rounded border-gray-300"
+                      />
+                      <Label htmlFor="resource-featured" className="text-sm">
+                        Feature this resource in the "Featured Resources" section
+                      </Label>
+                    </div>
                   </div>
 
                   {/* Related Resources Selection */}
@@ -1973,19 +2023,21 @@ export default function ContentPage() {
               </div>
             </div>
 
-            {/* Tags */}
+            {/* Featured Resource Toggle */}
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-resource-tags" className="text-right">Tags</Label>
-              <Input
-                id="edit-resource-tags"
-                value={resourceFormData.tags.join(', ')}
-                onChange={(e) => setResourceFormData({ 
-                  ...resourceFormData, 
-                  tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-                })}
-                className="col-span-3"
-                placeholder="Add tags (comma separated)"
-              />
+              <Label htmlFor="edit-resource-featured" className="text-right">Featured</Label>
+              <div className="col-span-3 flex items-center space-x-2">
+                <input
+                  id="edit-resource-featured"
+                  type="checkbox"
+                  checked={resourceFormData.featured}
+                  onChange={(e) => setResourceFormData({ ...resourceFormData, featured: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="edit-resource-featured" className="text-sm">
+                  Feature this resource in the "Featured Resources" section (max 3 featured resources)
+                </Label>
+              </div>
             </div>
 
             {/* Public/Private */}
@@ -2007,7 +2059,7 @@ export default function ContentPage() {
               <Label className="text-right pt-2">Related Resources</Label>
               <div className="col-span-3 space-y-2">
                 <div className="text-sm text-gray-600 mb-2">
-                  Select other resources that are related to this one
+                  Select other resources that are related to this one (max 3 selections)
                 </div>
                 <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
                   {resources.length === 0 ? (
@@ -2024,6 +2076,10 @@ export default function ContentPage() {
                             checked={resourceFormData.relatedResources.includes(resource.id)}
                             onChange={(e) => {
                               if (e.target.checked) {
+                                if (resourceFormData.relatedResources.length >= 3) {
+                                  toast.error("You can only select up to 3 related resources");
+                                  return;
+                                }
                                 setResourceFormData({
                                   ...resourceFormData,
                                   relatedResources: [...resourceFormData.relatedResources, resource.id]

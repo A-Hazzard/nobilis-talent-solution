@@ -1,12 +1,7 @@
 'use client'
 
 import Navigation from '@/components/Navigation';
-import HeroSection from '@/components/HeroSection';
-import CompanySection from '@/components/CompanySection';
-import ValuesSection from '@/components/ValuesSection';
-import ServicesSection from '@/components/ServicesSection';
-import TestimonialsSection from '@/components/TestimonialsSection';
-import ContactSection from '@/components/ContactSection';
+import AboutSection from '@/components/AboutSection';
 import StickyCallButton from '@/components/StickyCallButton';
 import ScrollToTop from '@/components/ScrollToTop';
 import { useScrollAnimations, useParallax } from '@/lib/hooks/useScrollAnimations';
@@ -15,7 +10,7 @@ import { useEffect } from 'react';
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
 
-export default function Home() {
+export default function AboutPage() {
   useScrollAnimations();
   useParallax();
 
@@ -47,15 +42,10 @@ export default function Home() {
   return (
     <div className="min-h-screen relative">
       <Navigation />
-      <HeroSection />
-      <ServicesSection />
-      <CompanySection />
-      <ValuesSection />
-      <TestimonialsSection />
-      <ContactSection />
+      <AboutSection />
       {/* Footer rendered globally in RootLayout */}
       <StickyCallButton />
       <ScrollToTop />
     </div>
   );
-} 
+}

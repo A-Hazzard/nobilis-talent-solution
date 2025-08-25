@@ -1,5 +1,6 @@
 import { CheckCircle } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const AboutSection = () => {
   const achievements = [
@@ -133,10 +134,13 @@ const AboutSection = () => {
                 </ul>
               </div>
 
-              <div className="mt-8">
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <a href="#contact" className="btn-primary">
                   Let's Work Together
                 </a>
+                <Link href="/" className="btn-secondary">
+                  Back to Home
+                </Link>
               </div>
             </div>
           </div>

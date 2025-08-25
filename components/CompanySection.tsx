@@ -1,4 +1,7 @@
 import Image from 'next/image';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
 
 const CompanySection = () => {
   return (
@@ -8,7 +11,7 @@ const CompanySection = () => {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div data-animate>
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-6">
-                  About Nobilis Talent Solutions LLC
+                  About Nobilis Talent Solutions
                 </h2>
                 
                 <div className="space-y-4 text-base leading-7 text-foreground/80">
@@ -21,6 +24,15 @@ const CompanySection = () => {
                   <p>
                     If you're ready to reimagine what you or your organization can achieve, let's connect and start the transformation journey.
                   </p>
+                  
+                  <div className="mt-6">
+                    <Link href="/about">
+                      <Button className="btn-primary group">
+                        Read More About Kareem
+                        <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
 

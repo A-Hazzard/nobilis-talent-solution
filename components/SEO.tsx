@@ -40,7 +40,7 @@ export default function SEO({
   const defaultStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Nobilis Talent Solutions LLC',
+    name: 'Nobilis Talent Solutions',
     url: 'https://payneleadership.com',
     logo: 'https://payneleadership.com/logo-transparent.png',
     description: 'Human Capital Alchemist and Coach helping leaders and teams unlock potential, navigate change, and build cultures where people and performance flourish.',
@@ -72,7 +72,7 @@ export default function SEO({
     jobTitle: 'Human Capital Alchemist & Coach',
     worksFor: {
       '@type': 'Organization',
-      name: 'Nobilis Talent Solutions LLC'
+      name: 'Nobilis Talent Solutions'
     },
     description: 'Purposeful, passionate, and results-driven Human Capital Alchemist & Coach with experience across diverse sectors.',
     image: 'https://payneleadership.com/assets/kareem-profile.jpg',

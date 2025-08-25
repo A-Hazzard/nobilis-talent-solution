@@ -54,7 +54,7 @@ const HeroSection = () => {
         <div className="max-w-4xl mx-auto text-center">
           <div className="hero-text">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 hero-stagger">
-              Where strategy meets humanity, transformation happens.
+              Where strategy meets humanity
             </h1>
             
             <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed hero-stagger">

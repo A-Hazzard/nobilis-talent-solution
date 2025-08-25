@@ -10,15 +10,6 @@ const AboutSection = () => {
     "20+ businesses successfully launched",
   ];
 
-  const credentials = [
-    "MSc. Project Management & Evaluation",
-    "BSc. Management with Psychology",
-    "PMP (Project Management Professional)",
-    "CPTD (Certified Professional in Talent Development)",
-    "Certified Professional Coach (ICF Accredited Program)",
-    "Certified Professional in Measuring the Impact of L&D",
-  ];
-
   return (
     <section id="about" className="py-16 lg:py-24 gradient-subtle">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -100,7 +91,7 @@ const AboutSection = () => {
                 </p>
               </div>
 
-              {/* Achievements - Improved responsiveness */}
+              {/* Achievements - Made metrics bold */}
               <div className="mb-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   {achievements.map((achievement, index) => (
@@ -109,29 +100,12 @@ const AboutSection = () => {
                       className="flex flex-col items-center gap-2 sm:gap-3 rounded-xl border bg-card p-3 sm:p-4 text-card-foreground hover:shadow-md transition-shadow duration-200"
                     >
                       <CheckCircle className="h-6 w-6 text-primary mb-2" />
-                      <p className="text-xs sm:text-sm leading-relaxed">
+                      <p className="text-xs sm:text-sm leading-relaxed font-bold">
                         {achievement}
                       </p>
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Credentials - Improved responsiveness */}
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">
-                  Credentials / Certifications
-                </h3>
-                <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {credentials.map((credential, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm">
-                      <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                      <span className="text-xs sm:text-sm leading-relaxed">
-                        {credential}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
               </div>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4">

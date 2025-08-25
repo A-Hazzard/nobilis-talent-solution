@@ -50,6 +50,15 @@ export type LeadFormData = {
   confirmPassword: string;
   organization: string;
   phone: string;
+  // Onboarding fields
+  jobTitle?: string;
+  organizationType?: 'startup' | 'small-business' | 'enterprise' | 'nonprofit' | 'other';
+  industryFocus?: string;
+  teamSize?: string;
+  primaryGoals?: string[];
+  challengesDescription?: string;
+  timeline?: string;
+  budget?: string;
 };
 
 export type FieldErrors = {
@@ -98,17 +107,14 @@ export type LeadsActions = {
   handleDeleteLead: (id: string) => Promise<void>;
   openEditDialog: (lead: Lead) => void;
   resetForm: () => void;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   setSearchTerm: (term: string) => void;
   setFilters: (filters: { organizationType?: string; teamSize?: string }) => void;
-  setCurrentPage: (page: number) => void;
   setIsAddDialogOpen: (open: boolean) => void;
   setIsEditDialogOpen: (open: boolean) => void;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   setShowPassword: (show: boolean) => void;
   setShowConfirmPassword: (show: boolean) => void;
   formatDate: (date: Date) => string;
-  getFieldError: (fieldName: string) => string | undefined;
-  isFieldValid: (fieldName: string) => boolean;
   getFilteredLeads: () => Lead[];
 };
 

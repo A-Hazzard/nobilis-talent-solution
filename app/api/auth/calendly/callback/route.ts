@@ -1,47 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBaseUrl } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const code = searchParams.get('code');
-  const error = searchParams.get('error');
-
-  if (error) {
-    console.error('Calendly OAuth error:', error);
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/admin/calendar?error=oauth_failed`
-    );
-  }
-
-  if (!code) {
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/admin/calendar?error=no_code`
-    );
-  }
-
   try {
-    // Exchange authorization code for access token
-    // Dynamically construct the redirect URI based on the request origin
-    const requestOrigin = request.headers.get('origin') || request.headers.get('host');
-    let redirectUri;
-    
-    if (requestOrigin) {
-      if (requestOrigin.startsWith('http')) {
-        // Already has protocol
-        redirectUri = `${requestOrigin}/api/auth/calendly/callback`;
-      } else {
-        // No protocol, determine based on host
-        const isLocalhost = requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1');
-        const protocol = isLocalhost ? 'http://' : 'https://';
-        redirectUri = `${protocol}${requestOrigin}/api/auth/calendly/callback`;
-      }
-    } else {
-      redirectUri = process.env.NEXT_PUBLIC_CALENDLY_REDIRECT_URI || 'http://localhost:3000/api/auth/calendly/callback';
+    const { searchParams } = new URL(request.url);
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+
+    if (!code) {
+      return NextResponse.redirect(`${getBaseUrl()}/auth?error=no_code`);
     }
-    
-    console.log('🔗 Using redirect URI for token exchange:', redirectUri);
-    console.log('🔍 Request origin:', requestOrigin);
-    console.log('🔍 Request headers:', Object.fromEntries(request.headers.entries()));
-    
+
+    // Validate state parameter if needed
+    if (state && state !== 'your-state-validation') {
+      return NextResponse.redirect(`${getBaseUrl()}/auth?error=invalid_state`);
+    }
+
+    // Exchange code for access token
     const tokenResponse = await fetch('https://auth.calendly.com/oauth/token', {
       method: 'POST',
       headers: {
@@ -49,38 +24,26 @@ export async function GET(request: NextRequest) {
       },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
-        client_id: process.env.NEXT_PUBLIC_CALENDLY_CLIENT_ID!,
-        client_secret: process.env.CALENDLY_CLIENT_SECRET!,
         code: code,
-        redirect_uri: redirectUri,
+        client_id: process.env.CALENDLY_CLIENT_ID || '',
+        client_secret: process.env.CALENDLY_CLIENT_SECRET || '',
+        redirect_uri: `${getBaseUrl()}/api/auth/calendly/callback`,
       }),
     });
 
     if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('❌ Calendly token exchange failed:', {
-        status: tokenResponse.status,
-        statusText: tokenResponse.statusText,
-        body: errorText
-      });
-      throw new Error(`Token exchange failed: ${tokenResponse.status} ${tokenResponse.statusText} - ${errorText}`);
+      console.error('Calendly token exchange failed:', await tokenResponse.text());
+      return NextResponse.redirect(`${getBaseUrl()}/auth?error=token_exchange_failed`);
     }
 
     const tokenData = await tokenResponse.json();
     
-    // Store the access token (in a real app, you'd store this securely)
-    // For now, we'll redirect with the token in the URL (not secure for production)
-    const accessToken = tokenData.access_token;
-    
-    // Redirect back to calendar with success
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/admin/calendar?success=true&token=${accessToken}`
-    );
+    // Store the access token securely (you might want to store this in your database)
+    // For now, we'll redirect to success
+    return NextResponse.redirect(`${getBaseUrl()}/auth?success=true&provider=calendly`);
 
   } catch (error) {
-    console.error('Error exchanging code for token:', error);
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/admin/calendar?error=token_exchange_failed`
-    );
+    console.error('Calendly callback error:', error);
+    return NextResponse.redirect(`${getBaseUrl()}/auth?error=callback_failed`);
   }
 } 

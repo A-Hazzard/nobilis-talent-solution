@@ -37,19 +37,19 @@ const Navigation = () => {
   // Navigation links for home page (hash links for smooth scrolling)
   const homeNavLinks = [
     { href: '#home', label: 'Home', icon: Home },
-    { href: '#about', label: 'About', icon: UserIcon },
-    { href: '#services', label: 'Services', icon: Settings },
+    { href: '/about', label: 'About', icon: UserIcon },
+    { href: '/services', label: 'Services', icon: Settings },
     { href: '/content', label: 'Content', icon: FileText },
-    { href: '#contact', label: 'Contact', icon: Phone },
+    { href: '/contact', label: 'Contact', icon: Phone },
   ];
 
   // Navigation links for other pages (proper routing)
   const otherPageNavLinks = [
     { href: '/', label: 'Home', icon: Home },
-    { href: '/#about', label: 'About', icon: UserIcon },
-    { href: '/#services', label: 'Services', icon: Settings },
+    { href: '/about', label: 'About', icon: UserIcon },
+    { href: '/services', label: 'Services', icon: Settings },
     { href: '/content', label: 'Content', icon: FileText },
-    { href: '/#contact', label: 'Contact', icon: Phone },
+    { href: '/contact', label: 'Contact', icon: Phone },
   ];
 
   const navLinks = isHomePage ? homeNavLinks : otherPageNavLinks;

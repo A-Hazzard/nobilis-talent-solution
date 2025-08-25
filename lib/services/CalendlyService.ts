@@ -1,5 +1,6 @@
 import type { CalendarEvent } from '@/shared/types/entities';
 import type { CalendlyScheduledEvent } from '@/lib/types/services';
+import { getBaseUrl } from "@/lib/utils";
 
 export class CalendlyService {
   private static instance: CalendlyService;
@@ -81,6 +82,14 @@ export class CalendlyService {
     console.log('Calendly OAuth URL:', authUrl);
     
     return authUrl;
+  }
+
+  /**
+   * Get the redirect URI for Calendly OAuth
+   */
+  getRedirectUri(): string {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/auth/calendly/callback`;
   }
 
   /**

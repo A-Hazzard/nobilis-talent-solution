@@ -223,23 +223,32 @@ export function LeadsTable({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(lead)}>
+            <DropdownMenuItem onClick={(e) => {
+              e.stopPropagation();
+              onEdit(lead);
+            }}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onGeneratePaymentLink(lead)}>
+            <DropdownMenuItem onClick={(e) => {
+              e.stopPropagation();
+              onGeneratePaymentLink(lead);
+            }}>
               <CreditCard className="h-4 w-4 mr-2" />
               Generate Payment Link
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <a href={`mailto:${lead.email}`}>
+              <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()}>
                 <Mail className="h-4 w-4 mr-2" />
                 Send Email
               </a>
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="text-red-600"
-              onClick={() => onDelete(lead.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(lead.id);
+              }}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete

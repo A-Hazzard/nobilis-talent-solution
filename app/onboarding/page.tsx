@@ -129,6 +129,16 @@ export default function OnboardingPage() {
           ...prev,
           firstName: user.firstName || '',
           lastName: user.lastName || '',
+          jobTitle: user.jobTitle || '',
+          phone: user.phone || '',
+          organizationName: user.organization || '',
+          organizationType: user.organizationType || 'small-business',
+          industryFocus: user.industryFocus || '',
+          teamSize: user.teamSize || '',
+          primaryGoals: user.primaryGoals || [],
+          challengesDescription: user.challengesDescription || '',
+          timeline: user.timeline || '',
+          budget: user.budget || '',
         }));
       }
     }

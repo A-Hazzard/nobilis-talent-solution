@@ -35,13 +35,23 @@ const ContactSection = () => {
     setErrorMessage('');
 
     try {
+      // Prepare data in the format the API expects
+      const apiData = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone,
+        organization: formData.company,
+        message: formData.challenges,
+        contactMethod: formData.contactMethod
+      };
+
       // Submit to backend API
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(apiData),
       });
 
       const result = await response.json();

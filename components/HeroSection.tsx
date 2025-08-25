@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Calendar, Users, TrendingUp, ChevronDown } from 'lucide-react';
+import { ArrowRight, Users, TrendingUp, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
 
@@ -81,36 +81,6 @@ const HeroSection = () => {
                 Explore Services
               </a>
             </div>
-
-            {/* Value Proposition */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-12 hero-stagger">
-              <h3 className="text-xl font-semibold text-white mb-4">Why Choose Kareem Payne Leadership?</h3>
-              <div className="grid md:grid-cols-3 gap-6 text-center">
-                <div>
-                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="font-semibold text-white mb-2">Proven Results</h4>
-                  <p className="text-white/80 text-sm">98% success rate with measurable improvements</p>
-                </div>
-                <div>
-                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <TrendingUp className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="font-semibold text-white mb-2">Strategic Approach</h4>
-                  <p className="text-white/80 text-sm">Customized solutions for your unique challenges</p>
-                </div>
-                <div>
-                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Calendar className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="font-semibold text-white mb-2">Free Consultation</h4>
-                  <p className="text-white/80 text-sm">30-minute strategy session at no cost</p>
-                </div>
-              </div>
-            </div>
-
-           
           </div>
         </div>
       </div>

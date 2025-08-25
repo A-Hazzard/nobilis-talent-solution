@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import type { EmailData, InvoiceEmailData } from "@/lib/types/services";
+import { getBaseUrl } from "@/lib/utils";
 
 export class EmailService {
   private static instance: EmailService;
@@ -34,6 +35,7 @@ export class EmailService {
    * Generate simple HTML email
    */
   private generateSimpleHTML(subject: string, content: string): string {
+    const baseUrl = getBaseUrl();
     return `
           <!DOCTYPE html>
           <html>
@@ -52,7 +54,7 @@ export class EmailService {
           <body>
               <div class="container">
                   <div class="header">
-                      <h1>Payne Leadership</h1>
+                      <h1>Nobilis Talent Solutions</h1>
                       <p>${subject}</p>
                   </div>
                   
@@ -61,9 +63,9 @@ export class EmailService {
                   </div>
                   
                   <div class="footer">
-                      <p>Payne Leadership<br>
+                      <p>Nobilis Talent Solutions<br>
                       123 Business St, City, State 12345<br>
-                      +1 (555) 123-4567 | contact@payneleadership.com</p>
+                      +1 (555) 123-4567 | nobilis.talent@gmail.com</p>
                   </div>
               </div>
           </body>
@@ -106,6 +108,7 @@ export class EmailService {
     data: InvoiceEmailData
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      const baseUrl = getBaseUrl();
       const dueDate = data.invoice.dueDate.toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
@@ -145,13 +148,13 @@ export class EmailService {
         </div>
         
         <p>Please review the invoice above and complete your payment at your earliest convenience.</p>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/payment?invoice=${data.invoice.invoiceNumber}" 
+        <a href="${baseUrl}/payment?invoice=${data.invoice.invoiceNumber}" 
            style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Pay Now</a>
         
         <p>If you have any questions, please don't hesitate to contact us.</p>
         
         <p>Best regards,<br>
-        Payne Leadership Team</p>
+        Nobilis Talent Solutions Team</p>
       `;
 
       const html = this.generateSimpleHTML("Invoice", content);
@@ -207,14 +210,14 @@ export class EmailService {
         <p>${resetLink}</p>
         
         <p>Best regards,<br>
-        Payne Leadership Team</p>
+        Nobilis Talent Solutions Team</p>
       `;
 
       const html = this.generateSimpleHTML("Password Reset Request", content);
 
       return await this.sendEmail({
         to,
-        subject: "Password Reset Request - Payne Leadership",
+        subject: "Password Reset Request - Nobilis Talent Solutions",
         html,
       });
     } catch (error) {
@@ -226,7 +229,7 @@ export class EmailService {
     }
   }
 
-  /**git
+  /**
    * Send welcome email
    */
   async sendWelcomeEmail(
@@ -234,10 +237,11 @@ export class EmailService {
     userName: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      const baseUrl = getBaseUrl();
       const content = `
         <p>Hello ${userName},</p>
         
-        <p>Welcome to Payne Leadership! We're thrilled to have you as part of our community.</p>
+        <p>Welcome to Nobilis Talent Solutions! We're thrilled to have you as part of our community.</p>
         
         <p>Here's what you can do to get started:</p>
         <ul>
@@ -247,23 +251,23 @@ export class EmailService {
           <li>Access our resources</li>
         </ul>
         
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin" 
+        <a href="${baseUrl}/admin" 
            style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
         
         <p>If you have any questions or need assistance, don't hesitate to reach out to our support team.</p>
         
         <p>Best regards,<br>
-        Payne Leadership Team</p>
+        Nobilis Talent Solutions Team</p>
       `;
 
       const html = this.generateSimpleHTML(
-        "Welcome to Payne Leadership!",
+        "Welcome to Nobilis Talent Solutions!",
         content
       );
 
       return await this.sendEmail({
         to,
-        subject: "Welcome to Payne Leadership!",
+        subject: "Welcome to Nobilis Talent Solutions!",
         html,
       });
     } catch (error) {
@@ -287,10 +291,11 @@ export class EmailService {
     contactMethod: 'email' | 'phone';
   }): Promise<{ success: boolean; error?: string }> {
     try {
+      const baseUrl = getBaseUrl();
       const content = `
         <p>Dear ${data.firstName} ${data.lastName},</p>
         
-        <p>Thank you for reaching out to Payne Leadership! We've received your message and appreciate you taking the time to share your challenges with us.</p>
+        <p>Thank you for contacting Nobilis Talent Solutions! We've received your message and appreciate you taking the time to share your challenges with us.</p>
         
         <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
           <h4>Your Message Summary:</h4>
@@ -304,23 +309,22 @@ export class EmailService {
         
         <p>In the meantime, you might find these resources helpful:</p>
         <ul>
-          <li><a href="${process.env.NEXT_PUBLIC_APP_URL}/resources">Free Leadership Resources</a></li>
-
-          <li><a href="${process.env.NEXT_PUBLIC_APP_URL}/blog">Leadership Blog</a></li>
+          <li><a href="${baseUrl}/resources">Free Leadership Resources</a></li>
+          <li><a href="${baseUrl}/blog">Leadership Blog</a></li>
         </ul>
         
         <p>If you have any urgent questions, feel free to call us directly at +1 (555) 123-4567.</p>
         
         <p>Best regards,<br>
         Kareem Payne<br>
-        Payne Leadership</p>
+        Nobilis Talent Solutions</p>
       `;
 
-      const html = this.generateSimpleHTML("Thank You for Contacting Us", content);
+      const html = this.generateSimpleHTML("Thank You for Contacting Nobilis Talent Solutions", content);
 
       return await this.sendEmail({
         to: data.to,
-        subject: "Thank You for Contacting Payne Leadership",
+        subject: "Thank You for Contacting Nobilis Talent Solutions",
         html,
       });
     } catch (error) {
@@ -369,11 +373,11 @@ export class EmailService {
         <p><strong>Action Required:</strong> Please respond to this contact within 24 hours.</p>
         
         <div style="margin: 20px 0;">
-          <a href="mailto:${data.contactData.email}?subject=Re: Your inquiry to Payne Leadership" 
+          <a href="mailto:${data.contactData.email}?subject=Re: Your inquiry to Nobilis Talent Solutions" 
              style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin-right: 10px;">Reply via Email</a>
           
           ${data.contactData.phone ? `<a href="tel:${data.contactData.phone}" 
-             style="display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 6px;">Call Now</a>` : ''}
+             style="margin-top: 10px; display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 6px;">Call Now</a>` : ''}
         </div>
         
         <p>Contact ID: ${data.contactData.id}</p>
@@ -426,7 +430,7 @@ export class EmailService {
         <p>If you have any questions about this payment, please don't hesitate to contact us.</p>
         
         <p>Best regards,<br>
-        Payne Leadership Team</p>
+        Nobilis Talent Solutions Team</p>
       `;
 
       const html = this.generateSimpleHTML("Payment Confirmation", content);
@@ -458,6 +462,7 @@ export class EmailService {
     meetingLink?: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
+      const baseUrl = getBaseUrl();
       const content = `
         <p>Dear ${data.clientName},</p>
         
@@ -482,12 +487,12 @@ export class EmailService {
         
         <p>If you need to reschedule or cancel this appointment, please contact us at least 24 hours in advance.</p>
         
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/calendar" 
+        <a href="${baseUrl}/admin/calendar" 
            style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">View Calendar</a>
         
         <p>Best regards,<br>
         Kareem Payne<br>
-        Payne Leadership</p>
+        Nobilis Talent Solutions</p>
       `;
 
       const html = this.generateSimpleHTML("Appointment Confirmation", content);

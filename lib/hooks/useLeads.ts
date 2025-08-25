@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { Lead } from '@/shared/types/entities';
-import type { LeadFormData, FieldErrors, LeadsState, LeadsActions } from '@/lib/types/hooks';
+import { useState, useCallback, useEffect } from 'react';
 import { LeadsService } from '@/lib/services/LeadsService';
 import { toast } from 'sonner';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
+import type { Lead } from '@/shared/types/entities';
+import type { LeadsState, LeadsActions, FieldErrors } from '@/lib/types/hooks';
 import { validatePassword } from '@/lib/utils/validation';
-import { logAuditAction } from '@/lib/utils/auditUtils';
 
 /**
  * Custom hook for leads state management
@@ -43,6 +43,15 @@ export function useLeads(): [LeadsState, LeadsActions] {
       confirmPassword: '',
       organization: '',
       phone: '',
+      // Onboarding fields
+      jobTitle: '',
+      organizationType: undefined,
+      industryFocus: '',
+      teamSize: '',
+      primaryGoals: [],
+      challengesDescription: '',
+      timeline: '',
+      budget: '',
     },
   });
 
@@ -116,7 +125,8 @@ export function useLeads(): [LeadsState, LeadsActions] {
         toast.error(error);
       } else {
         // Log audit action
-        await logAuditAction({
+        await logAdminAction({
+          userId: 'admin', // Since this is admin action
           action: 'create',
           entity: 'lead',
           entityId: formData.email, // Use email as entityId for leads
@@ -168,7 +178,8 @@ export function useLeads(): [LeadsState, LeadsActions] {
         toast.error(response.error);
       } else {
         // Log audit action
-        await logAuditAction({
+        await logAdminAction({
+          userId: 'admin', // Since this is admin action
           action: 'update',
           entity: 'lead',
           entityId: editingLead.id,
@@ -228,7 +239,8 @@ export function useLeads(): [LeadsState, LeadsActions] {
       } else {
         // Log audit action
         if (leadToDelete) {
-          await logAuditAction({
+          await logAdminAction({
+            userId: 'admin', // Since this is admin action
             action: 'delete',
             entity: 'lead',
             entityId: id,
@@ -263,6 +275,15 @@ export function useLeads(): [LeadsState, LeadsActions] {
         confirmPassword: '',
         organization: lead.organization || '',
         phone: lead.phone || '',
+        // Onboarding fields
+        jobTitle: lead.jobTitle || '',
+        organizationType: lead.organizationType,
+        industryFocus: lead.industryFocus || '',
+        teamSize: lead.teamSize || '',
+        primaryGoals: lead.primaryGoals || [],
+        challengesDescription: lead.challengesDescription || '',
+        timeline: lead.timeline || '',
+        budget: lead.budget || '',
       },
       isEditDialogOpen: true,
     }));
@@ -279,6 +300,15 @@ export function useLeads(): [LeadsState, LeadsActions] {
         confirmPassword: '',
         organization: '',
         phone: '',
+        // Onboarding fields
+        jobTitle: '',
+        organizationType: undefined,
+        industryFocus: '',
+        teamSize: '',
+        primaryGoals: [],
+        challengesDescription: '',
+        timeline: '',
+        budget: '',
       },
       fieldErrors: {},
       passwordValidation: {
@@ -291,13 +321,25 @@ export function useLeads(): [LeadsState, LeadsActions] {
     }));
   }, []);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const onInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setState(prev => ({ 
-      ...prev, 
-      formData: { ...prev.formData, [name]: value },
-      error: null 
-    }));
+    
+    setState(prev => {
+      let newFormData = { ...prev.formData };
+      
+      // Handle special case for primaryGoals array
+      if (name === 'primaryGoals') {
+        newFormData[name] = value.split(',').map(goal => goal.trim()).filter(goal => goal) as any;
+      } else {
+        newFormData[name as keyof typeof newFormData] = value as any;
+      }
+      
+      return { 
+        ...prev, 
+        formData: newFormData,
+        error: null 
+      };
+    });
 
     // Clear field-specific error when user starts typing
     if (state.fieldErrors[name as keyof FieldErrors]) {
@@ -338,44 +380,15 @@ export function useLeads(): [LeadsState, LeadsActions] {
 
     if (name === 'firstName' || name === 'lastName') {
       const fieldName = name === 'firstName' ? 'First name' : 'Last name';
-      if (value && value.trim().length < 3) {
+      if (value.length < 2) {
         setState(prev => ({
           ...prev,
-          fieldErrors: { ...prev.fieldErrors, [name]: `${fieldName} must be at least 3 characters long` }
+          fieldErrors: { ...prev.fieldErrors, [name]: `${fieldName} must be at least 2 characters` }
         }));
       } else {
         setState(prev => ({
           ...prev,
           fieldErrors: { ...prev.fieldErrors, [name]: undefined }
-        }));
-      }
-    }
-
-    if (name === 'organization' && value) {
-      if (value.trim().length < 3) {
-        setState(prev => ({
-          ...prev,
-          fieldErrors: { ...prev.fieldErrors, organization: 'Organization must be at least 3 characters long' }
-        }));
-      } else {
-        setState(prev => ({
-          ...prev,
-          fieldErrors: { ...prev.fieldErrors, organization: undefined }
-        }));
-      }
-    }
-
-    if (name === 'phone' && value) {
-      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-      if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
-        setState(prev => ({
-          ...prev,
-          fieldErrors: { ...prev.fieldErrors, phone: 'Please enter a valid phone number' }
-        }));
-      } else {
-        setState(prev => ({
-          ...prev,
-          fieldErrors: { ...prev.fieldErrors, phone: undefined }
         }));
       }
     }
@@ -386,11 +399,7 @@ export function useLeads(): [LeadsState, LeadsActions] {
   }, []);
 
   const setFilters = useCallback((filters: { organizationType?: string; teamSize?: string }) => {
-    setState(prev => ({ ...prev, filters: { ...prev.filters, ...filters }, currentPage: 1 }));
-  }, []);
-
-  const setCurrentPage = useCallback((page: number) => {
-    setState(prev => ({ ...prev, currentPage: page }));
+    setState(prev => ({ ...prev, filters: { ...prev.filters, ...filters } }));
   }, []);
 
   const setIsAddDialogOpen = useCallback((open: boolean) => {
@@ -410,16 +419,14 @@ export function useLeads(): [LeadsState, LeadsActions] {
   }, []);
 
   const formatDate = useCallback((date: Date) => {
-    return new Date(date).toLocaleDateString();
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
   }, []);
-
-  const getFieldError = useCallback((fieldName: string) => {
-    return state.fieldErrors[fieldName as keyof FieldErrors];
-  }, [state.fieldErrors]);
-
-  const isFieldValid = useCallback((fieldName: string) => {
-    return !getFieldError(fieldName) && state.formData[fieldName as keyof LeadFormData]?.trim() !== '';
-  }, [getFieldError, state.formData]);
 
   useEffect(() => {
     loadLeads();
@@ -432,26 +439,24 @@ export function useLeads(): [LeadsState, LeadsActions] {
     }
   }, [state.searchTerm]); // Only depend on searchTerm
 
-  const actions: LeadsActions = {
-    loadLeads,
-    handleAddLead,
-    handleEditLead,
-    handleDeleteLead,
-    openEditDialog,
-    resetForm,
-    handleInputChange,
-    setSearchTerm,
-    setFilters,
-    setCurrentPage,
-    setIsAddDialogOpen,
-    setIsEditDialogOpen,
-    setShowPassword,
-    setShowConfirmPassword,
-    formatDate,
-    getFieldError,
-    isFieldValid,
-    getFilteredLeads,
-  };
-
-  return [state, actions];
+  return [
+    state,
+    {
+      loadLeads,
+      handleAddLead,
+      handleEditLead,
+      handleDeleteLead,
+      openEditDialog,
+      resetForm,
+      onInputChange,
+      setSearchTerm,
+      setFilters,
+      setIsAddDialogOpen,
+      setIsEditDialogOpen,
+      setShowPassword,
+      setShowConfirmPassword,
+      formatDate,
+      getFilteredLeads,
+    },
+  ];
 } 

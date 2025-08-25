@@ -23,6 +23,20 @@ type ContactFormData = {
 };
 
 /**
+ * Filter out undefined values from an object
+ * Firebase doesn't allow undefined values in documents
+ */
+function filterUndefinedValues(obj: Record<string, any>): Record<string, any> {
+  const filtered: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      filtered[key] = value;
+    }
+  }
+  return filtered;
+}
+
+/**
  * Check rate limiting
  */
 function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetTime: number } {
@@ -103,12 +117,12 @@ export async function POST(request: NextRequest) {
     const formData: ContactFormData = {
       name: body.name.trim(),
       email: body.email.trim().toLowerCase(),
-      phone: body.phone?.trim(),
-      organization: body.organization?.trim(),
+      phone: body.phone?.trim() || null,
+      organization: body.organization?.trim() || null,
       message: body.message.trim(),
-      budget: body.budget?.trim(),
-      timeline: body.timeline?.trim(),
-      serviceType: body.serviceType?.trim()
+      budget: body.budget?.trim() || null,
+      timeline: body.timeline?.trim() || null,
+      serviceType: body.serviceType?.trim() || null
     };
 
     // Spam detection
@@ -119,14 +133,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to Firestore
-    const contactData = {
+    const contactData = filterUndefinedValues({
       ...formData,
       createdAt: serverTimestamp(),
       ipAddress: ip,
       userAgent: request.headers.get('user-agent') || '',
       isSpam: detectSpam(formData),
       status: 'new'
-    };
+    });
 
     const docRef = await addDoc(collection(db, 'contacts'), contactData);
 
@@ -161,7 +175,7 @@ export async function POST(request: NextRequest) {
 
     // Send notification email to admin
     await emailService.sendContactNotification({
-      to: process.env.ADMIN_EMAIL || 'kareempayne11@gmail.com',
+      to: process.env.SMTP_FROM || process.env.ADMIN_EMAIL || 'kareempayne11@gmail.com',
       contactData: {
         id: docRef.id,
         firstName: formData.name.split(' ')[0] || formData.name,
@@ -177,7 +191,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Thank you for your message! We\'ll get back to you within 24 hours.',
+      message: 'Thank you for contacting Nobilis Talent Solutions! We\'ll get back to you within 24 hours.',
       contactId: docRef.id
     });
 
@@ -196,4 +210,4 @@ export async function GET() {
     { error: 'Method not allowed' },
     { status: 405 }
   );
-} 
+}

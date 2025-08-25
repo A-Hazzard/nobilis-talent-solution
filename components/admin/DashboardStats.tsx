@@ -8,10 +8,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
 interface DashboardStatsProps {
-  period?: 'week' | 'month' | 'year';
+  // period parameter removed as it's not being used
 }
 
-export default function DashboardStats({ period = 'month' }: DashboardStatsProps) {
+export default function DashboardStats({}: DashboardStatsProps) {
   const [dashboard] = useDashboard();
 
   const { isLoading, error, analytics } = dashboard;
@@ -90,19 +90,6 @@ export default function DashboardStats({ period = 'month' }: DashboardStatsProps
       </div>
     );
   }
-
-  const _getPeriodDescription = () => {
-    switch (period) {
-      case 'week':
-        return 'This week';
-      case 'month':
-        return 'This month';
-      case 'year':
-        return 'This year';
-      default:
-        return 'This month';
-    }
-  };
 
   // Helper function to safely format numbers
   const safeFormatNumber = (value: number | undefined | null): string => {

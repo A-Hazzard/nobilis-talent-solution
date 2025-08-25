@@ -220,8 +220,8 @@ export default function ContentPage() {
         } else {
           setResources(resourcesResponse.resources);
         }
-      } catch (_err) {
-        console.error('Failed to search data:', _err);
+      } catch (err) {
+        console.error('Failed to search data:', err);
         setError('Failed to search data');
       } finally {
         setIsLoading(false);
@@ -262,8 +262,8 @@ export default function ContentPage() {
       } else {
         setResources(resourcesResponse.resources);
       }
-    } catch (_err) {
-      console.error('Failed to load data:', _err);
+    } catch (err) {
+      console.error('Failed to load data:', err);
       setError('Failed to load data');
     } finally {
       setIsLoading(false);
@@ -309,8 +309,8 @@ export default function ContentPage() {
         resetForm();
         await loadData();
       }
-    } catch (_error) {
-      console.error('Exception in handleAddPost:', _error);
+    } catch (error) {
+      console.error('Exception in handleAddPost:', error);
       toast.error("Failed to create blog post");
     } finally {
       setIsUploading(false);

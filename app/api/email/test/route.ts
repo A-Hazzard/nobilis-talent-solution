@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Test email sent successfully',
-        messageId: result.messageId,
       });
     } else {
       return NextResponse.json(

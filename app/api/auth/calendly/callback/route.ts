@@ -36,8 +36,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${getBaseUrl()}/auth?error=token_exchange_failed`);
     }
 
-    const tokenData = await tokenResponse.json();
-    
     // Store the access token securely (you might want to store this in your database)
     // For now, we'll redirect to success
     return NextResponse.redirect(`${getBaseUrl()}/auth?success=true&provider=calendly`);

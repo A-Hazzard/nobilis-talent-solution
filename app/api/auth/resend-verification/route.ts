@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmailService } from '@/lib/services/EmailService';
-import { getBaseUrl } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,11 +18,9 @@ export async function POST(request: NextRequest) {
     // 3. Send the email with the verification link
     
     const emailService = EmailService.getInstance();
-    const baseUrl = getBaseUrl();
     
     // For demo purposes, we'll create a simple verification link
     // In production, use Firebase Auth or your own token system
-    const verificationLink = `${baseUrl}/verify-email?token=demo-token&email=${encodeURIComponent(email)}&userId=${encodeURIComponent(userId)}`;
     
     const result = await emailService.sendWelcomeEmail(email, 'User');
 

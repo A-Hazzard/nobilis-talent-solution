@@ -35,7 +35,6 @@ export class EmailService {
    * Generate simple HTML email
    */
   private generateSimpleHTML(subject: string, content: string): string {
-    const baseUrl = getBaseUrl();
     return `
           <!DOCTYPE html>
           <html>

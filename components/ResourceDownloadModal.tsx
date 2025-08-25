@@ -25,6 +25,15 @@ import type { Resource } from '@/shared/types/entities';
 import { DownloadAnalyticsService } from '@/lib/services/DownloadAnalyticsService';
 import { useAuth } from '@/hooks/useAuth';
 
+// Type for related resources (partial Resource)
+type RelatedResource = {
+  id: string;
+  title: string;
+  type: string;
+  description: string;
+  downloadCount: number;
+};
+
 interface ResourceDownloadModalProps {
   resource: Resource | null;
   isOpen: boolean;
@@ -63,7 +72,7 @@ export default function ResourceDownloadModal({
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadComplete, setDownloadComplete] = useState(false);
-  const [relatedResources, setRelatedResources] = useState<Array<{ id: string; title: string; type: string; description: string }>>([]);
+  const [relatedResources, setRelatedResources] = useState<RelatedResource[]>([]);
   const [isLoadingRelated, setIsLoadingRelated] = useState(false);
   
   const { user } = useAuth();
@@ -81,12 +90,34 @@ export default function ResourceDownloadModal({
     
     setIsLoadingRelated(true);
     try {
-      const related = await analyticsService.getRelatedResources(
-        resource.id
-      );
-      setRelatedResources(related);
+      // If the resource has relatedResources field, fetch those specific resources
+      if (resource.relatedResources && resource.relatedResources.length > 0) {
+        // Fetch the related resources by their IDs
+        const relatedPromises = resource.relatedResources.map(async (relatedId) => {
+          try {
+            const response = await fetch(`/api/content/resources/${relatedId}`);
+            if (response.ok) {
+              return await response.json();
+            }
+          } catch (error) {
+            console.error(`Error fetching related resource ${relatedId}:`, error);
+          }
+          return null;
+        });
+        
+        const relatedResults = await Promise.all(relatedPromises);
+        const validRelatedResources = relatedResults.filter(r => r !== null);
+        setRelatedResources(validRelatedResources);
+      } else {
+        // Fallback: get related resources by category and tags
+        const related = await analyticsService.getRelatedResources(
+          resource.id
+        );
+        setRelatedResources(related);
+      }
     } catch (error) {
       console.error('Error loading related resources:', error);
+      setRelatedResources([]);
     } finally {
       setIsLoadingRelated(false);
     }
@@ -269,30 +300,27 @@ export default function ResourceDownloadModal({
               ) : relatedResources.length > 0 ? (
                 <div className="space-y-2">
                   {relatedResources.map((related) => (
-                    <div key={related.id} className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 cursor-pointer">
+                    <div 
+                      key={related.id} 
+                      className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 cursor-pointer p-2 rounded hover:bg-blue-100 transition-colors"
+                      onClick={() => {
+                        // Close current modal and open new one for related resource
+                        onClose();
+                        // Trigger download for the related resource
+                        setTimeout(() => {
+                          onDownload(related.id);
+                        }, 100);
+                      }}
+                    >
                       {getTypeIcon(related.type)}
-                      <span>{related.title}</span>
+                      <span className="flex-1">{related.title}</span>
                       <ExternalLink className="w-3 h-3" />
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-blue-600">
-                    <FileText className="w-4 h-4" />
-                    <span>Leadership Development Guide</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-blue-600">
-                    <Video className="w-4 h-4" />
-                    <span>Team Building Workshop Video</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-blue-600">
-                    <BookOpen className="w-4 h-4" />
-                    <span>Communication Best Practices</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </div>
+                <div className="text-sm text-blue-600">
+                  No related resources available at the moment.
                 </div>
               )}
             </CardContent>

@@ -270,6 +270,7 @@ export class ResourcesService {
         isPublic: resourceData.isPublic,
         createdBy: resourceData.createdBy,
         tags: resourceData.tags || [],
+        relatedResources: resourceData.relatedResources || [],
         featured: resourceData.featured || false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -354,6 +355,7 @@ export class ResourcesService {
       if (updates.isPublic !== undefined) updateData.isPublic = updates.isPublic;
       if (updates.tags !== undefined) updateData.tags = updates.tags;
       if (updates.featured !== undefined) updateData.featured = updates.featured;
+      if (updates.relatedResources !== undefined) updateData.relatedResources = updates.relatedResources;
 
       const docRef = doc(db, this.collectionName, id);
       await updateDoc(docRef, updateData);

@@ -92,6 +92,8 @@ export default function ContentPage() {
     category: 'leadership' as Resource['category'],
     isPublic: true,
     tags: [] as string[],
+    relatedResources: [] as string[],
+    thumbnailUrl: '',
   });
   
   const [formData, setFormData] = useState({
@@ -316,6 +318,8 @@ export default function ContentPage() {
       category: 'leadership',
       isPublic: true,
       tags: [],
+      relatedResources: [],
+      thumbnailUrl: '',
     });
     setSelectedResourceFile(null);
   };
@@ -413,6 +417,8 @@ export default function ContentPage() {
       category: resource.category,
       isPublic: resource.isPublic,
       tags: resource.tags || [],
+      relatedResources: resource.relatedResources || [],
+      thumbnailUrl: resource.thumbnailUrl || '',
     });
     setSelectedResourceFile(null);
     setIsEditResourceDialogOpen(true);
@@ -922,6 +928,29 @@ export default function ContentPage() {
                 </div>
               </div>
 
+              {/* Resource Thumbnail URL */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="resourceThumbnailUrl" className="text-right">Thumbnail URL (optional)</Label>
+                <div className="col-span-3">
+                  <Input
+                    id="resourceThumbnailUrl"
+                    value={resourceFormData.thumbnailUrl}
+                    onChange={(e) => setResourceFormData({ ...resourceFormData, thumbnailUrl: e.target.value })}
+                    className="col-span-3"
+                    placeholder="Enter thumbnail image URL"
+                  />
+                  {resourceFormData.thumbnailUrl && (
+                    <div className="mt-2">
+                      <img 
+                        src={resourceFormData.thumbnailUrl} 
+                        alt="Resource thumbnail preview" 
+                        className="w-32 h-20 object-cover rounded border"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Resource Tags */}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="resourceTags" className="text-right">Tags</Label>
@@ -951,6 +980,52 @@ export default function ContentPage() {
                   <Label htmlFor="resourcePublic" className="text-sm">
                     Make this resource publicly accessible
                   </Label>
+                </div>
+              </div>
+
+              {/* Related Resources Selection */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">Related Resources</Label>
+                <div className="col-span-3 space-y-2">
+                  <div className="text-sm text-gray-600 mb-2">
+                    Select other resources that are related to this one
+                  </div>
+                  <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
+                    {resources.length === 0 ? (
+                      <div className="text-sm text-gray-500 text-center py-4">
+                        No other resources available. Create some resources first.
+                      </div>
+                    ) : (
+                      resources
+                        .filter(r => !editingResource || r.id !== editingResource.id)
+                        .map((resource) => (
+                          <label key={resource.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                            <input
+                              type="checkbox"
+                              checked={resourceFormData.relatedResources.includes(resource.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setResourceFormData({
+                                    ...resourceFormData,
+                                    relatedResources: [...resourceFormData.relatedResources, resource.id]
+                                  });
+                                } else {
+                                  setResourceFormData({
+                                    ...resourceFormData,
+                                    relatedResources: resourceFormData.relatedResources.filter(id => id !== resource.id)
+                                  });
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            <span className="text-sm flex-1">{resource.title}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {resource.type}
+                            </Badge>
+                          </label>
+                        ))
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1217,6 +1292,29 @@ export default function ContentPage() {
                     </div>
                   )}
 
+                  {/* Thumbnail URL */}
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="resourceThumbnailUrl" className="text-right">Thumbnail URL (optional)</Label>
+                    <div className="col-span-3">
+                      <Input
+                        id="resourceThumbnailUrl"
+                        value={resourceFormData.thumbnailUrl}
+                        onChange={(e) => setResourceFormData({ ...resourceFormData, thumbnailUrl: e.target.value })}
+                        className="col-span-3"
+                        placeholder="Enter thumbnail image URL"
+                      />
+                      {resourceFormData.thumbnailUrl && (
+                        <div className="mt-2">
+                          <img 
+                            src={resourceFormData.thumbnailUrl} 
+                            alt="Resource thumbnail preview" 
+                            className="w-32 h-20 object-cover rounded border"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Tags */}
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="resource-tags" className="text-right">Tags</Label>
@@ -1244,6 +1342,50 @@ export default function ContentPage() {
                         <SelectItem value="private">Private</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  {/* Related Resources Selection */}
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label className="text-right pt-2">Related Resources</Label>
+                    <div className="col-span-3 space-y-2">
+                      <div className="text-sm text-gray-600 mb-2">
+                        Select other resources that are related to this one
+                      </div>
+                      <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
+                        {resources.length === 0 ? (
+                          <div className="text-sm text-gray-500 text-center py-4">
+                            No other resources available. Create some resources first.
+                          </div>
+                        ) : (
+                          resources.map((resource) => (
+                            <label key={resource.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                              <input
+                                type="checkbox"
+                                checked={resourceFormData.relatedResources.includes(resource.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setResourceFormData({
+                                      ...resourceFormData,
+                                      relatedResources: [...resourceFormData.relatedResources, resource.id]
+                                    });
+                                  } else {
+                                    setResourceFormData({
+                                      ...resourceFormData,
+                                      relatedResources: resourceFormData.relatedResources.filter(id => id !== resource.id)
+                                    });
+                                  }
+                                }}
+                                className="rounded"
+                              />
+                              <span className="text-sm flex-1">{resource.title}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {resource.type}
+                              </Badge>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
@@ -1808,6 +1950,29 @@ export default function ContentPage() {
               </div>
             )}
 
+            {/* Thumbnail URL */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-resourceThumbnailUrl" className="text-right">Thumbnail URL (optional)</Label>
+              <div className="col-span-3">
+                <Input
+                  id="edit-resourceThumbnailUrl"
+                  value={resourceFormData.thumbnailUrl}
+                  onChange={(e) => setResourceFormData({ ...resourceFormData, thumbnailUrl: e.target.value })}
+                  className="col-span-3"
+                  placeholder="Enter thumbnail image URL"
+                />
+                {resourceFormData.thumbnailUrl && (
+                  <div className="mt-2">
+                    <img 
+                      src={resourceFormData.thumbnailUrl} 
+                      alt="Resource thumbnail preview" 
+                      className="w-32 h-20 object-cover rounded border"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Tags */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-resource-tags" className="text-right">Tags</Label>
@@ -1835,6 +2000,52 @@ export default function ContentPage() {
                   <SelectItem value="private">Private</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Related Resources Selection */}
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label className="text-right pt-2">Related Resources</Label>
+              <div className="col-span-3 space-y-2">
+                <div className="text-sm text-gray-600 mb-2">
+                  Select other resources that are related to this one
+                </div>
+                <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
+                  {resources.length === 0 ? (
+                    <div className="text-sm text-gray-500 text-center py-4">
+                      No other resources available. Create some resources first.
+                    </div>
+                  ) : (
+                    resources
+                      .filter(r => !editingResource || r.id !== editingResource.id)
+                      .map((resource) => (
+                        <label key={resource.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={resourceFormData.relatedResources.includes(resource.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setResourceFormData({
+                                  ...resourceFormData,
+                                  relatedResources: [...resourceFormData.relatedResources, resource.id]
+                                });
+                              } else {
+                                setResourceFormData({
+                                  ...resourceFormData,
+                                  relatedResources: resourceFormData.relatedResources.filter(id => id !== resource.id)
+                                });
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <span className="text-sm flex-1">{resource.title}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {resource.type}
+                          </Badge>
+                        </label>
+                      ))
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>

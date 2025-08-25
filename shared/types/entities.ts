@@ -92,6 +92,7 @@ export type Resource = {
   createdBy: string; // user ID
   tags?: string[]; // Additional tags for better categorization
   featured?: boolean; // Whether this resource should be featured
+  relatedResources?: string[]; // Array of related resource IDs
 };
 
 export type BlogPost = {

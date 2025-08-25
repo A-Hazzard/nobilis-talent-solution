@@ -1,6 +1,5 @@
 import { CheckCircle } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 interface TeamMemberProps {
   name: string;
@@ -9,6 +8,7 @@ interface TeamMemberProps {
   image: string;
   achievements: string[];
   achievementsBold?: boolean;
+  reverseLayout?: boolean;
 }
 
 const TeamMember = ({ 
@@ -17,13 +17,14 @@ const TeamMember = ({
   bio, 
   image, 
   achievements, 
-  achievementsBold = false 
+  achievementsBold = false,
+  reverseLayout = false
 }: TeamMemberProps) => {
   return (
     <div className="border-2 border-primary/20 rounded-3xl p-6 lg:p-8 bg-background/50 backdrop-blur-sm">
-      <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-        {/* Left side - Image and stats */}
-        <div className="relative" data-animate>
+      <div className={`grid lg:grid-cols-2 gap-8 lg:gap-12 items-center ${reverseLayout ? 'lg:grid-flow-col-dense' : ''}`}>
+        {/* Image and stats */}
+        <div className={`relative ${reverseLayout ? 'lg:col-start-2' : ''}`} data-animate>
           <div className="relative z-10">
             <div className="relative w-full max-w-sm sm:max-w-md mx-auto">
               <Image
@@ -65,8 +66,8 @@ const TeamMember = ({
           </div>
         </div>
 
-        {/* Right side - Content */}
-        <div className="md:mt-20" data-animate>
+        {/* Content */}
+        <div className={`md:mt-20 ${reverseLayout ? 'lg:col-start-1' : ''}`} data-animate>
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-6">
             {name}
           </h2>
@@ -95,15 +96,6 @@ const TeamMember = ({
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            <a href="/contact" className="btn-primary">
-              Let's Work Together
-            </a>
-            <Link href="/" className="btn-secondary">
-              Back to Home
-            </Link>
           </div>
         </div>
       </div>

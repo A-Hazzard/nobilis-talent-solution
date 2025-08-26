@@ -11,24 +11,16 @@ import logo  from "@/public/assets/logo-transparent.png"
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useUserStore } from '@/lib/stores/userStore';
+
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, isAuthenticated, signOut, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, signOut } = useAuth();
   
   // Use authenticated user's email or fallback to demo email
   const userEmail = user?.email || 'john@company.com';
   const { pendingPayment, hasPendingPayment } = usePendingPayment(userEmail);
-
-  // Debug logging
-  console.log('Navigation render:', { 
-    user, 
-    isAuthenticated, 
-    authLoading,
-    userStore: useUserStore.getState()
-  });
 
   const pathname = usePathname();
   const isHomePage = pathname === '/';

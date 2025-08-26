@@ -86,10 +86,11 @@ body {
     }
     
     /* Improve touch targets */
-    button, a, input, textarea, select {
+    /* Button issue */
+    /* button, a, input, textarea, select {
       min-height: 44px;
       min-width: 44px;
-    }
+    } */
     
     /* Better form spacing on mobile */
     form {

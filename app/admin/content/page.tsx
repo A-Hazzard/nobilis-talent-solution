@@ -21,7 +21,8 @@ import {
   BookOpen,
   Download,
   File,
-  Upload
+  Upload,
+  Star
 } from 'lucide-react';
 
 import {
@@ -1007,8 +1008,14 @@ export default function ContentPage() {
                     className="rounded border-gray-300"
                   />
                   <Label htmlFor="resourceFeatured" className="text-sm">
-                    Feature this resource in the "Featured Resources" section (max 3 featured resources)
+                    Feature this resource in the "Featured Resources" section
                   </Label>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>({3 - resources.filter(resource => resource.featured).length} featured spots left)</span>
+                    {resources.filter(resource => resource.featured).length >= 3 && !resourceFormData.featured && (
+                      <span className="text-red-500">• Max featured resources reached</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1027,6 +1034,7 @@ export default function ContentPage() {
                     ) : (
                       resources
                         .filter(r => !editingResource || r.id !== editingResource.id)
+                        .filter(r => !r.featured) // Exclude featured resources from related resources selection
                         .map((resource) => (
                           <label key={resource.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                             <input
@@ -1407,7 +1415,9 @@ export default function ContentPage() {
                             No other resources available. Create some resources first.
                           </div>
                         ) : (
-                          resources.map((resource) => (
+                          resources
+                            .filter(r => !r.featured) // Exclude featured resources from related resources selection
+                            .map((resource) => (
                             <label key={resource.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                               <input
                                 type="checkbox"
@@ -1479,14 +1489,32 @@ export default function ContentPage() {
           {!isLoading && !error && resources.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {resources.map((resource) => (
-                <Card key={resource.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <Card key={resource.id} className={`overflow-hidden hover:shadow-lg transition-shadow ${resource.featured ? 'border-2 border-yellow-300' : ''}`}>
                   {resource.thumbnailUrl && (
-                    <div className="aspect-video overflow-hidden">
+                    <div className="aspect-video overflow-hidden relative">
                       <img 
                         src={resource.thumbnailUrl} 
                         alt={resource.title}
                         className="w-full h-full object-cover"
                       />
+                      {resource.featured && (
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                            <Star className="w-3 h-3 mr-1" />
+                            Featured
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {!resource.thumbnailUrl && resource.featured && (
+                    <div className="relative">
+                      <div className="absolute top-2 right-2 z-10">
+                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                          <Star className="w-3 h-3 mr-1" />
+                          Featured
+                        </Badge>
+                      </div>
                     </div>
                   )}
                   <CardContent className="p-6">
@@ -2035,8 +2063,14 @@ export default function ContentPage() {
                   className="rounded border-gray-300"
                 />
                 <Label htmlFor="edit-resource-featured" className="text-sm">
-                  Feature this resource in the "Featured Resources" section (max 3 featured resources)
+                  Feature this resource in the "Featured Resources" section
                 </Label>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>({3 - resources.filter(resource => resource.featured).length} featured spots left)</span>
+                  {resources.filter(resource => resource.featured).length >= 3 && !resourceFormData.featured && (
+                    <span className="text-red-500">• Max featured resources reached</span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -2069,6 +2103,7 @@ export default function ContentPage() {
                   ) : (
                     resources
                       .filter(r => !editingResource || r.id !== editingResource.id)
+                      .filter(r => !r.featured) // Exclude featured resources from related resources selection
                       .map((resource) => (
                         <label key={resource.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                           <input

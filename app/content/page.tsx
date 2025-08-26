@@ -18,7 +18,6 @@ import {
   Video,
   BookOpen,
   Star,
-  
   Image as ImageIcon,
   Music,
   File
@@ -429,14 +428,25 @@ export default function ContentPage() {
     return description.length > 120 ? description.substring(0, 120) + '...' : description;
   };
 
-  // Get featured resources (admin-selected or top 3 by download count as fallback)
+  // Get featured resources (admin-selected + fill remaining slots with most downloaded)
   const adminFeaturedResources = resources.filter(resource => resource.isPublic && resource.featured);
-  const featuredResources = adminFeaturedResources.length > 0 
-    ? adminFeaturedResources.slice(0, 3)
-    : resources
-        .filter(resource => resource.isPublic)
-        .sort((a, b) => (b.downloadCount || 0) - (a.downloadCount || 0))
-        .slice(0, 3);
+  const remainingResourceSlots = 3 - adminFeaturedResources.length;
+  const topResources = resources
+    .filter(resource => resource.isPublic && !resource.featured)
+    .sort((a, b) => (b.downloadCount || 0) - (a.downloadCount || 0))
+    .slice(0, remainingResourceSlots)
+    .map(resource => ({ ...resource, featured: true })); // Mark popular resources as featured when added to featured section
+  const featuredResources = [...adminFeaturedResources, ...topResources].slice(0, 3);
+
+  // Get featured blog posts (admin-selected + fill remaining slots with most viewed)
+  const adminFeaturedBlogPosts = blogPosts.filter(post => post.status === 'published' && post.featured);
+  const remainingBlogSlots = 3 - adminFeaturedBlogPosts.length;
+  const topBlogPosts = blogPosts
+    .filter(post => post.status === 'published' && !post.featured)
+    .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+    .slice(0, remainingBlogSlots)
+    .map(post => ({ ...post, featured: true })); // Mark popular posts as featured when added to featured section
+  const featuredBlogPosts = [...adminFeaturedBlogPosts, ...topBlogPosts].slice(0, 3);
 
   const getTypeIcon = (type: string) => {
     if (type === 'pdf') return <FileText className="w-10 h-10 text-gray-600" />;
@@ -540,6 +550,85 @@ export default function ContentPage() {
                 </Select>
               </div>
             </div>
+
+            {/* Featured Blog Posts */}
+            {featuredBlogPosts.length > 0 && (
+              <div className="mb-12 lg:mb-16">
+                <div className="flex items-center gap-3 mb-6 lg:mb-8">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl flex items-center justify-center">
+                    <Star className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Featured Blog Posts</h2>
+                    <p className="text-sm lg:text-base text-gray-600">Our most popular and insightful articles</p>
+                  </div>
+                </div>
+                <div 
+                  ref={cardsRef}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+                >
+                  {featuredBlogPosts.map((post) => (
+                    <Card key={post.id} className="blog-card group hover:shadow-2xl transition-all duration-300 border-2 border-yellow-200 hover:border-yellow-300 overflow-hidden">
+                      <div className="relative h-48 bg-gradient-to-br from-yellow-50 to-orange-50">
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10"></div>
+                        <div className="absolute top-4 left-4">
+                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
+                            {post.featured ? 'Featured' : 'Popular'}
+                          </Badge>
+                        </div>
+
+                        {post.featuredImage && (
+                          <div className="absolute inset-0">
+                            <img
+                              src={post.featuredImage}
+                              alt={post.title}
+                              className="w-full h-full object-cover opacity-20"
+                            />
+                          </div>
+                        )}
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">
+                            {post.title}
+                          </h3>
+                        </div>
+                      </div>
+                      <CardContent className="p-6">
+                        <p className="text-gray-600 mb-4">
+                          {post.excerpt}
+                        </p>
+                        <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-4 h-4" />
+                            {post.viewCount?.toLocaleString() || 0} views
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {post.publishedAt?.toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <Badge variant="outline" className="text-xs">
+                            {categoryLabels[post.category] || post.category}
+                          </Badge>
+                          {post.tags?.slice(0, 2).map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                        <Button 
+                          onClick={() => handleViewPost(post.slug)}
+                          className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border-0 h-12 rounded-xl"
+                        >
+                          <ArrowRight className="w-5 h-5 mr-2" />
+                          Read Article
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Blog Posts Grid */}
             {isLoadingBlogs ? (
@@ -673,7 +762,7 @@ export default function ContentPage() {
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10"></div>
                         <div className="absolute top-4 left-4">
                           <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
-                            Featured
+                            {resource.featured ? 'Featured' : 'Popular'}
                           </Badge>
                         </div>
                         <div className="absolute top-4 right-4">
@@ -681,8 +770,9 @@ export default function ContentPage() {
                             {typeIcons[resource.type]}
                           </div>
                         </div>
+
                         <div className="absolute bottom-4 left-4 right-4">
-                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">
+                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">
                             {resource.title}
                           </h3>
                         </div>

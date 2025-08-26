@@ -114,6 +114,7 @@ export type BlogPost = {
   readTime?: number; // Estimated reading time in minutes
   seoTitle?: string;
   seoDescription?: string;
+  featured?: boolean; // Whether this blog post should be featured
   // Resources and references
   resources?: string[]; // Array of resource IDs from the database
   references?: Array<{

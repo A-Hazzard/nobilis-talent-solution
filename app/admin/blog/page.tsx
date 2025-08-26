@@ -22,7 +22,8 @@ import {
   Download,
   File,
   Upload,
-  CheckCircle
+  CheckCircle,
+  Star
 } from 'lucide-react';
 
 import {
@@ -115,6 +116,7 @@ export default function ContentPage() {
     seoDescription: '',
     readTime: 0,
     featuredImage: '',
+    featured: false,
     resources: [] as string[], // Associated resource IDs
     references: [] as Array<{
       title: string;
@@ -413,6 +415,7 @@ export default function ContentPage() {
       seoDescription: post.seoDescription || '',
       readTime: post.readTime || 0,
       featuredImage: post.featuredImage || '',
+      featured: post.featured || false,
       resources: post.resources || [],
       references: post.references || [],
       scheduledDate: post.scheduledDate || '',
@@ -437,6 +440,7 @@ export default function ContentPage() {
       seoDescription: '',
       readTime: 0,
       featuredImage: '',
+      featured: false,
       resources: [],
       references: [],
       scheduledDate: '',
@@ -486,6 +490,13 @@ export default function ContentPage() {
     }
 
     setIsUploading(true);
+    
+    // Add timeout to prevent hanging uploads
+    const uploadTimeout = setTimeout(() => {
+      setIsUploading(false);
+      toast.error("Upload timed out. Please try again.");
+    }, 30000); // 30 second timeout
+
     try {
       const response = await resourcesService.create({
         ...resourceFormData,
@@ -493,15 +504,18 @@ export default function ContentPage() {
         fileUrl: resourceFormData.type === 'video' ? resourceFormData.description : '',
       }, selectedResourceFile || undefined);
       
+      clearTimeout(uploadTimeout);
+      
       if (response.error) {
         toast.error(response.error);
       } else {
         toast.success("Resource created successfully");
-        setIsEditResourceDialogOpen(false);
+        setIsAddDialogOpen(false);
         resetResourceForm();
         await loadData();
       }
     } catch (error) {
+      clearTimeout(uploadTimeout);
       console.error('Exception in handleAddResource:', error);
       toast.error("Failed to create resource");
     } finally {
@@ -529,11 +543,20 @@ export default function ContentPage() {
     }
 
     setIsUploading(true);
+    
+    // Add timeout to prevent hanging uploads
+    const uploadTimeout = setTimeout(() => {
+      setIsUploading(false);
+      toast.error("Upload timed out. Please try again.");
+    }, 30000); // 30 second timeout
+
     try {
       const response = await resourcesService.update(editingResource.id, {
         ...resourceFormData,
         fileUrl: resourceFormData.type === 'video' ? resourceFormData.description : editingResource.fileUrl,
       }, selectedResourceFile || undefined);
+      
+      clearTimeout(uploadTimeout);
       
       if (response.error) {
         toast.error(response.error);
@@ -545,6 +568,7 @@ export default function ContentPage() {
         await loadData();
       }
     } catch (error) {
+      clearTimeout(uploadTimeout);
       console.error('Exception in handleEditResource:', error);
       toast.error("Failed to update resource");
     } finally {
@@ -901,6 +925,29 @@ export default function ContentPage() {
                 />
               </div>
 
+              {/* Featured Blog Post Toggle */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="blogFeatured" className="text-right">Featured</Label>
+                <div className="col-span-3 flex items-center space-x-2">
+                  <input
+                    id="blogFeatured"
+                    type="checkbox"
+                    checked={formData.featured}
+                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                    className="rounded border-gray-300 w-4 h-4 sm:w-5 sm:h-5"
+                  />
+                  <Label htmlFor="blogFeatured" className="text-sm">
+                    Feature this blog post in the "Featured Blog Posts" section
+                  </Label>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>({3 - posts.filter(post => post.featured).length} featured spots left)</span>
+                    {posts.filter(post => post.featured).length >= 3 && !formData.featured && (
+                      <span className="text-red-500">• Max featured posts reached</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Resources Selection */}
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label className="text-right pt-2">Resources</Label>
@@ -1142,11 +1189,17 @@ export default function ContentPage() {
                     type="checkbox"
                     checked={resourceFormData.featured}
                     onChange={(e) => setResourceFormData({ ...resourceFormData, featured: e.target.checked })}
-                    className="rounded border-gray-300"
+                    className="rounded border-gray-300 w-4 h-4 sm:w-5 sm:h-5"
                   />
                   <Label htmlFor="resourceFeatured" className="text-sm">
                     Feature this resource in the "Featured Resources" section (max 3 featured resources)
                   </Label>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>({3 - resources.filter(resource => resource.featured).length} featured spots left)</span>
+                    {resources.filter(resource => resource.featured).length >= 3 && !resourceFormData.featured && (
+                      <span className="text-red-500">• Max featured resources reached</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1165,6 +1218,7 @@ export default function ContentPage() {
                     ) : (
                       resources
                         .filter(r => !editingResource || r.id !== editingResource.id)
+                        .filter(r => !r.featured) // Exclude featured resources from related resources selection
                         .map((resource) => (
                           <label key={resource.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                             <input
@@ -1187,7 +1241,7 @@ export default function ContentPage() {
                                   });
                                 }
                               }}
-                              className="rounded"
+                              className="rounded w-3 h-3 sm:w-4 sm:h-4"
                             />
                             <span className="text-sm flex-1">{resource.title}</span>
                             <Badge variant="outline" className="text-xs">
@@ -1209,7 +1263,7 @@ export default function ContentPage() {
                     type="checkbox"
                     checked={resourceFormData.isPublic}
                     onChange={(e) => setResourceFormData({ ...resourceFormData, isPublic: e.target.checked })}
-                    className="rounded border-gray-300"
+                    className="rounded border-gray-300 w-4 h-4 sm:w-5 sm:h-5"
                   />
                   <Label htmlFor="resourcePublic" className="text-sm">
                     Make this resource publicly accessible
@@ -1218,7 +1272,11 @@ export default function ContentPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              <Button variant="outline" onClick={() => {
+                setIsAddDialogOpen(false);
+                setIsUploading(false);
+                resetResourceForm();
+              }}>
                 Cancel
               </Button>
               <Button 
@@ -1312,14 +1370,32 @@ export default function ContentPage() {
           {!isLoading && !error && posts.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map((post) => (
-                <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <Card key={post.id} className={`overflow-hidden hover:shadow-lg transition-shadow ${post.featured ? 'border-2 border-yellow-300' : ''}`}>
                   {post.featuredImage && (
-                    <div className="aspect-video overflow-hidden">
+                    <div className="aspect-video overflow-hidden relative">
                       <img 
                         src={post.featuredImage} 
                         alt={post.title}
                         className="w-full h-full object-cover"
                       />
+                      {post.featured && (
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                            <Star className="w-3 h-3 mr-1" />
+                            Featured
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {!post.featuredImage && post.featured && (
+                    <div className="relative">
+                      <div className="absolute top-2 right-2 z-10">
+                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                          <Star className="w-3 h-3 mr-1" />
+                          Featured
+                        </Badge>
+                      </div>
                     </div>
                   )}
                   <CardContent className="p-6">
@@ -1415,14 +1491,32 @@ export default function ContentPage() {
           {!isLoading && !error && resources.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {resources.map((resource) => (
-                <Card key={resource.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <Card key={resource.id} className={`overflow-hidden hover:shadow-lg transition-shadow ${resource.featured ? 'border-2 border-yellow-300' : ''}`}>
                   {resource.thumbnailUrl && (
-                    <div className="aspect-video overflow-hidden">
+                    <div className="aspect-video overflow-hidden relative">
                       <img 
                         src={resource.thumbnailUrl} 
                         alt={resource.title}
                         className="w-full h-full object-cover"
                       />
+                      {resource.featured && (
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                            <Star className="w-3 h-3 mr-1" />
+                            Featured
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {!resource.thumbnailUrl && resource.featured && (
+                    <div className="relative">
+                      <div className="absolute top-2 right-2 z-10">
+                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                          <Star className="w-3 h-3 mr-1" />
+                          Featured
+                        </Badge>
+                      </div>
                     </div>
                   )}
                   <CardContent className="p-6">
@@ -1674,6 +1768,29 @@ export default function ContentPage() {
                   <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Featured Blog Post Toggle */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-blog-featured" className="text-right">Featured</Label>
+              <div className="col-span-3 flex items-center space-x-2">
+                <input
+                  id="edit-blog-featured"
+                  type="checkbox"
+                  checked={formData.featured}
+                  onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="edit-blog-featured" className="text-sm">
+                  Feature this blog post in the "Featured Blog Posts" section
+                </Label>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>({3 - posts.filter(post => post.featured).length} featured spots left)</span>
+                  {posts.filter(post => post.featured).length >= 3 && !formData.featured && (
+                    <span className="text-red-500">• Max featured posts reached</span>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Resources Selection */}
@@ -1987,11 +2104,17 @@ export default function ContentPage() {
                   type="checkbox"
                   checked={resourceFormData.featured}
                   onChange={(e) => setResourceFormData({ ...resourceFormData, featured: e.target.checked })}
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 w-4 h-4 sm:w-5 sm:h-5"
                 />
                 <Label htmlFor="edit-resource-featured" className="text-sm">
                   Feature this resource in the "Featured Resources" section (max 3 featured resources)
                 </Label>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>({3 - resources.filter(resource => resource.featured).length} featured spots left)</span>
+                  {resources.filter(resource => resource.featured).length >= 3 && !resourceFormData.featured && (
+                    <span className="text-red-500">• Max featured resources reached</span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -2008,7 +2131,9 @@ export default function ContentPage() {
                       No other resources available.
                     </div>
                   ) : (
-                    resources.map((resource) => (
+                    resources
+                      .filter(r => !r.featured) // Exclude featured resources from related resources selection
+                      .map((resource) => (
                       <label key={resource.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                         <input
                           type="checkbox"
@@ -2030,7 +2155,7 @@ export default function ContentPage() {
                                });
                              }
                            }}
-                          className="rounded"
+                          className="rounded w-3 h-3 sm:w-4 sm:h-4"
                         />
                         <span className="text-sm flex-1">{resource.title}</span>
                         <Badge variant="outline" className="text-xs">
@@ -2058,7 +2183,12 @@ export default function ContentPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditResourceDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsEditResourceDialogOpen(false);
+              setIsUploading(false);
+              setEditingResource(null);
+              resetResourceForm();
+            }}>
               Cancel
             </Button>
             <Button 

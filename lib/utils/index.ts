@@ -16,7 +16,24 @@ export function getCurrentDomain(): string {
   }
   
   // Server-side: use environment variable or fallback
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  // Check for VERCEL_URL first (for Vercel deployments)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Check for custom app URL
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  
+  // Check for host header (for other deployments)
+  if (process.env.HOST) {
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    return `${protocol}://${process.env.HOST}`;
+  }
+  
+  // Fallback to localhost for development
+  return 'http://localhost:3000';
 }
 
 /**

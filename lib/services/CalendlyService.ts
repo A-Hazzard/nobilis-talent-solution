@@ -1,6 +1,6 @@
 import type { CalendarEvent } from '@/shared/types/entities';
 import type { CalendlyScheduledEvent } from '@/lib/types/services';
-import { getBaseUrl } from "@/lib/utils";
+import { getBaseUrl } from '@/lib/utils';
 
 export class CalendlyService {
   private static instance: CalendlyService;
@@ -17,36 +17,25 @@ export class CalendlyService {
   }
 
   /**
-   * Set the OAuth access token
+   * Set the access token
    */
-  setAccessToken(token: string) {
+  setAccessToken(token: string): void {
     this.accessToken = token;
-    // Store token in localStorage for persistence
-    localStorage.setItem('calendly_access_token', token);
-    console.log('🔑 Calendly access token set and stored');
+    console.log('🔑 Calendly access token set');
   }
 
   /**
-   * Get the stored access token
+   * Get the current access token
    */
   getAccessToken(): string | null {
-    if (!this.accessToken) {
-      // Try to get from localStorage
-      const storedToken = localStorage.getItem('calendly_access_token');
-      if (storedToken) {
-        this.accessToken = storedToken;
-        console.log('🔑 Retrieved token from localStorage');
-      }
-    }
     return this.accessToken;
   }
 
   /**
    * Clear the access token
    */
-  clearAccessToken() {
+  clearAccessToken(): void {
     this.accessToken = null;
-    localStorage.removeItem('calendly_access_token');
     console.log('🔑 Calendly access token cleared');
   }
 
@@ -63,7 +52,7 @@ export class CalendlyService {
     // Dynamically construct the redirect URI based on the current domain
     const currentDomain = typeof window !== 'undefined' 
       ? window.location.origin 
-      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      : getBaseUrl();
     
     const redirectUri = `${currentDomain}/api/auth/calendly/callback`;
     

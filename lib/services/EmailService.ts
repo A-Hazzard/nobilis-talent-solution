@@ -34,7 +34,7 @@ export class EmailService {
   /**
    * Generate simple HTML email
    */
-  private generateSimpleHTML(subject: string, content: string): string {
+  generateSimpleHTML(subject: string, content: string): string {
     return `
           <!DOCTYPE html>
           <html>
@@ -147,7 +147,7 @@ export class EmailService {
         </div>
         
         <p>Please review the invoice above and complete your payment at your earliest convenience.</p>
-        <a href="${baseUrl}/payment?invoice=${data.invoice.invoiceNumber}" 
+        <a href="${baseUrl}/payment/pending?email=${encodeURIComponent(data.clientEmail)}" 
            style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Pay Now</a>
         
         <p>If you have any questions, please don't hesitate to contact us.</p>
@@ -170,7 +170,7 @@ export class EmailService {
           {
             filename: data.pdfAttachment.filename,
             content: data.pdfAttachment.content,
-            contentType: data.pdfAttachment.contentType,
+            contentType: 'application/pdf',
           },
         ];
       }

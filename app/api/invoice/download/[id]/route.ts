@@ -82,12 +82,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     });
 
-    // Return HTML as response (placeholder until PDF generation is implemented)
+    // Return PDF as response
+    const filename = pdfService.getInvoiceFilename(invoice.invoiceNumber);
+    
     return new NextResponse(pdfResult.data, {
       status: 200,
       headers: {
-        'Content-Type': 'text/html',
-        'Content-Disposition': `inline; filename="invoice-${invoice.invoiceNumber}.html"`,
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': pdfResult.data.length.toString(),
         'Cache-Control': 'no-cache'
       }
     });

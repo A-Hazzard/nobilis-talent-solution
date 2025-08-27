@@ -33,7 +33,7 @@ const sidebarItems = [
   },
   {
     title: 'Content',
-    href: '/admin/blog',
+    href: '/admin/content',
     icon: FileText,
   },
   {

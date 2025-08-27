@@ -472,7 +472,7 @@ export default function ContentPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center relative z-10">
         <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
              <span className="text-white">Content </span>
-             <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+             <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                Library
              </span>
            </h1>
@@ -555,7 +555,7 @@ export default function ContentPage() {
             {featuredBlogPosts.length > 0 && (
               <div className="mb-12 lg:mb-16">
                 <div className="flex items-center gap-3 mb-6 lg:mb-8">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
                     <Star className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
                   <div>
@@ -568,11 +568,11 @@ export default function ContentPage() {
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
                 >
                   {featuredBlogPosts.map((post) => (
-                    <Card key={post.id} className="blog-card group hover:shadow-2xl transition-all duration-300 border-2 border-yellow-200 hover:border-yellow-300 overflow-hidden">
-                      <div className="relative h-48 bg-gradient-to-br from-yellow-50 to-orange-50">
+                    <Card key={post.id} className="blog-card group hover:shadow-2xl transition-all duration-300 border-2 border-primary/20 hover:border-primary/40 overflow-hidden">
+                      <div className="relative h-48 bg-gradient-to-br from-primary/5 to-secondary/10">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10"></div>
                         <div className="absolute top-4 left-4">
-                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
+                          <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0">
                             {post.featured ? 'Featured' : 'Popular'}
                           </Badge>
                         </div>
@@ -587,7 +587,7 @@ export default function ContentPage() {
                           </div>
                         )}
                         <div className="absolute bottom-4 left-4 right-4">
-                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">
+                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">
                             {post.title}
                           </h3>
                         </div>
@@ -637,7 +637,7 @@ export default function ContentPage() {
                   <Skeleton key={i} className="h-80" />
                 ))}
               </div>
-            ) : filteredBlogPosts.length === 0 ? (
+            ) : filteredBlogPosts.filter(post => !featuredBlogPosts.some(fbp => fbp.id === post.id)).length === 0 ? (
               <div className="text-center py-8 lg:py-12">
                 <FileText className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">No blog posts found</h3>
@@ -645,7 +645,7 @@ export default function ContentPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-                {filteredBlogPosts.map((post) => (
+                {filteredBlogPosts.filter(post => !featuredBlogPosts.some(fbp => fbp.id === post.id)).map((post) => (
                   <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     {post.featuredImage && (
                       <div className="aspect-video overflow-hidden">
@@ -744,7 +744,7 @@ export default function ContentPage() {
             {featuredResources.length > 0 && (
               <div className="mb-12 lg:mb-16">
                 <div className="flex items-center gap-3 mb-6 lg:mb-8">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
                     <Star className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
                   <div>
@@ -757,26 +757,51 @@ export default function ContentPage() {
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
                 >
                   {featuredResources.map((resource) => (
-                    <Card key={resource.id} className="resource-card group hover:shadow-2xl transition-all duration-300 border-2 border-yellow-200 hover:border-yellow-300 overflow-hidden">
-                      <div className="relative h-48 bg-gradient-to-br from-yellow-50 to-orange-50">
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10"></div>
-                        <div className="absolute top-4 left-4">
-                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
-                            {resource.featured ? 'Featured' : 'Popular'}
-                          </Badge>
-                        </div>
-                        <div className="absolute top-4 right-4">
-                          <div className="w-12 h-12 bg-white/80 rounded-xl flex items-center justify-center">
-                            {typeIcons[resource.type]}
+                    <Card key={resource.id} className="resource-card group hover:shadow-2xl transition-all duration-300 border-2 border-primary/20 hover:border-primary/40 overflow-hidden">
+                      {resource.thumbnailUrl ? (
+                        <div className="relative h-48 overflow-hidden">
+                          <img 
+                            src={resource.thumbnailUrl} 
+                            alt={resource.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10"></div>
+                          <div className="absolute top-4 left-4">
+                            <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0">
+                              {resource.featured ? 'Featured' : 'Popular'}
+                            </Badge>
+                          </div>
+                          <div className="absolute top-4 right-4">
+                            <div className="w-12 h-12 bg-white/80 rounded-xl flex items-center justify-center">
+                              {typeIcons[resource.type]}
+                            </div>
+                          </div>
+                          <div className="absolute bottom-4 left-4 right-4">
+                            <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors drop-shadow-lg">
+                              {resource.title}
+                            </h3>
                           </div>
                         </div>
-
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">
-                            {resource.title}
-                          </h3>
+                      ) : (
+                        <div className="relative h-48 bg-gradient-to-br from-primary/5 to-secondary/10">
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10"></div>
+                          <div className="absolute top-4 left-4">
+                            <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0">
+                              {resource.featured ? 'Featured' : 'Popular'}
+                            </Badge>
+                          </div>
+                          <div className="absolute top-4 right-4">
+                            <div className="w-12 h-12 bg-white/80 rounded-xl flex items-center justify-center">
+                              {typeIcons[resource.type]}
+                            </div>
+                          </div>
+                          <div className="absolute bottom-4 left-4 right-4">
+                            <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">
+                              {resource.title}
+                            </h3>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       <CardContent className="p-6">
                         <p className="text-gray-600 mb-4">
                           {truncateDescription(resource.description, resource.id)}
@@ -830,7 +855,7 @@ export default function ContentPage() {
                     All Resources
                   </h2>
                   <p className="text-sm lg:text-base text-gray-600 mt-2">
-                    {filteredResources.filter(r => !r.featured).length} resources available
+                    {filteredResources.filter(r => !r.featured && !featuredResources.some(fr => fr.id === r.id)).length} resources available
                   </p>
                 </div>
               </div>
@@ -841,7 +866,7 @@ export default function ContentPage() {
                     <Skeleton key={i} className="h-80" />
                   ))}
                 </div>
-              ) : filteredResources.filter(r => !r.featured).length === 0 ? (
+              ) : filteredResources.filter(r => !r.featured && !featuredResources.some(fr => fr.id === r.id)).length === 0 ? (
                 <div className="text-center py-8 lg:py-12">
                   <Download className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">No resources found</h3>
@@ -852,7 +877,7 @@ export default function ContentPage() {
                   ref={cardsRef}
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6"
                 >
-                  {filteredResources.filter(r => !r.featured).map((resource) => (
+                  {filteredResources.filter(r => !r.featured && !featuredResources.some(fr => fr.id === r.id)).map((resource) => (
                     <Card key={resource.id} className="group hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-primary/30 overflow-hidden">
                       {resource.thumbnailUrl ? (
                         <div className="relative h-40 overflow-hidden">

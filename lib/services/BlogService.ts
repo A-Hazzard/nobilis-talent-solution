@@ -4,6 +4,7 @@ import {
   getDocs, 
   getDoc, 
   addDoc, 
+  setDoc,
   updateDoc, 
   deleteDoc, 
   query, 
@@ -384,16 +385,51 @@ export class BlogService {
   }
 
   /**
-   * Increment view count
+   * Increment view count (unique per user)
    */
-  async incrementViewCount(id: string): Promise<{ error?: string }> {
+  async incrementViewCount(id: string, userId?: string): Promise<{ error?: string }> {
     try {
-      const docRef = doc(db, this.collectionName, id);
-      await updateDoc(docRef, {
-        viewCount: increment(1),
-      });
+      // If no userId provided, just increment normally (for anonymous users)
+      if (!userId) {
+        const docRef = doc(db, this.collectionName, id);
+        await updateDoc(docRef, {
+          viewCount: increment(1),
+        });
+        return {};
+      }
+
+      // For authenticated users, check if they've already viewed this post
+      const viewTrackingRef = doc(db, 'blogViewTracking', `${id}_${userId}`);
       
-      return {};
+      try {
+        const viewDoc = await getDoc(viewTrackingRef);
+        
+        // If user hasn't viewed this post before, increment the view count
+        if (!viewDoc.exists()) {
+          // Mark that this user has viewed this post using setDoc with specific ID
+          await setDoc(viewTrackingRef, {
+            postId: id,
+            userId: userId,
+            viewedAt: serverTimestamp(),
+          });
+          
+          // Increment the view count
+          const docRef = doc(db, this.collectionName, id);
+          await updateDoc(docRef, {
+            viewCount: increment(1),
+          });
+        }
+        
+        return {};
+      } catch (viewError) {
+        console.error('Error checking view tracking:', viewError);
+        // Fallback to simple increment if tracking fails
+        const docRef = doc(db, this.collectionName, id);
+        await updateDoc(docRef, {
+          viewCount: increment(1),
+        });
+        return {};
+      }
     } catch (error) {
       console.error('Error incrementing view count:', error);
       return { error: 'Failed to update view count' };

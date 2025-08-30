@@ -1,5 +1,6 @@
 import type { InvoicePreview } from '@/shared/types/payment';
 import type { PDFOptions } from '@/lib/types/services';
+import puppeteer from 'puppeteer';
 
 export class PDFService {
   private static instance: PDFService;
@@ -23,7 +24,7 @@ export class PDFService {
       day: 'numeric',
     });
 
-    const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+    const dueDate = invoice.dueDate.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -171,12 +172,12 @@ export class PDFService {
 </head>
 <body>
     <div class="header">
-        <div class="company-name">Payne Leadership</div>
+        <div class="company-name">Nobilis Talent Solutions</div>
         <div class="company-details">
             123 Business Street<br>
             City, State 12345<br>
             Phone: +1 (555) 123-4567<br>
-            Email: contact@payneleadership.com
+            Email: nobilis.talent@gmail.com
         </div>
     </div>
     
@@ -206,14 +207,14 @@ export class PDFService {
                 <th class="amount">Amount</th>
             </tr>
         </thead>
-                 <tbody>
-             ${invoice.items.map(item => `
-                 <tr>
-                     <td class="description">${item.description}</td>
-                     <td class="amount">$${item.total.toFixed(2)}</td>
-                 </tr>
-             `).join('')}
-         </tbody>
+        <tbody>
+            ${invoice.items.map(item => `
+                <tr>
+                    <td class="description">${item.description}</td>
+                    <td class="amount">$${item.total.toFixed(2)}</td>
+                </tr>
+            `).join('')}
+        </tbody>
     </table>
     
     <div class="total-section">
@@ -233,39 +234,55 @@ export class PDFService {
     
     <div class="footer">
         <p>Thank you for your business!</p>
-        <p>Payne Leadership | Professional Development & Leadership Consulting</p>
+        <p>Nobilis Talent Solutions | Professional Development & Leadership Consulting</p>
     </div>
 </body>
 </html>`;
   }
 
   /**
-   * Generate invoice PDF (placeholder - would integrate with actual PDF library)
+   * Generate invoice PDF using Puppeteer
    */
   async generateInvoicePDF(
     invoice: InvoicePreview, 
     invoiceNumber: string, 
     options: PDFOptions = {}
   ): Promise<{ success: boolean; data?: Buffer; error?: string }> {
+    let browser;
     try {
       // Generate the HTML content
       const html = this.generateInvoiceHTML(invoice, invoiceNumber, options);
       
-      // For now, return the HTML as a string
-      // In a real implementation, this would convert HTML to PDF using a library like Puppeteer
-      // or a service like wkhtmltopdf
-      
       console.log('Invoice HTML generated successfully');
       
-      // Placeholder: In a real implementation, you would:
-      // 1. Use Puppeteer to convert HTML to PDF
-      // 2. Return the PDF buffer
-      // 3. Handle proper PDF generation
+      // Launch Puppeteer browser
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      
+      // Set content and wait for it to load
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      
+      // Generate PDF
+      const pdfBuffer = await page.pdf({
+        format: options.format || 'A4',
+        printBackground: true,
+        margin: {
+          top: options.margin?.top || '20mm',
+          right: options.margin?.right || '20mm',
+          bottom: options.margin?.bottom || '20mm',
+          left: options.margin?.left || '20mm'
+        }
+      });
+      
+      console.log('Invoice PDF generated successfully');
       
       return {
         success: true,
-        data: Buffer.from(html, 'utf-8'), // Placeholder - would be actual PDF buffer
-        error: 'PDF generation not fully implemented - HTML returned instead'
+        data: Buffer.from(pdfBuffer)
       };
     } catch (error) {
       console.error('Error generating invoice PDF:', error);
@@ -273,6 +290,10 @@ export class PDFService {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
     }
   }
 

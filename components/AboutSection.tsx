@@ -1,5 +1,6 @@
 import Link from "next/link";
 import TeamMember from "./about/TeamMember";
+import { teamImages } from "@/lib/constants/images";
 
 const AboutSection = () => {
   const kareemAchievements = [
@@ -21,18 +22,19 @@ const AboutSection = () => {
     <section id="about" className="py-16 lg:py-24 gradient-subtle">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Meet the Team Header */}
-        <div className="text-center mb-16" data-animate>
+        <div className="text-center mb-20 md:mb-24 lg:mb-28" data-animate>
           <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
             Meet the Team
           </h1>
           <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
-            We're passionate about helping organizations unlock their strategic potential 
-            by leveraging the growth of people. Meet the dedicated professionals behind our mission.
+            We're passionate about helping organizations unlock their strategic
+            potential by leveraging the growth of people. Meet the dedicated
+            professionals behind our mission.
           </p>
         </div>
 
         {/* Kareem's Section */}
-        <div className="mb-20" data-animate>
+        <div className="mb-24 md:mb-32 lg:mb-40" data-animate>
           <TeamMember
             name="Kareem T. Payne"
             title="Human Capital Alchemist & Coach"
@@ -41,14 +43,14 @@ const AboutSection = () => {
 He specializes in helping organizations unlock their strategic potential by leveraging the growth of people. Through coaching, leadership development, and performance consulting, Kareem equips leaders and teams with the tools they need to thrive. As a qualified Emotional Intelligence (EI) practitioner, he champions EI as a catalyst for personal transformation.
 
 Whether in a boardroom, training room, or community hall, his message is consistent: growth is a choice, and learning never stops. A lifelong learner with a growth mindset, Kareem embraces the philosophy — "Stay Curious. Keep Learning."`}
-            image="/assets/kareem-profile.jpg"
+            image={teamImages.kareem}
             achievements={kareemAchievements}
             achievementsBold={true}
           />
         </div>
 
         {/* Wife's Section - Placeholder */}
-        <div className="mb-20" data-animate>
+        <div className="mb-24 md:mb-32 lg:mb-40" data-animate>
           <TeamMember
             name="Sarah Johnson"
             title="Organizational Development Specialist"
@@ -57,7 +59,7 @@ Whether in a boardroom, training room, or community hall, his message is consist
 Her approach combines evidence-based methodologies with practical business acumen, helping teams navigate complex organizational challenges while building stronger, more cohesive work environments. Sarah has worked across various industries including healthcare, technology, and non-profit sectors, consistently delivering measurable improvements in team performance and employee engagement.
 
 Sarah believes that the foundation of any successful organization lies in its people. She champions inclusive leadership practices and helps leaders develop the emotional intelligence necessary to inspire and motivate their teams. Her collaborative style and deep understanding of human behavior make her an invaluable partner in organizational transformation efforts.`}
-            image="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=500&fit=crop&crop=face"
+            image={teamImages.sarah}
             achievements={wifeAchievements}
             achievementsBold={true}
             reverseLayout={true}
@@ -71,7 +73,8 @@ Sarah believes that the foundation of any successful organization lies in its pe
               Ready to Transform Your Organization?
             </h3>
             <p className="text-foreground/70 mb-8 max-w-2xl mx-auto">
-              Let's work together to unlock your team's potential and drive sustainable growth through strategic human capital development.
+              Let's work together to unlock your team's potential and drive
+              sustainable growth through strategic human capital development.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/contact" className="btn-primary">

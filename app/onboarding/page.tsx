@@ -209,7 +209,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSkip = async () => {
+  const _handleSkip = async () => {
     // Mark onboarding completed without extra fields
     setIsSubmitting(true);
     try {
@@ -287,9 +287,9 @@ export default function OnboardingPage() {
             Get Started
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
-          <Button variant="outline" size="lg" onClick={handleSkip}>
+          {/* <Button variant="outline" size="lg" onClick={handleSkip}>
             Skip for now
-          </Button>
+          </Button> */}
         </div>
       </CardContent>
     </Card>

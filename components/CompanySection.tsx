@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import { generalImages } from '@/lib/constants/images';
 
 const CompanySection = () => {
   return (
@@ -39,8 +40,8 @@ const CompanySection = () => {
               <div className="relative" data-animate>
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-medium">
                   <Image
-                    src="https://images.unsplash.com/photo-1557800636-894a64c1696f?w=1600&h=1200&fit=crop&crop=center"
-                    alt="Team collaboration"
+                    src={generalImages.chart}
+                    alt="Growth metrics chart"
                     fill
                     className="object-cover"
                     onError={(e) => {

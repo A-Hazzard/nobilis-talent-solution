@@ -2,25 +2,26 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
+import { serviceImages } from '@/lib/constants/images';
 
 const ServicesCarousel = () => {
   const services = [
     {
       id: 'coaching-development',
       title: 'Coaching & Development',
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=800&fit=crop&crop=center',
+      image: serviceImages['individual-group-coaching'],
       description: 'Personalized coaching that sparks holistic growth and strengthens confidence.'
     },
     {
       id: 'strategic-hr-consulting',
       title: 'Strategic HR Consulting',
-      image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=800&fit=crop&crop=center',
+      image: serviceImages['performance-management-design'],
       description: 'Human, agile, and impactful performance management systems.'
     },
     {
       id: 'training-facilitation',
       title: 'Training & Facilitation',
-      image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&crop=center',
+      image: serviceImages['training-facilitation'],
       description: 'Interactive learning experiences that build skills and shift mindsets.'
     }
   ];

@@ -3,7 +3,7 @@ import { auth } from '@/lib/firebase/config';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 /**
- * Determines the appropriate redirect path based on user role, email verification, and onboarding status
+ * Determines the appropriate redirect path based on user role and onboarding status
  * @param user - The authenticated user
  * @param isLogin - Whether this is a login flow (true) or signup flow (false)
  * @returns The path to redirect to
@@ -12,12 +12,11 @@ export function getRedirectPath(user: User | null, isLogin: boolean = false): st
   if (!user) {
     return '/';
   }
+  // Reference isLogin to satisfy lint rule without changing logic
+  void isLogin;
 
-  // Email verification is only required for new sign-ups, not existing users signing in
-  // The verify-email page will handle this logic internally based on whether there's a verification token
-
-  // Check if user needs onboarding (only for signup flow, not login)
-  if (!isLogin && user.role !== 'admin' && !user.onboardingCompleted) {
+  // Require onboarding for any authenticated non-admin user until completed
+  if (user.role !== 'admin' && !user.onboardingCompleted) {
     return '/onboarding';
   }
 

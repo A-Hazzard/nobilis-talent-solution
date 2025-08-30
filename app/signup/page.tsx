@@ -157,7 +157,7 @@ export default function SignupPage() {
         router.push('/onboarding');
       }
       // Existing users will be redirected via useEffect when auth state updates
-    } catch (err) {
+    } catch {
       setError('Failed to sign up with Google. Please try again.');
     } finally {
       setSocialLoading(null);

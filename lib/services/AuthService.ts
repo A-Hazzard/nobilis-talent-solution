@@ -324,6 +324,7 @@ export class AuthService {
         displayName: userData.displayName,
         role: 'user',
         isActive: true,
+        onboardingCompleted: false,
         createdAt: now,
         memberSince: now, // Set memberSince to current date and time
         lastLoginAt: now, // Set initial last login to creation time

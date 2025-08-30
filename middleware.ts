@@ -45,7 +45,7 @@ const protectedApiRoutes = [
   '/api/content',
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Check if the route is protected
@@ -67,6 +67,30 @@ export function middleware(request: NextRequest) {
   
   // Check if user is authenticated
   const isAuthenticated = !!(authToken || refreshToken);
+
+  // If authenticated but onboarding not completed, force redirect to /onboarding
+  // Allow access to the onboarding page and API endpoints while checking
+  const isOnboardingPath = pathname === '/onboarding' || pathname.startsWith('/onboarding/');
+  const isApiPath = pathname.startsWith('/api/');
+  if (isAuthenticated && !isOnboardingPath && !isApiPath) {
+    // Call internal API to check onboarding status
+    const url = new URL('/api/auth/check-onboarding', request.url);
+    try {
+      const resp = await fetch(url, {
+        headers: authToken ? { authorization: `Bearer ${authToken}` } : undefined,
+        cache: 'no-store',
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.role !== 'admin' && data.onboardingCompleted === false) {
+          return NextResponse.redirect(new URL('/onboarding', request.url));
+        }
+      }
+    } catch (e) {
+      // If check fails, do not block navigation; fail open
+      console.warn('Middleware: onboarding check failed', e);
+    }
+  }
   
   // Handle protected routes
   if (isProtectedRoute || isProtectedApiRoute) {
@@ -93,7 +117,23 @@ export function middleware(request: NextRequest) {
   
   // Handle public routes - redirect authenticated users away from auth pages
   if (isAuthenticated && (pathname === '/login' || pathname === '/signup')) {
-    // Redirect to admin dashboard if already authenticated
+    // If onboarding not completed, send to onboarding instead of admin
+    if (!isApiPath) {
+      const url = new URL('/api/auth/check-onboarding', request.url);
+      try {
+        const resp = await fetch(url, {
+          headers: authToken ? { authorization: `Bearer ${authToken}` } : undefined,
+          cache: 'no-store',
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.role !== 'admin' && data.onboardingCompleted === false) {
+            return NextResponse.redirect(new URL('/onboarding', request.url));
+          }
+        }
+      } catch {}
+    }
+    // Default redirect for authenticated users on auth pages
     return NextResponse.redirect(new URL('/admin', request.url));
   }
   

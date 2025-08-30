@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, X, Eye, EyeOff, User, Mail, Lock, Building, UserCheck, Phone } from 'lucide-react';
+import { Check, X, Eye, EyeOff, User, Mail, Lock, Building, UserCheck, Phone, Chrome } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { validateSignupForm } from '@/lib/utils/validation';
 import { getRedirectPath } from '@/lib/utils/authUtils';
@@ -18,8 +18,9 @@ export const dynamic = 'force-dynamic';
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signUp, user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { signUp, signInWithGoogle, user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -141,6 +142,25 @@ export default function SignupPage() {
       setError('Failed to sign up. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setSocialLoading('google');
+    setError(null);
+    try {
+      const { error, isNewUser } = await signInWithGoogle();
+      if (error) {
+        setError(error.message);
+      } else if (isNewUser) {
+        // New Google users go straight to onboarding
+        router.push('/onboarding');
+      }
+      // Existing users will be redirected via useEffect when auth state updates
+    } catch (err) {
+      setError('Failed to sign up with Google. Please try again.');
+    } finally {
+      setSocialLoading(null);
     }
   };
 
@@ -383,6 +403,35 @@ export default function SignupPage() {
             </Button>
           </form>
 
+          {/* Social Signup Divider */}
+          <div className="my-6 flex items-center">
+            <div className="flex-1 border-t border-gray-300"></div>
+            <span className="mx-4 text-sm text-gray-500 bg-white px-2">Or continue with</span>
+            <div className="flex-1 border-t border-gray-300"></div>
+          </div>
+
+          {/* Social Signup Buttons */}
+          <div>
+            <Button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={socialLoading !== null || isLoading}
+              className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-md disabled:transform-none disabled:opacity-50"
+            >
+              {socialLoading === 'google' ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  Connecting...
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <Chrome className="h-5 w-5 mr-3 text-blue-600" />
+                  Continue with Google
+                </div>
+              )}
+            </Button>
+          </div>
+
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
             <a href="/login" className="text-blue-600 hover:text-blue-500">
@@ -393,4 +442,4 @@ export default function SignupPage() {
       </Card>
     </div>
   );
-} 
+}

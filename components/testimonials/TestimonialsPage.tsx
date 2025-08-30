@@ -48,7 +48,7 @@ const TestimonialsPage = () => {
   ];
 
   const stats = [
-    { number: '4000+', label: 'People Trained' },
+    { number: '200+', label: 'People Trained' },
     { number: '100+', label: 'Leaders Coached' },
     { number: '20+', label: 'Businesses Launched' },
     { number: '10+', label: 'Keynotes Delivered' }

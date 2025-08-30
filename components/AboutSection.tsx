@@ -4,7 +4,7 @@ import { teamImages } from "@/lib/constants/images";
 
 const AboutSection = () => {
   const kareemAchievements = [
-    "4000+ entrepreneurs and team members trained",
+    "200+ entrepreneurs and team members trained",
     "10+ keynotes delivered",
     "100+ leaders and entrepreneurs coached",
     "20+ businesses successfully launched",

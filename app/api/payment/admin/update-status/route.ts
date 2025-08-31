@@ -55,7 +55,9 @@ export async function PUT(request: NextRequest) {
           html 
         });
       } else if (status === 'completed') {
-        const amountNum = Number(current.baseAmount || 0);
+        const baseAmount = Number(current.baseAmount || 0);
+        const totalAmount = Number(current.totalAmount || current.baseAmount || 0);
+        const bonusAmount = totalAmount - baseAmount;
         const invoiceNumber = current.invoiceNumber || `INV-${paymentId.slice(0, 6).toUpperCase()}`;
         
         console.log('🔍 Admin Update: Starting completion email process for payment:', {
@@ -63,27 +65,44 @@ export async function PUT(request: NextRequest) {
           invoiceNumber,
           clientEmail: current.clientEmail,
           clientName: current.clientName,
-          amount: amountNum
+          baseAmount,
+          totalAmount,
+          bonusAmount
         });
         
-        // Generate PDF invoice (same pattern as webhook and new invoice workflows)
+        // Generate PDF invoice with proper amounts (including bonus if applicable)
         let pdfAttachment = undefined;
         try {
+          // Create items array with base service and bonus if applicable
+          const items = [{
+            id: '1',
+            description: current.description || 'Leadership Consultation',
+            quantity: 1,
+            unitPrice: baseAmount,
+            total: baseAmount,
+            type: 'service' as const
+          }];
+          
+          // Add bonus item if there's a bonus amount
+          if (bonusAmount > 0) {
+            items.push({
+              id: '2',
+              description: 'Additional Payment (Bonus)',
+              quantity: 1,
+              unitPrice: bonusAmount,
+              total: bonusAmount,
+              type: 'service' as const
+            });
+          }
+          
           const invoiceData = {
             invoiceNumber,
             clientName: current.clientName,
             clientEmail: current.clientEmail,
-            items: [{
-              id: '1',
-              description: current.description || 'Leadership Consultation',
-              quantity: 1,
-              unitPrice: amountNum,
-              total: amountNum,
-              type: 'service' as const
-            }],
-            subtotal: amountNum,
+            items,
+            subtotal: totalAmount,
             taxAmount: 0,
-            total: amountNum,
+            total: totalAmount,
             dueDate: new Date()
           };
           
@@ -111,7 +130,7 @@ export async function PUT(request: NextRequest) {
           to: current.clientEmail,
           clientName: current.clientName || current.clientEmail,
           invoiceNumber,
-          amount: amountNum,
+          amount: totalAmount, // Use total amount (including bonus)
           paymentMethod: 'manual', // Since this is manually marked as completed
           transactionId: `MANUAL-${paymentId}`,
           pdfAttachment

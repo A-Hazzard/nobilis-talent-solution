@@ -195,7 +195,7 @@ export default function ContentSection() {
                         )}
                       </div>
                       <CardTitle className="text-lg line-clamp-2">
-                        <Link href={`/blog/${blog.slug}`} className="hover:text-blue-600 transition-colors">
+                        <Link href={`/content/blog/${blog.slug}`} className="hover:text-blue-600 transition-colors">
                           {blog.title}
                         </Link>
                       </CardTitle>

@@ -29,7 +29,7 @@ const publicRoutes = [
   '/blog',
   '/content',
   '/resources',
-  '/payment',
+
   '/payment/success',
   '/payment/pending',
 ];

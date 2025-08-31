@@ -173,8 +173,8 @@ export default function PaymentSuccessPage() {
             
             <div className="text-sm text-muted-foreground">
               Questions? Contact us at{' '}
-              <a href="mailto:hello@kareempayne.com" className="text-primary hover:underline">
-                hello@kareempayne.com
+              <a href="mailto:nobilis.talent@gmail.com" className="text-primary hover:underline">
+                nobilis.talent@gmail.com
               </a>
             </div>
           </div>

@@ -298,12 +298,12 @@ export default function ContentPage() {
       setAuthModalContext({
         title: 'Sign in to read blog posts',
         description: 'Please sign in or create an account to read our blog posts and access exclusive content.',
-        onSuccess: () => { window.location.href = `/blog/${slug}`; }
+        onSuccess: () => { window.location.href = `/content/blog/${slug}`; }
       });
       setIsAuthModalOpen(true);
       return;
     }
-    window.location.href = `/blog/${slug}`;
+    window.location.href = `/content/blog/${slug}`;
   };
 
   const handleDownloadClick = (resourceId: string) => {

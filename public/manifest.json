@@ -72,7 +72,7 @@
       "name": "Resources",
       "short_name": "Resources",
       "description": "Access leadership development resources",
-      "url": "/resources",
+      "url": "/content",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     },
 

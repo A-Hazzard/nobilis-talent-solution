@@ -20,15 +20,28 @@ export class PDFService {
   private generateInvoiceHTML(invoice: InvoicePreview, invoiceNumber: string, options: PDFOptions = {}): string {
     const invoiceDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
     });
 
     const dueDate = invoice.dueDate.toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
     });
+
+    // Convert logo to base64 for embedding
+    const fs = require('fs');
+    const path = require('path');
+    let logoBase64 = '';
+    
+    try {
+      const logoPath = path.join(process.cwd(), 'public', 'assets', 'logo-transparent.png');
+      const logoBuffer = fs.readFileSync(logoPath);
+      logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+    } catch (error) {
+      console.warn('Could not load logo for PDF:', error);
+    }
 
     return `
 <!DOCTYPE html>
@@ -39,202 +52,300 @@ export class PDFService {
     <style>
         @page {
             size: ${options.format || 'A4'};
-            margin: ${options.margin?.top || '20mm'} ${options.margin?.right || '20mm'} ${options.margin?.bottom || '20mm'} ${options.margin?.left || '20mm'};
+            margin: ${options.margin?.top || '15mm'} ${options.margin?.right || '15mm'} ${options.margin?.bottom || '15mm'} ${options.margin?.left || '15mm'};
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
             font-family: 'Arial', sans-serif;
-            line-height: 1.6;
+            font-size: 12px;
+            line-height: 1.4;
             color: #333;
-            margin: 0;
-            padding: 0;
+            background: #fff;
+        }
+        
+        .invoice-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
         }
         
         .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #667eea;
-        }
-        
-        .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-        
-        .company-details {
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .invoice-info {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 30px;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
         }
         
-        .client-info, .invoice-details {
+        .logo-section {
             flex: 1;
         }
         
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        
+        .company-info {
+            font-size: 11px;
+            line-height: 1.4;
+            color: #555;
+        }
+        
+        .invoice-header {
+            flex: 1;
+            text-align: right;
+        }
+        
         .invoice-title {
-            font-size: 20px;
+            font-size: 32px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
         }
         
         .invoice-number {
-            font-size: 16px;
-            color: #667eea;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        
+        .invoice-dates {
+            text-align: right;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+        
+        .date-row {
             margin-bottom: 5px;
         }
         
-        .date-info {
-            font-size: 12px;
+        .date-label {
+            display: inline-block;
+            width: 60px;
+            text-align: left;
             color: #666;
+        }
+        
+        .balance-due {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #ff6b35;
+        }
+        
+        .balance-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        
+        .balance-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .billing-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        
+        .bill-to {
+            flex: 1;
+        }
+        
+        .bill-to h3 {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .client-details {
+            font-size: 11px;
+            line-height: 1.5;
+            color: #555;
         }
         
         .items-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
+            border: 1px solid #ddd;
         }
         
         .items-table th {
-            background-color: #f8f9fa;
-            padding: 12px;
+            background-color: #4a4a4a;
+            color: white;
+            padding: 12px 15px;
             text-align: left;
-            border-bottom: 2px solid #dee2e6;
+            font-size: 11px;
             font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .items-table th.center {
+            text-align: center;
+        }
+        
+        .items-table th.right {
+            text-align: right;
         }
         
         .items-table td {
-            padding: 12px;
-            border-bottom: 1px solid #dee2e6;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
         }
         
-        .items-table .description {
-            width: 60%;
+        .items-table td.center {
+            text-align: center;
         }
         
-        .items-table .amount {
-            width: 40%;
+        .items-table td.right {
             text-align: right;
         }
         
-        .total-section {
+        .items-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .totals-section {
+            margin-top: 30px;
             text-align: right;
-            margin-top: 20px;
+        }
+        
+        .totals-table {
+            margin-left: auto;
+            width: 300px;
+        }
+        
+        .totals-table tr td {
+            padding: 8px 15px;
+            font-size: 11px;
+        }
+        
+        .totals-table tr td:first-child {
+            text-align: right;
+            color: #666;
+        }
+        
+        .totals-table tr td:last-child {
+            text-align: right;
+            font-weight: bold;
+            width: 100px;
         }
         
         .total-row {
-            font-size: 16px;
-            font-weight: bold;
-            padding: 10px 0;
+            border-top: 2px solid #333;
+            font-size: 12px !important;
         }
         
-        .total-amount {
-            font-size: 20px;
-            color: #667eea;
-            border-top: 2px solid #667eea;
-            padding-top: 10px;
-        }
-        
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            border-top: 1px solid #dee2e6;
-            padding-top: 20px;
-        }
-        
-        .payment-info {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        
-        .payment-info h4 {
-            margin: 0 0 10px 0;
-            color: #333;
-        }
-        
-        .payment-info p {
-            margin: 5px 0;
-            font-size: 12px;
+        .total-row td {
+            padding-top: 12px !important;
+            font-weight: bold !important;
+            color: #333 !important;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="company-name">Nobilis Talent Solutions</div>
-        <div class="company-details">
-            123 Business Street<br>
-            City, State 12345<br>
-            Phone: +1 (555) 123-4567<br>
-            Email: nobilis.talent@gmail.com
-        </div>
-    </div>
-    
-    <div class="invoice-info">
-        <div class="client-info">
-            <div class="invoice-title">Bill To:</div>
-            <div style="font-size: 14px; margin-bottom: 10px;">
-                ${invoice.clientName}<br>
-                ${invoice.clientEmail || ''}
+    <div class="invoice-container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo-section">
+                ${logoBase64 ? `<img src="${logoBase64}" alt="Company Logo" class="logo" />` : ''}
+                <div class="company-info">
+                    <strong>Nobilis Talent Solutions</strong><br>
+                    Aaron Hazzard<br>
+                    Available globally<br>
+                    Phone: +1 (678) 920-6605<br>
+                    Email: nobilis.talent@gmail.com
+                </div>
+            </div>
+            
+            <div class="invoice-header">
+                <div class="invoice-title">INVOICE</div>
+                <div class="invoice-number">#${invoiceNumber}</div>
+                
+                <div class="invoice-dates">
+                    <div class="date-row">
+                        <span class="date-label">Date:</span>
+                        <span>${invoiceDate}</span>
+                    </div>
+                    <div class="date-row">
+                        <span class="date-label">Due Date:</span>
+                        <span>${dueDate}</span>
+                    </div>
+                </div>
+                
+                <div class="balance-due">
+                    <div class="balance-label">Balance Due:</div>
+                    <div class="balance-amount">$${invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                </div>
             </div>
         </div>
         
-        <div class="invoice-details">
-            <div class="invoice-title">Invoice</div>
-            <div class="invoice-number">#${invoiceNumber}</div>
-            <div class="date-info">
-                <strong>Date:</strong> ${invoiceDate}<br>
-                <strong>Due Date:</strong> ${dueDate}
+        <!-- Billing Section -->
+        <div class="billing-section">
+            <div class="bill-to">
+                <h3>Bill To:</h3>
+                <div class="client-details">
+                    ${invoice.clientName}<br>
+                    ${invoice.clientEmail || ''}
+                </div>
             </div>
         </div>
-    </div>
-    
-    <table class="items-table">
-        <thead>
-            <tr>
-                <th class="description">Description</th>
-                <th class="amount">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${invoice.items.map(item => `
+        
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
                 <tr>
-                    <td class="description">${item.description}</td>
-                    <td class="amount">$${item.total.toFixed(2)}</td>
+                    <th>Item</th>
+                    <th class="center">Quantity</th>
+                    <th class="right">Rate</th>
+                    <th class="right">Amount</th>
                 </tr>
-            `).join('')}
-        </tbody>
-    </table>
-    
-    <div class="total-section">
-        <div class="total-row">
-            <span>Total:</span>
-            <span class="total-amount">$${invoice.total.toFixed(2)}</span>
+            </thead>
+            <tbody>
+                ${invoice.items.map(item => `
+                    <tr>
+                        <td>${item.description}</td>
+                        <td class="center">${item.quantity}</td>
+                        <td class="right">$${item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="right">$${item.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        
+        <!-- Totals Section -->
+        <div class="totals-section">
+            <table class="totals-table">
+                <tr>
+                    <td>Subtotal:</td>
+                    <td>$${invoice.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                    <td>Tax (0%):</td>
+                    <td>$${invoice.taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+                <tr class="total-row">
+                    <td>Total:</td>
+                    <td>$${invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            </table>
         </div>
-    </div>
-    
-    <div class="payment-info">
-        <h4>Payment Information</h4>
-        <p><strong>Payment Method:</strong> Credit Card / Bank Transfer</p>
-        <p><strong>Payment Terms:</strong> Net 30</p>
-        <p><strong>Due Date:</strong> ${dueDate}</p>
-        <p>Please include invoice number #${invoiceNumber} with your payment.</p>
-    </div>
-    
-    <div class="footer">
-        <p>Thank you for your business!</p>
-        <p>Nobilis Talent Solutions | Professional Development & Leadership Consulting</p>
     </div>
 </body>
 </html>`;
@@ -250,48 +361,72 @@ export class PDFService {
   ): Promise<{ success: boolean; data?: Buffer; error?: string }> {
     let browser;
     try {
+      console.log('🚀 PDFService: Starting PDF generation for invoice:', invoiceNumber);
+      console.log('🚀 PDFService: Invoice data:', {
+        clientName: invoice.clientName,
+        total: invoice.total,
+        itemsCount: invoice.items?.length,
+        dueDate: invoice.dueDate
+      });
+      
       // Generate the HTML content
       const html = this.generateInvoiceHTML(invoice, invoiceNumber, options);
       
-      console.log('Invoice HTML generated successfully');
+      console.log('✅ PDFService: Invoice HTML generated successfully, length:', html.length);
       
       // Launch Puppeteer browser
+      console.log('🌐 PDFService: Launching Puppeteer browser...');
       browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu'
+        ]
       });
+      
+      console.log('✅ PDFService: Browser launched successfully');
       
       const page = await browser.newPage();
       
       // Set content and wait for it to load
+      console.log('📄 PDFService: Setting page content...');
       await page.setContent(html, { waitUntil: 'networkidle0' });
+      
+      console.log('✅ PDFService: Page content set, generating PDF...');
       
       // Generate PDF
       const pdfBuffer = await page.pdf({
         format: options.format || 'A4',
         printBackground: true,
         margin: {
-          top: options.margin?.top || '20mm',
-          right: options.margin?.right || '20mm',
-          bottom: options.margin?.bottom || '20mm',
-          left: options.margin?.left || '20mm'
+          top: options.margin?.top || '15mm',
+          right: options.margin?.right || '15mm',
+          bottom: options.margin?.bottom || '15mm',
+          left: options.margin?.left || '15mm'
         }
       });
       
-      console.log('Invoice PDF generated successfully');
+      console.log('✅ PDFService: PDF generated successfully, size:', pdfBuffer.length, 'bytes');
       
       return {
         success: true,
         data: Buffer.from(pdfBuffer)
       };
     } catch (error) {
-      console.error('Error generating invoice PDF:', error);
+      console.error('❌ PDFService: Error generating invoice PDF:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     } finally {
       if (browser) {
+        console.log('🔒 PDFService: Closing browser...');
         await browser.close();
       }
     }

@@ -103,7 +103,7 @@ const Footer = () => {
                 <Mail className="w-5 h-5 mr-3 text-primary" />
                 <a
                   href="mailto:nobilis.talent@gmail.com"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  className="text-white/80 hover:text-primary transition-smooth"
                 >
                   nobilis.talent@gmail.com
                 </a>
@@ -111,11 +111,15 @@ const Footer = () => {
               <div className="flex items-center">
                 <Phone className="w-5 h-5 mr-3 text-primary" />
                 <a
-                  href="tel:678-920-6605"
+                  href="tel:+15551234567"
                   className="text-white/80 hover:text-primary transition-smooth"
                 >
-                  (678) 920-6605
+                  +1 (555) 123-4567
                 </a>
+              </div>
+              <div className="text-white/80 text-sm">
+                123 Business St<br />
+                City, State 12345
               </div>
               <div className="mt-6">
                 <a

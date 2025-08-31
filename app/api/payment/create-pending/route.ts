@@ -9,7 +9,7 @@ import type { InvoicePreview } from '@/shared/types/payment';
 export async function POST(request: NextRequest) {
   try {
     const body: CreatePendingPaymentRequest = await request.json();
-    const { clientEmail, clientName, baseAmount, description } = body;
+    const { clientEmail, clientName, baseAmount, description, dueDate } = body;
 
     // Validate input
     if (!clientEmail || !clientName || !baseAmount || !description) {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         subtotal: baseAmount,
         taxAmount: 0,
         total: baseAmount,
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       };
 
       // Save invoice number to the payment

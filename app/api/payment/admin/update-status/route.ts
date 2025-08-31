@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/config';
 import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { EmailService } from '@/lib/services/EmailService';
+import { PDFService } from '@/lib/services/PDFService';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -55,35 +56,68 @@ export async function PUT(request: NextRequest) {
         });
       } else if (status === 'completed') {
         const amountNum = Number(current.baseAmount || 0);
-        const content = `
-          <p>Dear ${current.clientName || 'Valued Client'},</p>
-          
-          <p>Great news! Your payment has been successfully marked as completed.</p>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
-            <h4>Payment Confirmation:</h4>
-            <p><strong>Amount:</strong> $${amountNum.toFixed(2)}</p>
-            <p><strong>Description:</strong> ${current.description || 'Leadership Consultation'}</p>
-            ${current.invoiceNumber ? `<p><strong>Invoice Number:</strong> #${current.invoiceNumber}</p>` : ''}
-            <p><strong>Status:</strong> <span style="color: #28a745; font-weight: bold;">Completed</span></p>
-            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-          </div>
-          
-          <p>Thank you for choosing Nobilis Talent Solutions. We appreciate your business and look forward to working with you!</p>
-          
-          <p>If you have any questions about this payment or need to schedule your consultation, please don't hesitate to reach out.</p>
-          
-          <p>Best regards,<br>
-          Nobilis Talent Solutions Team</p>
-        `;
+        const invoiceNumber = current.invoiceNumber || `INV-${paymentId.slice(0, 6).toUpperCase()}`;
         
-        const html = emailService.generateSimpleHTML("Payment Completed", content);
-        
-        await emailService.sendEmail({ 
-          to: current.clientEmail, 
-          subject: `Payment Completed - ${current.invoiceNumber ? `Invoice #${current.invoiceNumber}` : 'Leadership Consultation'}`, 
-          html 
+        console.log('🔍 Admin Update: Starting completion email process for payment:', {
+          paymentId,
+          invoiceNumber,
+          clientEmail: current.clientEmail,
+          clientName: current.clientName,
+          amount: amountNum
         });
+        
+        // Generate PDF invoice (same pattern as webhook and new invoice workflows)
+        let pdfAttachment = undefined;
+        try {
+          const invoiceData = {
+            invoiceNumber,
+            clientName: current.clientName,
+            clientEmail: current.clientEmail,
+            items: [{
+              id: '1',
+              description: current.description || 'Leadership Consultation',
+              quantity: 1,
+              unitPrice: amountNum,
+              total: amountNum,
+              type: 'service' as const
+            }],
+            subtotal: amountNum,
+            taxAmount: 0,
+            total: amountNum,
+            dueDate: new Date()
+          };
+          
+          console.log('📄 Admin Update: Generating PDF for completion email...');
+          const pdfService = PDFService.getInstance();
+          const pdf = await pdfService.generateInvoicePDF(invoiceData, invoiceNumber);
+          
+          if (pdf.success && pdf.data) {
+            pdfAttachment = {
+              filename: `invoice-${invoiceNumber}.pdf`,
+              content: pdf.data,
+              contentType: 'application/pdf'
+            };
+            console.log('✅ Admin Update: PDF generated successfully, size:', pdf.data.length, 'bytes');
+          } else {
+            console.log('❌ Admin Update: PDF generation failed:', pdf.error);
+          }
+        } catch (pdfError) {
+          console.error('❌ Admin Update: PDF generation error:', pdfError);
+        }
+        
+        // Send payment confirmation email with PDF attachment (same pattern as webhook)
+        console.log('📧 Admin Update: Sending payment confirmation email with PDF...');
+        const emailResult = await emailService.sendPaymentConfirmationWithPDF({
+          to: current.clientEmail,
+          clientName: current.clientName || current.clientEmail,
+          invoiceNumber,
+          amount: amountNum,
+          paymentMethod: 'manual', // Since this is manually marked as completed
+          transactionId: `MANUAL-${paymentId}`,
+          pdfAttachment
+        });
+        
+        console.log('📧 Admin Update: Email result:', emailResult);
       } else if (status === 'expired') {
         const content = `
           <p>Dear ${current.clientName || 'Valued Client'},</p>

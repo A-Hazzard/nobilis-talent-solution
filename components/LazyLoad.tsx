@@ -75,7 +75,4 @@ export const LazyResourceDownloadModal = createLazyComponent(
   <Skeleton className="w-full h-64" />
 );
 
-export const LazyInvoicePreviewModal = createLazyComponent(
-  () => import('./InvoicePreviewModal'),
-  <Skeleton className="w-full h-64" />
-); 
+ 

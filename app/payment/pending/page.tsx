@@ -79,6 +79,7 @@ export default function PendingPaymentPage() {
             clientName: pendingPayment.clientName,
             clientEmail: pendingPayment.clientEmail,
             amount: totalAmount,
+            baseAmount: pendingPayment.baseAmount,
             description: pendingPayment.description,
             pendingPaymentId: pendingPayment.id,
             invoiceNumber: pendingPayment.invoiceNumber,
@@ -208,120 +209,118 @@ export default function PendingPaymentPage() {
 
           {/* Payment Details */}
           <div className="card-elevated p-8 rounded-2xl mb-12">
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Payment Information */}
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Payment Details</h2>
+            {/* Payment Information */}
+            <div className="space-y-6 mb-8">
+              <h2 className="text-2xl font-bold text-foreground">Payment Details</h2>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Service:</span>
+                  <span className="font-medium">{pendingPayment.description}</span>
+                </div>
                 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Service:</span>
-                    <span className="font-medium">{pendingPayment.description}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Base Amount:</span>
-                    <span className="font-semibold text-lg">{PaymentLinkService.formatAmount(pendingPayment.baseAmount)}</span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Base Amount:</span>
+                  <span className="font-semibold text-lg">{PaymentLinkService.formatAmount(pendingPayment.baseAmount)}</span>
+                </div>
 
-                  {additionalAmount > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Additional Amount:</span>
-                      <span className="font-semibold text-primary">{PaymentLinkService.formatAmount(additionalAmount)}</span>
-                    </div>
-                  )}
+                {additionalAmount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Additional Amount:</span>
+                    <span className="font-semibold text-primary">{PaymentLinkService.formatAmount(additionalAmount)}</span>
+                  </div>
+                )}
 
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold">Total Amount:</span>
-                      <span className="text-2xl font-bold text-primary">{PaymentLinkService.formatAmount(totalAmount)}</span>
-                    </div>
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold">Total Amount:</span>
+                    <span className="text-2xl font-bold text-primary">{PaymentLinkService.formatAmount(totalAmount)}</span>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Generous Giving */}
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Want to be Generous?</h2>
-                <p className="text-muted-foreground">
-                  If you'd like to add a little extra to support Kareem's work, you can choose an additional amount below.
-                </p>
+            {/* Generous Giving */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-foreground">Want to be Generous?</h2>
+              <p className="text-muted-foreground">
+                If you'd like to add a little extra to support Kareem's work, you can choose an additional amount below.
+              </p>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => handleGenerousAmount(25)}
-                    className={`p-3 rounded-lg border transition-all ${
-                      additionalAmount === 25 && !customAmount
-                        ? 'border-primary bg-primary/10 text-primary' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Heart className="w-4 h-4" />
-                      <span className="font-medium">$25</span>
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleGenerousAmount(50)}
-                    className={`p-3 rounded-lg border transition-all ${
-                      additionalAmount === 50 && !customAmount
-                        ? 'border-primary bg-primary/10 text-primary' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Heart className="w-4 h-4" />
-                      <span className="font-medium">$50</span>
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleGenerousAmount(100)}
-                    className={`p-3 rounded-lg border transition-all ${
-                      additionalAmount === 100 && !customAmount
-                        ? 'border-primary bg-primary/10 text-primary' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Heart className="w-4 h-4" />
-                      <span className="font-medium">$100</span>
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleGenerousAmount(0)}
-                    className={`p-3 rounded-lg border transition-all ${
-                      additionalAmount === 0 && !customAmount
-                        ? 'border-primary bg-primary/10 text-primary' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <span className="font-medium">No Extra</span>
-                  </button>
-                </div>
-
-                {/* Custom Amount Input */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Or enter a custom amount:</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2 text-muted-foreground">$</span>
-                    <input
-                      type="number"
-                      value={customAmount}
-                      onChange={(e) => handleCustomAmount(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="0.00"
-                      min="0"
-                      step="0.01"
-                    />
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleGenerousAmount(25)}
+                  className={`p-3 rounded-lg border transition-all ${
+                    additionalAmount === 25 && !customAmount
+                      ? 'border-primary bg-primary/10 text-primary' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Heart className="w-4 h-4" />
+                    <span className="font-medium">$25</span>
                   </div>
-                </div>
+                </button>
+                
+                <button
+                  onClick={() => handleGenerousAmount(50)}
+                  className={`p-3 rounded-lg border transition-all ${
+                    additionalAmount === 50 && !customAmount
+                      ? 'border-primary bg-primary/10 text-primary' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Heart className="w-4 h-4" />
+                    <span className="font-medium">$50</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => handleGenerousAmount(100)}
+                  className={`p-3 rounded-lg border transition-all ${
+                    additionalAmount === 100 && !customAmount
+                      ? 'border-primary bg-primary/10 text-primary' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Heart className="w-4 h-4" />
+                    <span className="font-medium">$100</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => handleGenerousAmount(0)}
+                  className={`p-3 rounded-lg border transition-all ${
+                    additionalAmount === 0 && !customAmount
+                      ? 'border-primary bg-primary/10 text-primary' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <span className="font-medium">No Extra</span>
+                </button>
+              </div>
 
-                <div className="text-sm text-muted-foreground">
-                  <p>Your generosity helps Kareem continue providing exceptional leadership coaching to others.</p>
+              {/* Custom Amount Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Or enter a custom amount:</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-muted-foreground">$</span>
+                  <input
+                    type="number"
+                    value={customAmount}
+                    onChange={(e) => handleCustomAmount(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                  />
                 </div>
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                <p>Your generosity helps Kareem continue providing exceptional leadership coaching to others.</p>
               </div>
             </div>
           </div>

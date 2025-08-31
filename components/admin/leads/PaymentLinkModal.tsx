@@ -20,6 +20,7 @@ interface PaymentLinkModalProps {
 export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModalProps) {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [dueDate, setDueDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState<PendingPaymentResponse | null>(null);
@@ -38,6 +39,7 @@ export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModa
         clientEmail: lead.email,
         baseAmount: parseFloat(amount),
         description: description || `Leadership consultation for ${lead.firstName} ${lead.lastName}`,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
       };
 
       // Create pending payment
@@ -60,6 +62,7 @@ export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModa
       // Reset form
       setAmount('');
       setDescription('');
+      setDueDate('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create payment link');
     } finally {
@@ -75,6 +78,7 @@ export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModa
     setError('');
     setAmount('');
     setDescription('');
+    setDueDate('');
   };
 
   if (!lead) return null;
@@ -138,6 +142,20 @@ export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModa
                 placeholder={`Leadership consultation for ${lead.firstName} ${lead.lastName}`}
                 rows={3}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dueDate">Due Date (Optional)</Label>
+              <Input
+                id="dueDate"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
+              <p className="text-xs text-muted-foreground">
+                If not specified, defaults to 30 days from invoice date
+              </p>
             </div>
 
             {error && (

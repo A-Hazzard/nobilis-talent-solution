@@ -130,7 +130,6 @@ export function useLeads(): [LeadsState, LeadsActions] {
           action: 'create',
           entity: 'lead',
           entityId: formData.email, // Use email as entityId for leads
-          timestamp: Date.now(),
           details: {
             title: `Lead account created`,
             firstName: formData.firstName,
@@ -183,7 +182,7 @@ export function useLeads(): [LeadsState, LeadsActions] {
           action: 'update',
           entity: 'lead',
           entityId: editingLead.id,
-          timestamp: Date.now(),
+
           details: {
             title: `Lead account updated`,
             previousEmail: editingLead.email,
@@ -244,7 +243,7 @@ export function useLeads(): [LeadsState, LeadsActions] {
             action: 'delete',
             entity: 'lead',
             entityId: id,
-            timestamp: Date.now(),
+  
             details: {
               title: `Lead account deleted`,
               firstName: leadToDelete.firstName,

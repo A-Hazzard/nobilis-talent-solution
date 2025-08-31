@@ -23,7 +23,7 @@ export type PaymentLink = {
   clientEmail: string;
   amount: number;
   description: string;
-  status: 'active' | 'expired' | 'completed';
+  status: 'active' | 'overdue' | 'completed';
   createdAt: Date;
   expiresAt?: Date;
   stripePaymentLinkId?: string;
@@ -52,7 +52,7 @@ export type PendingPayment = {
   baseAmount: number;
   bonusAmount?: number; // Optional tip/bonus amount
   description: string;
-  status: 'pending' | 'completed' | 'cancelled' | 'expired';
+  status: 'pending' | 'completed' | 'cancelled' | 'overdue';
   createdAt: Date;
   expiresAt?: Date;
   stripeSessionId?: string;

@@ -285,7 +285,7 @@ export class ResourcesService {
         entity: 'resource',
         entityId: docRef.id,
         details: { title: resourceData.title, category: resourceData.category },
-        timestamp: Date.now(),
+
       });
 
       return { id: docRef.id };
@@ -367,7 +367,7 @@ export class ResourcesService {
         entity: 'resource',
         entityId: id,
         details: { updates },
-        timestamp: Date.now(),
+
       });
 
       return {};
@@ -418,7 +418,7 @@ export class ResourcesService {
         action: 'delete',
         entity: 'resource',
         entityId: id,
-        timestamp: Date.now(),
+
       });
 
       return {};

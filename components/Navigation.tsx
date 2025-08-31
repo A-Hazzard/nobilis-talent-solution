@@ -20,7 +20,7 @@ const Navigation = () => {
   
   // Use authenticated user's email or fallback to demo email
   const userEmail = user?.email || 'john@company.com';
-  const { pendingPayment, hasPendingPayment } = usePendingPayment(userEmail);
+  const { pendingPayment, shouldShowPaymentButton } = usePendingPayment(userEmail);
 
   const pathname = usePathname();
   const isHomePage = pathname === '/';
@@ -151,7 +151,7 @@ const Navigation = () => {
   
             {/* CTA Buttons - Desktop */}
             <div className="hidden lg:flex items-center space-x-2 lg:pr-6">
-              {hasPendingPayment && (
+              {shouldShowPaymentButton && (
                 <a
                   href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
                   className="btn-secondary font-semibold whitespace-nowrap text-xs px-3 py-1.5"
@@ -274,7 +274,7 @@ const Navigation = () => {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="block text-gray-700 hover:text-primary px-6 py-4 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium touch-manipulation active:scale-98 active:bg-gray-100 min-h-14 flex items-center justify-center text-lg space-x-3"
+                    className="flex items-center justify-center text-gray-700 hover:text-primary px-6 py-4 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium touch-manipulation active:scale-98 active:bg-gray-100 min-h-14 text-lg space-x-3"
                     onClick={(e) => handleLinkClick(link.href, e)}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -286,7 +286,7 @@ const Navigation = () => {
               
               {/* Mobile CTA Buttons */}
               <div className="pt-4 space-y-3">
-                {hasPendingPayment && (
+                {shouldShowPaymentButton && (
                   <a
                     href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
                     className="block w-full text-center btn-secondary font-semibold px-4 py-3 rounded-lg"

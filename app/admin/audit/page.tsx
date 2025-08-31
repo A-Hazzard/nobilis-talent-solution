@@ -335,7 +335,7 @@ export default function AuditLogsPage() {
                         </span>
                       </div>
                         
-                      <div className="space-y-1">
+                      <div className="space-y-2">
                         <p className="font-medium text-gray-900 text-sm sm:text-base break-words">
                           {(() => {
                             // Parse details if it's a JSON string
@@ -351,8 +351,9 @@ export default function AuditLogsPage() {
                             return parsedDetails?.title || log.entityId || 'Untitled';
                           })()}
                         </p>
+
+                        {/* Enhanced: Show detailed changes */}
                         {(() => {
-                          // Parse details for description
                           let parsedDetails = log.details;
                           if (typeof log.details === 'string') {
                             try {
@@ -361,10 +362,62 @@ export default function AuditLogsPage() {
                               return null;
                             }
                           }
+                          
+                          // Display changes if available
+                          if (parsedDetails?.changes && Object.keys(parsedDetails.changes).length > 0) {
+                            return (
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-gray-700">Changes:</p>
+                                <div className="bg-gray-50 border rounded p-2 space-y-1">
+                                  {Object.entries(parsedDetails.changes).map(([field, change]: [string, any]) => (
+                                    <div key={field} className="text-xs text-gray-600">
+                                      <span className="font-medium capitalize">{field}:</span>{' '}
+                                      <span className="text-red-600">{change.before || 'null'}</span>
+                                      {' → '}
+                                      <span className="text-green-600">{change.after || 'null'}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // Show before/after data if available
+                          if (parsedDetails?.beforeData && parsedDetails?.afterData) {
+                            const beforeData = parsedDetails.beforeData;
+                            const afterData = parsedDetails.afterData;
+                            const importantFields = ['status', 'name', 'title', 'email', 'amount', 'total'];
+                            
+                            const changedFields = importantFields.filter(field => 
+                              beforeData[field] !== afterData[field] && 
+                              (afterData[field] !== undefined || beforeData[field] !== undefined)
+                            );
+
+                            if (changedFields.length > 0) {
+                              return (
+                                <div className="space-y-1">
+                                  <p className="text-xs font-medium text-gray-700">Changes:</p>
+                                  <div className="bg-gray-50 border rounded p-2 space-y-1">
+                                    {changedFields.map(field => (
+                                      <div key={field} className="text-xs text-gray-600">
+                                        <span className="font-medium capitalize">{field}:</span>{' '}
+                                        <span className="text-red-600">{beforeData[field] || 'null'}</span>
+                                        {' → '}
+                                        <span className="text-green-600">{afterData[field] || 'null'}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            }
+                          }
+
+                          // Fallback to description if available
                           return parsedDetails?.description ? (
                             <p className="text-xs sm:text-sm text-gray-600 break-words">{parsedDetails.description}</p>
                           ) : null;
                         })()}
+
                         <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                           <span className="break-all">By: {log.userEmail}</span>
                           {(() => {

@@ -65,7 +65,7 @@ export class CalendarService {
         entity: 'calendar',
         entityId: docRef.id,
         details: { title: eventData.title, date: eventData.date },
-        timestamp: Date.now(),
+
       });
       
       return { data: createdEvent };
@@ -130,7 +130,7 @@ export class CalendarService {
         entity: 'calendar',
         entityId: id,
         details: { updates: updateData },
-        timestamp: Date.now(),
+
       });
 
       return { data: this.events[eventIndex] };
@@ -173,7 +173,7 @@ export class CalendarService {
         action: 'delete',
         entity: 'calendar',
         entityId: eventId,
-        timestamp: Date.now(),
+
       });
 
       return {};

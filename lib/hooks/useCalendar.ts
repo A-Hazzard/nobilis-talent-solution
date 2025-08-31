@@ -4,7 +4,7 @@ import type { EventFormData, CalendarState, CalendarActions } from '@/lib/types/
 import { CalendarService } from '@/lib/services/CalendarService';
 import { CalendlyService } from '@/lib/services/CalendlyService';
 import { CalendarUtils } from '@/lib/utils/calendarUtils';
-import { logAuditAction } from '@/lib/utils/auditUtils';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 /**
  * Custom hook for calendar state management
@@ -264,11 +264,11 @@ export function useCalendar(): [CalendarState, CalendarActions] {
         });
         
         // Log audit action for update
-        await logAuditAction({
+        await logAdminAction({
           action: 'update',
           entity: 'calendar',
           entityId: editingEvent.id,
-          timestamp: Date.now(),
+
           details: {
             title: `Calendar event updated: ${eventData.title}`,
             eventTitle: eventData.title,
@@ -285,11 +285,11 @@ export function useCalendar(): [CalendarState, CalendarActions] {
         
         if (response.data) {
           // Log audit action for create
-          await logAuditAction({
+          await logAdminAction({
             action: 'create',
             entity: 'calendar',
             entityId: response.data.id,
-            timestamp: Date.now(),
+  
             details: {
               title: `Calendar event created: ${eventData.title}`,
               eventTitle: eventData.title,
@@ -317,11 +317,11 @@ export function useCalendar(): [CalendarState, CalendarActions] {
       
       // Log audit action
       if (eventToDelete) {
-        await logAuditAction({
+        await logAdminAction({
           action: 'delete',
           entity: 'calendar',
           entityId: eventId,
-          timestamp: Date.now(),
+
           details: {
             title: `Calendar event deleted: ${eventToDelete.title}`,
             eventTitle: eventToDelete.title,

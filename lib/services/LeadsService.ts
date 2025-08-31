@@ -192,7 +192,7 @@ export class LeadsService {
         entity: 'lead',
         entityId: docRef.id,
         details: { firstName: leadData.firstName, lastName: leadData.lastName },
-        timestamp: Date.now(),
+
       });
       
       return { id: docRef.id };
@@ -239,7 +239,7 @@ export class LeadsService {
         entity: 'lead',
         entityId: id,
         details: { updates },
-        timestamp: Date.now(),
+
       });
       
       return {};
@@ -263,7 +263,7 @@ export class LeadsService {
         action: 'delete',
         entity: 'lead',
         entityId: id,
-        timestamp: Date.now(),
+
       });
       
       return {};

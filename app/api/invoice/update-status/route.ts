@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from '@/lib/helpers/auth';
 import { db } from '@/lib/firebase/config';
 import { doc, updateDoc, getDoc, serverTimestamp, FieldValue } from 'firebase/firestore';
-import { logAuditAction } from '@/lib/utils/auditUtils';
+import { ServerAuditLogger } from '@/lib/helpers/auditLogger';
 
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 
@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
     }
 
     const currentInvoice = invoiceSnapshot.data();
+    const previousStatus = currentInvoice?.status;
+    
     const updateData: Record<string, FieldValue | string> = {
       status,
       updatedAt: serverTimestamp()
@@ -64,19 +66,16 @@ export async function POST(request: NextRequest) {
     // Update the invoice
     await updateDoc(invoiceRef, updateData);
 
-    // Log audit action
-    await logAuditAction({
-      action: 'update',
-      entity: 'resource',
-      entityId: invoiceId,
-      timestamp: Date.now(),
-      details: {
-        title: `Invoice status updated`,
-        previousStatus: currentInvoice?.status,
-        newStatus: status,
-        invoiceNumber: currentInvoice?.invoiceNumber,
-        clientName: currentInvoice?.clientName
-      }
+    // Log audit action with enhanced details
+    const auditLogger = ServerAuditLogger.getInstance();
+    await auditLogger.logPaymentStatusUpdate(request, { id: authResult.user.uid, email: authResult.user.email }, {
+      id: invoiceId,
+      type: 'invoice',
+      clientName: currentInvoice?.clientName || '',
+      clientEmail: currentInvoice?.clientEmail || '',
+      previousStatus: previousStatus || 'unknown',
+      newStatus: status,
+      amount: currentInvoice?.total || 0,
     });
 
     return NextResponse.json({

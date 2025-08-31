@@ -148,7 +148,7 @@ export class TestimonialsService {
         entity: 'testimonial',
         entityId: docRef.id,
         details: { clientName: testimonialData.clientName, company: testimonialData.company },
-        timestamp: Date.now(),
+
       });
       
       return { id: docRef.id };
@@ -195,7 +195,7 @@ export class TestimonialsService {
         entity: 'testimonial',
         entityId: id,
         details: { updates },
-        timestamp: Date.now(),
+
       });
       
       return {};
@@ -225,7 +225,7 @@ export class TestimonialsService {
         action: 'delete',
         entity: 'testimonial',
         entityId: id,
-        timestamp: Date.now(),
+
       });
       
       return {};

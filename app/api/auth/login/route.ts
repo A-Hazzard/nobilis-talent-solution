@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
         action: 'login',
         entity: 'auth',
         details: { ipAddress, userAgent },
-        timestamp: Date.now(),
       });
     }
 

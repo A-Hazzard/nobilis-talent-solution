@@ -253,7 +253,7 @@ export class BlogService {
         entity: 'blog',
         entityId: docRef.id,
         details: { title: postData.title, category: postData.category },
-        timestamp: Date.now(),
+
       });
       
       return { id: docRef.id };
@@ -334,7 +334,7 @@ export class BlogService {
         entity: 'blog',
         entityId: id,
         details: { updates },
-        timestamp: Date.now(),
+
       });
       
       return {};
@@ -374,7 +374,7 @@ export class BlogService {
         action: 'delete',
         entity: 'blog',
         entityId: id,
-        timestamp: Date.now(),
+
       });
       
       return {};

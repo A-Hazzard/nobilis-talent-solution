@@ -3,7 +3,7 @@ import type { Testimonial } from '@/shared/types/entities';
 import type { TestimonialFormData, TestimonialsState, TestimonialsActions } from '@/lib/types/hooks';
 import { TestimonialsService } from '@/lib/services/TestimonialsService';
 import { toast } from 'sonner';
-import { logAuditAction } from '@/lib/utils/auditUtils';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 /**
  * Custom hook for testimonials state management
@@ -84,11 +84,11 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
         toast.error(response.error);
       } else {
         // Log audit action
-        await logAuditAction({
+        await logAdminAction({
           action: 'create',
           entity: 'testimonial',
           entityId: response.id || formData.clientName,
-          timestamp: Date.now(),
+
           details: {
             title: `Testimonial added`,
             clientName: formData.clientName,
@@ -152,11 +152,11 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
         toast.error(response.error);
       } else {
         // Log audit action
-        await logAuditAction({
+        await logAdminAction({
           action: 'update',
           entity: 'testimonial',
           entityId: editingTestimonial.id,
-          timestamp: Date.now(),
+
           details: {
             title: `Testimonial updated`,
             clientName: formData.clientName,
@@ -212,11 +212,11 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
       } else {
         // Log audit action
         if (testimonialToDelete) {
-          await logAuditAction({
+          await logAdminAction({
             action: 'delete',
             entity: 'testimonial',
             entityId: id,
-            timestamp: Date.now(),
+  
             details: {
               title: `Testimonial deleted`,
               clientName: testimonialToDelete.clientName,

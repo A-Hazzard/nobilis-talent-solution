@@ -3,14 +3,26 @@ import { db } from '@/lib/firebase/config';
 import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { EmailService } from '@/lib/services/EmailService';
 import { PDFService } from '@/lib/services/PDFService';
+import { getAuth } from '@/lib/helpers/auth';
+import { ServerAuditLogger } from '@/lib/helpers/auditLogger';
 
 export async function PUT(request: NextRequest) {
   try {
+    // Check authentication and admin privileges
+    const authResult = await getAuth(request);
+    if (!authResult.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (authResult.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const { paymentId, status } = await request.json();
     if (!paymentId || !status) {
       return NextResponse.json({ error: 'paymentId and status are required' }, { status: 400 });
     }
-    if (!['pending', 'completed', 'cancelled', 'expired'].includes(status)) {
+    if (!['pending', 'completed', 'cancelled', 'overdue'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
@@ -20,8 +32,21 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
     }
     const current = snap.data() as any;
+    const previousStatus = current.status;
 
     await updateDoc(paymentRef, { status, updatedAt: serverTimestamp() });
+
+    // Log audit action with enhanced details
+    const auditLogger = ServerAuditLogger.getInstance();
+    await auditLogger.logPaymentStatusUpdate(request, { id: authResult.user.uid, email: authResult.user.email }, {
+      id: paymentId,
+      type: 'pending-payment',
+      clientName: current.clientName || '',
+      clientEmail: current.clientEmail || '',
+      previousStatus,
+      newStatus: status,
+      amount: (current.baseAmount || 0) + (current.bonusAmount || 0),
+    });
 
     // Send notification email on cancellation or completion
     try {
@@ -137,31 +162,31 @@ export async function PUT(request: NextRequest) {
         });
         
         console.log('📧 Admin Update: Email result:', emailResult);
-      } else if (status === 'expired') {
+      } else if (status === 'overdue') {
         const content = `
           <p>Dear ${current.clientName || 'Valued Client'},</p>
           
-          <p>We wanted to inform you that your payment request has expired.</p>
+          <p>We wanted to inform you that your payment request is now overdue.</p>
           
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
             <h4>Payment Details:</h4>
             <p><strong>Amount:</strong> $${Number(current.baseAmount || 0).toFixed(2)}</p>
             <p><strong>Description:</strong> ${current.description || 'Leadership Consultation'}</p>
             ${current.invoiceNumber ? `<p><strong>Invoice Number:</strong> #${current.invoiceNumber}</p>` : ''}
-            <p><strong>Status:</strong> <span style="color: #ffc107; font-weight: bold;">Expired</span></p>
+            <p><strong>Status:</strong> <span style="color: #dc2626; font-weight: bold;">Overdue</span></p>
           </div>
           
-          <p>If you'd like to proceed with your consultation, you can create a new payment request at any time.</p>
+          <p>Please contact us at your earliest convenience to arrange payment or discuss alternative arrangements.</p>
           
           <p>Best regards,<br>
           Nobilis Talent Solutions Team</p>
         `;
         
-        const html = emailService.generateSimpleHTML("Payment Expired", content);
+        const html = emailService.generateSimpleHTML("Payment Overdue", content);
         
         await emailService.sendEmail({ 
           to: current.clientEmail, 
-          subject: `Payment Expired - ${current.invoiceNumber ? `Invoice #${current.invoiceNumber}` : 'Leadership Consultation'}`, 
+          subject: `Payment Overdue - ${current.invoiceNumber ? `Invoice #${current.invoiceNumber}` : 'Leadership Consultation'}`, 
           html 
         });
       }

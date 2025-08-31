@@ -23,13 +23,13 @@ import {
   XCircle,
   RefreshCw,
   CreditCard,
-  Clock
+  Clock,
+  Trash2
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { logAuditAction } from '@/lib/utils/auditUtils';
 
-type PaymentStatus = 'pending' | 'paid' | 'expired' | 'cancelled';
+type PaymentStatus = 'pending' | 'paid' | 'overdue' | 'cancelled';
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 
 type PendingPayment = {
@@ -180,14 +180,14 @@ export default function InvoicesPage() {
     try {
       if (payment.type === 'pending-payment') {
         // Map UI statuses to backend statuses
-        const backendStatus = ((): 'pending' | 'completed' | 'cancelled' | 'expired' => {
+        const backendStatus = ((): 'pending' | 'completed' | 'cancelled' | 'overdue' => {
           switch (newStatus) {
             case 'paid':
               return 'completed';
             case 'cancelled':
               return 'cancelled';
-            case 'expired':
-              return 'expired';
+            case 'overdue':
+              return 'overdue';
             case 'pending':
             default:
               return 'pending';
@@ -215,23 +215,7 @@ export default function InvoicesPage() {
         return { ...p, status: newStatus as PaymentStatus, updatedAt: new Date().toISOString() } as PendingPayment;
       }));
 
-      // Log audit action
-      await logAuditAction({
-        action: 'update',
-        entity: 'resource', // Using 'resource' for invoices/payments
-        entityId: payment.id,
-        timestamp: Date.now(),
-        details: {
-          title: `${payment.type === 'invoice' ? 'Invoice' : 'Payment'} status updated`,
-          paymentId: payment.id,
-          paymentType: payment.type,
-          clientName: payment.clientName,
-          clientEmail: payment.clientEmail,
-          previousStatus: payment.status,
-          newStatus: newStatus,
-          amount: payment.type === 'invoice' ? (payment as Invoice).total : (payment as PendingPayment).baseAmount + ((payment as PendingPayment).bonusAmount || 0),
-        },
-      });
+      // Audit logging is now handled server-side in the API endpoints
 
       toast.success(`Status updated to ${newStatus}`);
     } catch (error) {
@@ -263,6 +247,32 @@ export default function InvoicesPage() {
     }
   };
 
+  const handleDeleteInvoice = async (payment: Invoice) => {
+    if (!confirm(`Are you sure you want to delete invoice ${payment.invoiceNumber}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/invoice/delete/${payment.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove from local state
+        setPayments(prev => prev.filter(p => p.id !== payment.id));
+        
+        // Audit logging is now handled server-side in the API endpoint
+        
+        toast.success('Invoice deleted successfully');
+      } else {
+        toast.error('Failed to delete invoice');
+      }
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast.error('Failed to delete invoice');
+    }
+  };
+
   const handleSendEmail = async () => {
     if (!selectedPayment) return;
 
@@ -285,22 +295,7 @@ export default function InvoicesPage() {
           return p;
         }));
         
-        // Log audit action
-        await logAuditAction({
-          action: 'update',
-          entity: 'resource', // Using 'resource' for invoices/payments
-          entityId: selectedPayment.id,
-          timestamp: Date.now(),
-          details: {
-            title: `Invoice sent: ${selectedPayment.type === 'invoice' ? (selectedPayment as Invoice).invoiceNumber : selectedPayment.id}`,
-            paymentId: selectedPayment.id,
-            paymentType: selectedPayment.type,
-            clientName: selectedPayment.clientName,
-            clientEmail: selectedPayment.clientEmail,
-            action: 'email_sent',
-            emailMessage: emailMessage,
-          },
-        });
+        // Note: Email sending audit logging could be added to the API endpoint if needed
         
         toast.success('Invoice sent successfully');
         setIsEmailModalOpen(false);
@@ -324,7 +319,8 @@ export default function InvoicesPage() {
       const statusMap: Record<string, PaymentStatus> = {
         'pending': 'pending',
         'paid': 'paid',
-        'expired': 'expired',
+        'expired': 'overdue', // Map expired to overdue
+        'overdue': 'overdue',
         'cancelled': 'cancelled',
         'canceled': 'cancelled', // Handle American spelling
         'complete': 'paid',
@@ -363,7 +359,7 @@ export default function InvoicesPage() {
       const statusConfig = {
         pending: { variant: 'default' as const, icon: Clock, text: 'Pending', className: 'bg-yellow-100 text-yellow-800' },
         paid: { variant: 'default' as const, icon: CheckCircle, text: 'Paid', className: 'bg-green-100 text-green-800' },
-        expired: { variant: 'destructive' as const, icon: XCircle, text: 'Expired', className: '' },
+        overdue: { variant: 'destructive' as const, icon: XCircle, text: 'Overdue', className: '' },
         cancelled: { variant: 'secondary' as const, icon: XCircle, text: 'Cancelled', className: '' }
       };
 
@@ -655,11 +651,11 @@ export default function InvoicesPage() {
                         )}
                         {payment.type === 'pending-payment' && (
                           <DropdownMenuItem
-                            onClick={() => handleStatusUpdate(payment, 'expired')}
+                            onClick={() => handleStatusUpdate(payment, 'overdue')}
                             className="text-red-600"
                           >
                             <XCircle className="mr-2 h-4 w-4" />
-                            Mark as Expired
+                            Mark as Overdue
                           </DropdownMenuItem>
                         )}
                         {payment.type === 'pending-payment' && (
@@ -695,6 +691,15 @@ export default function InvoicesPage() {
                           >
                             <XCircle className="mr-2 h-4 w-4" />
                             Cancel Invoice
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'invoice' && (
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteInvoice(payment as Invoice)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Invoice
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>

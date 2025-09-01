@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
 import { CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
 import { PaymentLinkService } from '@/lib/services/PaymentLinkService';
 import type { Lead } from '@/shared/types/entities';
@@ -20,7 +21,7 @@ interface PaymentLinkModalProps {
 export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModalProps) {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState<PendingPaymentResponse | null>(null);
@@ -39,7 +40,7 @@ export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModa
         clientEmail: lead.email,
         baseAmount: parseFloat(amount),
         description: description || `Leadership consultation for ${lead.firstName} ${lead.lastName}`,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+        dueDate: dueDate ? dueDate.toISOString() : undefined,
       };
 
       // Create pending payment
@@ -62,7 +63,7 @@ export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModa
       // Reset form
       setAmount('');
       setDescription('');
-      setDueDate('');
+      setDueDate(undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create payment link');
     } finally {
@@ -78,7 +79,7 @@ export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModa
     setError('');
     setAmount('');
     setDescription('');
-    setDueDate('');
+    setDueDate(undefined);
   };
 
   if (!lead) return null;
@@ -146,12 +147,11 @@ export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModa
 
             <div className="space-y-2">
               <Label htmlFor="dueDate">Due Date (Optional)</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+              <DatePicker
+                date={dueDate}
+                onDateChange={setDueDate}
+                placeholder="Select due date"
+                disabledDates={(date) => date < new Date()}
               />
               <p className="text-xs text-muted-foreground">
                 If not specified, defaults to 30 days from invoice date

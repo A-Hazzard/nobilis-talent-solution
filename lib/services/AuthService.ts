@@ -8,7 +8,7 @@ import {
   GoogleAuthProvider,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 import type { FirebaseAuthError } from '@/shared/types/firebase';
 import type { User as AppUser } from '@/shared/types/entities';
@@ -202,6 +202,18 @@ export class AuthService {
     }
   }
 
+  async updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
+    try {
+      await updateDoc(doc(db, 'users', uid), {
+        ...updates,
+        updatedAt: new Date()
+      });
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
+  }
+
   async signInWithGoogle(): Promise<{ user: FirebaseUser | null; error: FirebaseAuthError | null; isNewUser?: boolean }> {
     try {
       console.log('AuthService: Starting Google sign-in...');
@@ -239,6 +251,16 @@ export class AuthService {
         });
         
         userProfile = await this.getUserProfile(firebaseUser.uid);
+      } else {
+        // For existing users, ensure onboardingCompleted is set to true if not already set
+        if (userProfile.onboardingCompleted === undefined) {
+          await this.updateUserProfile(firebaseUser.uid, {
+            onboardingCompleted: true,
+            onboardingCompletedAt: new Date()
+          });
+          // Refresh the profile to get updated data
+          userProfile = await this.getUserProfile(firebaseUser.uid);
+        }
       }
       
       // Update last login

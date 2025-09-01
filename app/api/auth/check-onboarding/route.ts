@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
     const userRef = doc(db, 'users', authResult.user.uid);
     const userSnap = await getDoc(userRef);
     const data = userSnap.exists() ? userSnap.data() : null;
-    const onboardingCompleted = data ? !!data.onboardingCompleted : false;
+    // For Google users, if onboardingCompleted is undefined, assume they're existing users
+    const onboardingCompleted = data ? (data.onboardingCompleted === undefined ? true : !!data.onboardingCompleted) : false;
     const role = (data?.role as 'admin' | 'user') || 'user';
 
     return NextResponse.json({ onboardingCompleted, role });

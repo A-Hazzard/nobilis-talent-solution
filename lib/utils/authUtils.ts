@@ -16,7 +16,8 @@ export function getRedirectPath(user: User | null, isLogin: boolean = false): st
   void isLogin;
 
   // Require onboarding for any authenticated non-admin user until completed
-  if (user.role !== 'admin' && !user.onboardingCompleted) {
+  // For Google sign-in users, if onboardingCompleted is undefined, assume they're existing users
+  if (user.role !== 'admin' && user.onboardingCompleted === false) {
     return '/onboarding';
   }
 

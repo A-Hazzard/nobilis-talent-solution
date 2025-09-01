@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CalendarEvent } from '@/shared/types/entities';
@@ -23,6 +24,7 @@ interface EventFormProps {
   onFormChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onTypeChange: (value: string) => void;
   onTimeChange: (field: 'startTime' | 'endTime', value: string) => void;
+  onDateChange: (date: Date | undefined) => void;
 }
 
 interface TimeOption {
@@ -43,6 +45,7 @@ export default function EventForm({
   onFormChange,
   onTypeChange,
   onTimeChange,
+  onDateChange,
 }: EventFormProps) {
   const [isStartTimeOpen, setIsStartTimeOpen] = useState(false);
   const [isEndTimeOpen, setIsEndTimeOpen] = useState(false);
@@ -152,14 +155,13 @@ export default function EventForm({
               <Label htmlFor="date" className="text-right">
                 Date
               </Label>
-              <Input
-                id="date"
-                name="date"
-                type="date"
-                value={form.date}
-                onChange={onFormChange}
-                className="col-span-3"
-              />
+              <div className="col-span-3">
+                <DatePicker
+                  date={form.date ? new Date(form.date) : undefined}
+                  onDateChange={onDateChange}
+                  placeholder="Select a date"
+                />
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">

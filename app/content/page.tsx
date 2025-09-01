@@ -132,15 +132,15 @@ export default function ContentPage() {
 
   // GSAP Animations
   useEffect(() => {
-    // Hero section animations
+    // Hero section animations - smooth fade in with scale
     if (heroRef.current) {
       gsap.fromTo(heroRef.current, 
-        { opacity: 0, y: 50 },
+        { opacity: 0, scale: 0.95 },
         { 
           opacity: 1, 
-          y: 0, 
-          duration: 1,
-          ease: "power2.out"
+          scale: 1, 
+          duration: 1.2,
+          ease: "power3.out"
         }
       );
     }

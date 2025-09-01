@@ -369,6 +369,12 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     });
   }, []);
 
+  const handleDateChange = useCallback((date: Date | undefined) => {
+    const dateString = date ? date.toISOString().split('T')[0] : '';
+    setForm(prev => ({ ...prev, date: dateString }));
+    setFormError(null);
+  }, []);
+
   const changeMonth = useCallback((direction: 'prev' | 'next') => {
     setCurrentMonth(prev => {
       const newMonth = new Date(prev);
@@ -379,6 +385,10 @@ export function useCalendar(): [CalendarState, CalendarActions] {
       }
       return newMonth;
     });
+  }, []);
+
+  const setMonth = useCallback((date: Date) => {
+    setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
   }, []);
 
   const openCalendlyBooking = useCallback(() => {
@@ -498,7 +508,9 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     handleFormChange,
     handleTypeChange,
     handleTimeChange,
+    handleDateChange,
     changeMonth,
+    setMonth,
     openCalendlyBooking,
     closeCalendlyBooking,
     toggleInstructions,

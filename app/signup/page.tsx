@@ -316,7 +316,7 @@ export default function SignupPage() {
                   id="phone"
                   name="phone"
                   type="tel"
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="(678) 920-6605"
                   value={formData.phone}
                   onChange={handleInputChange}
                   className={`pl-10 ${formData.phone && isFieldValid('phone') ? 'border-green-500' : getFieldError('phone') ? 'border-red-500' : ''}`}

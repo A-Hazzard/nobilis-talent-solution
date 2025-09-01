@@ -121,15 +121,15 @@ body {
 @layer components {
   /* Button variants */
   .btn-primary {
-    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-light))] text-primary-foreground px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:shadow-[--shadow-teal] hover:scale-105 active:scale-95;
+    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-light))] text-primary-foreground px-8 py-4 rounded-full font-bold transition-all duration-300 hover:shadow-[--shadow-teal] hover:scale-105 active:scale-95;
   }
 
   .btn-secondary {
-    @apply bg-gradient-to-r from-[hsl(var(--secondary))] to-[hsl(var(--secondary-light))] text-secondary-foreground px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:shadow-[--shadow-medium] hover:scale-105 active:scale-95;
+    @apply bg-gradient-to-r from-[hsl(var(--secondary))] to-[hsl(var(--secondary-light))] text-secondary-foreground px-8 py-4 rounded-full font-bold transition-all duration-300 hover:shadow-[--shadow-medium] hover:scale-105 active:scale-95;
   }
 
   .btn-outline {
-    @apply border-2 border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:bg-[hsl(var(--primary))] hover:text-primary-foreground hover:scale-105 active:scale-95;
+    @apply border-2 border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-8 py-4 rounded-full font-bold transition-all duration-300 hover:bg-[hsl(var(--primary))] hover:text-primary-foreground hover:scale-105 active:scale-95;
   }
 
   /* Card styles */
@@ -706,6 +706,14 @@ body {
   
   .ProseMirror ol li::marker {
     color: currentColor;
+  }
+
+  /* Background helpers */
+  .gradient-subtle {
+    background: var(--gradient-subtle);
+  }
+  .bg-gradient-subtle {
+    background: var(--gradient-subtle);
   }
 }
 

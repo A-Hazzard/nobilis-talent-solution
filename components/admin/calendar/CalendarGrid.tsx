@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { MonthPicker } from '@/components/ui/month-picker';
 import { CalendarIcon } from 'lucide-react';
 import type { CalendarEvent } from '@/shared/types/entities';
 import { CalendarUtils } from '@/lib/utils/calendarUtils';
@@ -10,6 +11,7 @@ interface CalendarGridProps {
   currentMonth: Date;
   events: CalendarEvent[];
   onMonthChange: (direction: 'prev' | 'next') => void;
+  onMonthSet?: (date: Date) => void;
   onEventClick: (event: CalendarEvent) => void;
 }
 
@@ -20,6 +22,7 @@ export default function CalendarGrid({
   currentMonth,
   events,
   onMonthChange,
+  onMonthSet,
   onEventClick,
 }: CalendarGridProps) {
   const calendarDays = CalendarUtils.getCalendarDays(currentMonth);
@@ -31,23 +34,34 @@ export default function CalendarGrid({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-3 text-xl">
             <CalendarIcon className="h-6 w-6" />
-            {monthName}
+            Calendar
           </CardTitle>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onMonthChange('prev')}
-            >
-              ←
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onMonthChange('next')}
-            >
-              →
-            </Button>
+          <div className="flex items-center gap-2">
+            {onMonthSet ? (
+              <MonthPicker
+                date={currentMonth}
+                onDateChange={onMonthSet}
+                className="w-auto"
+              />
+            ) : (
+              <span className="text-lg font-semibold">{monthName}</span>
+            )}
+            <div className="flex gap-1 ml-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onMonthChange('prev')}
+              >
+                ←
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onMonthChange('next')}
+              >
+                →
+              </Button>
+            </div>
           </div>
         </div>
       </CardHeader>

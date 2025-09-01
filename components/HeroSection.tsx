@@ -45,7 +45,7 @@ const HeroSection = () => {
       <div className="absolute top-48 right-40 animate-float hidden lg:block" style={{ animationDelay: '2s' }}>
         <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white">
           <TrendingUp className="w-8 h-8 mb-2" />
-          <p className="text-sm font-semibold">98% Success Rate</p>
+          <p className="text-sm font-semibold">100% Success Rate</p>
         </div>
       </div>
 
@@ -54,11 +54,11 @@ const HeroSection = () => {
         <div className="max-w-4xl mx-auto text-center">
           <div className="hero-text">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 hero-stagger">
-              Where strategy meets humanity
+              Where Strategy Meets Humanity
             </h1>
             
             <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed hero-stagger">
-              I help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results.
+              We help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results.
             </p>
 
             <p className="text-base sm:text-lg text-white/85 mb-8 max-w-3xl mx-auto leading-relaxed hero-stagger">

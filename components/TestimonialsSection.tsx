@@ -72,7 +72,7 @@ const TestimonialsSection = () => {
   // Show loading state
   if (isLoading) {
     return (
-      <section id="testimonials" className="py-20 lg:py-32 gradient-subtle">
+      <section id="testimonials" className="py-16 lg:py-24 gradient-subtle">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16 animate-fade-up">
             <h2 className="text-section text-accent mb-6">
@@ -100,7 +100,7 @@ const TestimonialsSection = () => {
   // Show error state
   if (error) {
     return (
-      <section id="testimonials" className="py-20 lg:py-32 gradient-subtle">
+      <section id="testimonials" className="py-16 lg:py-24 gradient-subtle">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16 animate-fade-up">
             <h2 className="text-section text-accent mb-6">
@@ -118,7 +118,7 @@ const TestimonialsSection = () => {
   // Show empty state
   if (testimonials.length === 0) {
     return (
-      <section id="testimonials" className="py-20 lg:py-32 gradient-subtle">
+      <section id="testimonials" className="py-16 lg:py-24 gradient-subtle">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16 animate-fade-up">
             <h2 className="text-section text-accent mb-6">
@@ -134,7 +134,7 @@ const TestimonialsSection = () => {
   }
 
   return (
-    <section id="testimonials" className="py-20 lg:py-32 gradient-subtle">
+    <section id="testimonials" className="py-16 lg:py-24 gradient-subtle">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16 animate-fade-up">

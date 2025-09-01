@@ -44,17 +44,9 @@ export default function SEO({
     url: 'https://payneleadership.com',
     logo: 'https://payneleadership.com/logo-transparent.png',
     description: 'Human Capital Alchemist and Coach helping leaders and teams unlock potential, navigate change, and build cultures where people and performance flourish.',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: '123 Business St',
-      addressLocality: 'City',
-      addressRegion: 'State',
-      postalCode: '12345',
-      addressCountry: 'US'
-    },
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+1-555-123-4567',
+      telephone: '+1-678-920-6605',
       contactType: 'customer service',
       email: 'nobilis.talent@gmail.com'
     },

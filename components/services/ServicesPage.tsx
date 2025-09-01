@@ -215,7 +215,7 @@ const ServicesPage = () => {
           </div>
 
           <div className="text-center mt-16" data-animate>
-            <Link href="/contact" className="btn-primary">
+            <Link href="/contact" className="btn-primary font-bold">
               Start Your Transformation
             </Link>
           </div>

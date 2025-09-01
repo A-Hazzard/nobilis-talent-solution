@@ -55,7 +55,9 @@ export default function CalendarPage() {
     handleFormChange,
     handleTypeChange,
     handleTimeChange,
+    handleDateChange,
     changeMonth,
+    setMonth,
     openCalendlyBooking,
     toggleInstructions,
     checkCalendlyConnection,
@@ -175,7 +177,7 @@ export default function CalendarPage() {
                   <ul className="space-y-1 text-sm">
                     <li>• See all your appointments in one calendar</li>
                     <li>• Events you create here stay in your system</li>
-                    <li>• Events from your booking page appear automatically</li>
+                    <li>• Events from your Calendy appear automatically</li>
                     <li>• Click any event to see more details</li>
                   </ul>
                 </div>
@@ -185,7 +187,7 @@ export default function CalendarPage() {
                   <ul className="space-y-1 text-sm">
                     <li>• Click "Add Event" to create your own appointments</li>
                     <li>• You can edit events you create here</li>
-                    <li>• Events from your booking page can't be edited here</li>
+                    <li>• Events from your Calendy can't be edited here</li>
                     <li>• You can delete any event if needed</li>
                   </ul>
                 </div>
@@ -255,6 +257,7 @@ export default function CalendarPage() {
             currentMonth={currentMonth}
             onEventClick={handleOpenModal}
             onMonthChange={changeMonth}
+            onMonthSet={setMonth}
           />
         </div>
         <div className="lg:col-span-1">
@@ -276,6 +279,7 @@ export default function CalendarPage() {
         onFormChange={handleFormChange}
         onTypeChange={handleTypeChange}
         onTimeChange={handleTimeChange}
+        onDateChange={handleDateChange}
       />
     </div>
   );

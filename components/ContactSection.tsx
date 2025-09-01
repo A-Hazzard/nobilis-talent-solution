@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, Globe, Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Phone, Mail, Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -90,7 +90,7 @@ const ContactSection = () => {
   };
   
   return (
-    <section id="contact" className="py-16 lg:py-32 bg-background overflow-hidden">
+    <section id="contact" className="py-16 lg:py-24 bg-background overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16 animate-fade-up">
@@ -109,7 +109,7 @@ const ContactSection = () => {
             <div className="card-feature p-4 sm:p-6 lg:p-8 max-w-full">
               <div className="flex items-center mb-6 lg:mb-8">
                 <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3 flex-shrink-0" />
-                <h3 className="text-xl sm:text-2xl font-bold text-accent">Book Your Strategy Session</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-accent">Contact Us</h3>
               </div>
 
               {/* Success/Error Messages */}
@@ -213,7 +213,7 @@ const ContactSection = () => {
 
                 <div className="min-w-0">
                   <Label htmlFor="challenges" className="text-accent text-sm sm:text-base">
-                    What leadership challenges are you facing? *
+                    Let us know how we can help *
                   </Label>
                   <Textarea
                     id="challenges"
@@ -314,15 +314,7 @@ const ContactSection = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                      <Globe className="w-6 h-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-accent text-sm sm:text-base">Availability</div>
-                      <div className="text-primary text-sm sm:text-base">Available globally.</div>
-                    </div>
-                  </div>
+
                 </div>
               </div>
 

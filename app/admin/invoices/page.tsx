@@ -101,7 +101,9 @@ export default function InvoicesPage() {
   const loadPayments = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/payment/admin/payments');
+      const response = await fetch('/api/payment/admin/payments', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setPayments(data.payments || []);
@@ -176,10 +178,58 @@ export default function InvoicesPage() {
     setFilteredPayments(filtered);
   };
 
+  // Status transition validation
+  const isValidStatusTransition = (currentStatus: string, newStatus: string, paymentType: 'pending-payment' | 'invoice'): boolean => {
+    const normalizedCurrent = normalizeStatus(currentStatus, paymentType);
+    
+    if (paymentType === 'pending-payment') {
+      switch (normalizedCurrent) {
+        case 'paid':
+          return false; // Paid payments cannot be changed
+        case 'cancelled':
+          return false; // Cancelled payments cannot be changed
+        case 'overdue':
+          return newStatus === 'paid' || newStatus === 'cancelled'; // Overdue can only go to paid or cancelled
+        case 'pending':
+          return ['paid', 'overdue', 'cancelled'].includes(newStatus); // Pending can go to any status
+        default:
+          return true;
+      }
+    } else {
+      switch (normalizedCurrent) {
+        case 'paid':
+          return false; // Paid invoices cannot be changed
+        case 'cancelled':
+          return false; // Cancelled invoices cannot be changed
+        case 'overdue':
+          return newStatus === 'paid' || newStatus === 'cancelled'; // Overdue can only go to paid or cancelled
+        case 'draft':
+        case 'sent':
+          return ['sent', 'paid', 'overdue', 'cancelled'].includes(newStatus); // Draft/sent can go to other statuses
+        default:
+          return true;
+      }
+    }
+  };
+
   const handleStatusUpdate = async (payment: Payment, newStatus: PaymentStatus | InvoiceStatus) => {
     try {
+      // Validate status transition
+      if (!isValidStatusTransition(payment.status, newStatus, payment.type)) {
+        const currentNormalized = normalizeStatus(payment.status, payment.type);
+        if (currentNormalized === 'paid') {
+          toast.error('Cannot change status of paid items');
+        } else if (currentNormalized === 'cancelled') {
+          toast.error('Cannot change status of cancelled items');
+        } else if (currentNormalized === 'overdue') {
+          toast.error('Overdue items can only be marked as paid or cancelled');
+        } else {
+          toast.error('Invalid status transition');
+        }
+        return;
+      }
       if (payment.type === 'pending-payment') {
-        // Map UI statuses to backend statuses
+        // Map UI statuses to backend statuses for pending payments
         const backendStatus = ((): 'pending' | 'completed' | 'cancelled' | 'overdue' => {
           switch (newStatus) {
             case 'paid':
@@ -197,11 +247,25 @@ export default function InvoicesPage() {
         const response = await fetch('/api/payment/admin/update-status', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ paymentId: payment.id, status: backendStatus })
         });
 
         if (!response.ok) {
           toast.error('Failed to update payment status');
+          return;
+        }
+      } else if (payment.type === 'invoice') {
+        // Handle invoice status updates
+        const response = await fetch('/api/invoice/update-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ invoiceId: payment.id, status: newStatus })
+        });
+
+        if (!response.ok) {
+          toast.error('Failed to update invoice status');
           return;
         }
       }
@@ -226,7 +290,9 @@ export default function InvoicesPage() {
 
   const handleDownload = async (payment: Invoice) => {
     try {
-      const response = await fetch(`/api/invoice/download/${payment.id}`);
+      const response = await fetch(`/api/invoice/download/${payment.id}`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -255,6 +321,7 @@ export default function InvoicesPage() {
     try {
       const response = await fetch(`/api/invoice/delete/${payment.id}`, {
         method: 'DELETE',
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -280,6 +347,7 @@ export default function InvoicesPage() {
       const response = await fetch('/api/invoice/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           invoiceId: selectedPayment.id,
           message: emailMessage
@@ -641,7 +709,7 @@ export default function InvoicesPage() {
                           </DropdownMenuItem>
                         )}
                         <Separator className="my-1" />
-                        {payment.type === 'pending-payment' && (
+                        {payment.type === 'pending-payment' && isValidStatusTransition(payment.status, 'paid', payment.type) && (
                           <DropdownMenuItem
                             onClick={() => handleStatusUpdate(payment, 'paid')}
                           >
@@ -649,7 +717,7 @@ export default function InvoicesPage() {
                             Mark as Paid
                           </DropdownMenuItem>
                         )}
-                        {payment.type === 'pending-payment' && (
+                        {payment.type === 'pending-payment' && isValidStatusTransition(payment.status, 'overdue', payment.type) && (
                           <DropdownMenuItem
                             onClick={() => handleStatusUpdate(payment, 'overdue')}
                             className="text-red-600"
@@ -658,7 +726,7 @@ export default function InvoicesPage() {
                             Mark as Overdue
                           </DropdownMenuItem>
                         )}
-                        {payment.type === 'pending-payment' && (
+                        {payment.type === 'pending-payment' && isValidStatusTransition(payment.status, 'cancelled', payment.type) && (
                           <DropdownMenuItem
                             onClick={() => handleStatusUpdate(payment, 'cancelled')}
                             className="text-red-600"
@@ -667,7 +735,7 @@ export default function InvoicesPage() {
                             Cancel Payment
                           </DropdownMenuItem>
                         )}
-                        {payment.type === 'invoice' && (
+                        {payment.type === 'invoice' && isValidStatusTransition(payment.status, 'paid', payment.type) && (
                           <DropdownMenuItem
                             onClick={() => handleStatusUpdate(payment, 'paid')}
                           >
@@ -675,7 +743,7 @@ export default function InvoicesPage() {
                             Mark as Paid
                           </DropdownMenuItem>
                         )}
-                        {payment.type === 'invoice' && (
+                        {payment.type === 'invoice' && isValidStatusTransition(payment.status, 'overdue', payment.type) && (
                           <DropdownMenuItem
                             onClick={() => handleStatusUpdate(payment, 'overdue')}
                             className="text-red-600"
@@ -684,7 +752,7 @@ export default function InvoicesPage() {
                             Mark as Overdue
                           </DropdownMenuItem>
                         )}
-                        {payment.type === 'invoice' && (
+                        {payment.type === 'invoice' && isValidStatusTransition(payment.status, 'cancelled', payment.type) && (
                           <DropdownMenuItem
                             onClick={() => handleStatusUpdate(payment, 'cancelled')}
                             className="text-red-600"

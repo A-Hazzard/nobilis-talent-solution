@@ -26,6 +26,22 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
+    // Status transition validation
+    const isValidStatusTransition = (currentStatus: string, newStatus: string): boolean => {
+      switch (currentStatus) {
+        case 'completed':
+          return false; // Completed payments cannot be changed
+        case 'cancelled':
+          return false; // Cancelled payments cannot be changed
+        case 'overdue':
+          return newStatus === 'completed' || newStatus === 'cancelled'; // Overdue can only go to completed or cancelled
+        case 'pending':
+          return ['completed', 'overdue', 'cancelled'].includes(newStatus); // Pending can go to any status
+        default:
+          return true;
+      }
+    };
+
     const paymentRef = doc(db, 'pendingPayments', paymentId);
     const snap = await getDoc(paymentRef);
     if (!snap.exists()) {
@@ -33,6 +49,19 @@ export async function PUT(request: NextRequest) {
     }
     const current = snap.data() as any;
     const previousStatus = current.status;
+
+    // Validate status transition
+    if (!isValidStatusTransition(previousStatus, status)) {
+      if (previousStatus === 'completed') {
+        return NextResponse.json({ error: 'Cannot change status of completed payments' }, { status: 400 });
+      } else if (previousStatus === 'cancelled') {
+        return NextResponse.json({ error: 'Cannot change status of cancelled payments' }, { status: 400 });
+      } else if (previousStatus === 'overdue' && !['completed', 'cancelled'].includes(status)) {
+        return NextResponse.json({ error: 'Overdue payments can only be marked as completed or cancelled' }, { status: 400 });
+      } else {
+        return NextResponse.json({ error: 'Invalid status transition' }, { status: 400 });
+      }
+    }
 
     await updateDoc(paymentRef, { status, updatedAt: serverTimestamp() });
 

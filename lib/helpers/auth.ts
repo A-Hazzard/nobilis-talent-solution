@@ -64,11 +64,37 @@ export async function getAuth(request: NextRequest): Promise<AuthResult> {
     // Verify the token
     const decodedToken = await getFirebaseAuth().verifyIdToken(token);
     
+    // Check if role is in custom claims, otherwise fetch from Firestore
+    let userRole = decodedToken.role || 'user';
+    
+    // If no role in token and we have admin UID, set as admin
+    if (!decodedToken.role && decodedToken.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1') {
+      userRole = 'admin';
+    }
+    
+    // If still no admin role, try fetching from Firestore as fallback
+    if (userRole === 'user') {
+      try {
+        const { getAdminFirestore } = await import('@/lib/firebase/admin');
+        const db = getAdminFirestore();
+        const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          if (userData?.role === 'admin') {
+            userRole = 'admin';
+          }
+        }
+      } catch (firestoreError) {
+        console.error('Error fetching user role from Firestore:', firestoreError);
+        // Continue with default role
+      }
+    }
+    
     return {
       user: {
         uid: decodedToken.uid,
         email: decodedToken.email || '',
-        role: decodedToken.role || 'user',
+        role: userRole,
       }
     };
   } catch (error) {

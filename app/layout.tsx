@@ -9,41 +9,41 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Kareem Payne - Leadership Coaching & Consulting',
-  description: 'Transform your leadership potential with Kareem Payne. Expert coaching for executives, teams, and organizations seeking breakthrough performance.',
-  keywords: 'leadership coaching, executive coaching, team development, organizational consulting, Kareem Payne',
-  authors: [{ name: 'Kareem Payne' }],
-  creator: 'Kareem Payne',
-  publisher: 'Kareem Payne Leadership Coaching',
+  title: 'Nobilis Talent Solutions - Where Strategy Meets Humanity',
+  description: 'We help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results. Strategic leadership development and organizational transformation.',
+  keywords: 'leadership coaching, executive coaching, team development, organizational consulting, talent strategy, human resources, organizational development, Kareem Payne, Jenifer Payne',
+  authors: [{ name: 'Kareem Payne' }, { name: 'Jenifer Payne' }],
+  creator: 'Nobilis Talent Solutions',
+  publisher: 'Nobilis Talent Solutions',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://kareempayne.com'),
+  metadataBase: new URL('https://nobilis-talent-solutions.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://kareempayne.com',
-    title: 'Kareem Payne - Leadership Coaching & Consulting',
-    description: 'Transform your leadership potential with Kareem Payne. Expert coaching for executives, teams, and organizations seeking breakthrough performance.',
-    siteName: 'Kareem Payne Leadership Coaching',
+    url: 'https://nobilis-talent-solutions.com',
+    title: 'Nobilis Talent Solutions - Where Strategy Meets Humanity',
+    description: 'We help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results. Strategic leadership development and organizational transformation.',
+    siteName: 'Nobilis Talent Solutions',
     images: [
       {
         url: '/assets/hero-leadership.jpg',
         width: 1200,
         height: 630,
-        alt: 'Kareem Payne Leadership Coaching',
+        alt: 'Nobilis Talent Solutions - Leadership Development',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kareem Payne - Leadership Coaching & Consulting',
-    description: 'Transform your leadership potential with Kareem Payne. Expert coaching for executives, teams, and organizations seeking breakthrough performance.',
+    title: 'Nobilis Talent Solutions - Where Strategy Meets Humanity',
+    description: 'We help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results.',
     images: ['/assets/hero-leadership.jpg'],
   },
   robots: {

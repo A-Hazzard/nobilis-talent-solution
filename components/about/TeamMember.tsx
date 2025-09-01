@@ -48,7 +48,7 @@ const TeamMember = ({
           </div>
 
                      {/* Floating achievement cards */}
-           <div className="absolute -top-12 md:-top-16 lg:-top-36 -right-6 animate-float hidden sm:block">
+           <div className="absolute -top-20 md:-top-24 lg:-top-44 -right-6 animate-float hidden sm:block">
             <div className="card-elevated bg-primary text-white p-4 sm:p-6 max-w-40 sm:max-w-48 flex flex-col items-center">
               <CheckCircle className="h-6 w-6 text-white mb-2" />
               <div className="text-2xl sm:text-3xl font-bold mb-1">
@@ -61,7 +61,7 @@ const TeamMember = ({
           </div>
 
                      <div
-             className="absolute -bottom-20 md:-bottom-24 lg:-bottom-32 -left-6 animate-float hidden sm:block"
+             className="absolute -bottom-28 md:-bottom-32 lg:-bottom-40 -left-6 animate-float hidden sm:block"
              style={{ animationDelay: "2s" }}
            >
             <div className="card-elevated bg-secondary text-white p-4 sm:p-6 max-w-40 sm:max-w-48 flex flex-col items-center">

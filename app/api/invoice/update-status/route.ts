@@ -36,6 +36,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Status transition validation
+    const isValidStatusTransition = (currentStatus: string, newStatus: string): boolean => {
+      switch (currentStatus) {
+        case 'paid':
+          return false; // Paid invoices cannot be changed
+        case 'cancelled':
+          return false; // Cancelled invoices cannot be changed
+        case 'overdue':
+          return newStatus === 'paid' || newStatus === 'cancelled'; // Overdue can only go to paid or cancelled
+        case 'draft':
+        case 'sent':
+          return ['sent', 'paid', 'overdue', 'cancelled'].includes(newStatus); // Draft/sent can go to other statuses
+        default:
+          return true;
+      }
+    };
+
     // Get current invoice to check if it exists
     const invoiceRef = doc(db, 'invoices', invoiceId);
     const invoiceSnapshot = await getDoc(invoiceRef);
@@ -49,6 +66,19 @@ export async function POST(request: NextRequest) {
 
     const currentInvoice = invoiceSnapshot.data();
     const previousStatus = currentInvoice?.status;
+
+    // Validate status transition
+    if (!isValidStatusTransition(previousStatus, status)) {
+      if (previousStatus === 'paid') {
+        return NextResponse.json({ error: 'Cannot change status of paid invoices' }, { status: 400 });
+      } else if (previousStatus === 'cancelled') {
+        return NextResponse.json({ error: 'Cannot change status of cancelled invoices' }, { status: 400 });
+      } else if (previousStatus === 'overdue' && !['paid', 'cancelled'].includes(status)) {
+        return NextResponse.json({ error: 'Overdue invoices can only be marked as paid or cancelled' }, { status: 400 });
+      } else {
+        return NextResponse.json({ error: 'Invalid status transition' }, { status: 400 });
+      }
+    }
     
     const updateData: Record<string, FieldValue | string> = {
       status,

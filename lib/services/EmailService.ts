@@ -320,7 +320,7 @@ export class EmailService {
           <li><a href="${baseUrl}/blog">Leadership Blog</a></li>
         </ul>
         
-        <p>If you have any urgent questions, feel free to call us directly at +1 (555) 123-4567.</p>
+        <p>If you have any urgent questions, feel free to call us directly at (678) 920-6605.</p>
         
         <p>Best regards,<br>
         Kareem Payne<br>

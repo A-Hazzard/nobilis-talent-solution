@@ -10,12 +10,12 @@ const AboutSection = () => {
     "20+ businesses successfully launched",
   ];
 
-  // Placeholder for wife's achievements - you can update these when you have her bio
+  // Jenifer's achievements
   const wifeAchievements = [
     "15+ years in organizational development",
-    "500+ teams transformed",
-    "25+ strategic partnerships built",
-    "95% client satisfaction rate",
+    "200+ teams transformed",
+    "50+ strategic partnerships built",
+    "100% client satisfaction rate",
   ];
 
   return (
@@ -37,8 +37,8 @@ const AboutSection = () => {
         <div className="mb-24 md:mb-32 lg:mb-40" data-animate>
           <TeamMember
             name="Kareem T. Payne"
-            title="Human Capital Alchemist & Coach"
-            bio={`Kareem T. Payne is a purposeful, passionate, and results-driven Human Capital Alchemist & Coach. With a career spanning diverse sectors—Retail, Hospitality, Financial Services, Energy, Manufacturing, Distribution, and Entrepreneurship—his work has impacted organizations and communities across the Caribbean and North America.
+            title="Founder & Chief Talent Strategist"
+            bio={`Kareem T. Payne is a purposeful, passionate, and results-driven Founder & Chief Talent Strategist. With a career spanning diverse sectors—Retail, Hospitality, Financial Services, Energy, Manufacturing, Distribution, and Entrepreneurship—his work has impacted organizations and communities across the Caribbean and North America.
 
 He specializes in helping organizations unlock their strategic potential by leveraging the growth of people. Through coaching, leadership development, and performance consulting, Kareem equips leaders and teams with the tools they need to thrive. As a qualified Emotional Intelligence (EI) practitioner, he champions EI as a catalyst for personal transformation.
 
@@ -49,16 +49,16 @@ Whether in a boardroom, training room, or community hall, his message is consist
           />
         </div>
 
-        {/* Wife's Section - Placeholder */}
+        {/* Jenifer's Section */}
         <div className="mb-24 md:mb-32 lg:mb-40" data-animate>
           <TeamMember
-            name="Sarah Johnson"
-            title="Organizational Development Specialist"
-            bio={`Sarah Johnson brings over 15 years of expertise in organizational development and team transformation. With a background in psychology and business administration, she specializes in creating sustainable change within organizations through strategic people development initiatives.
+            name="Jenifer Payne"
+            title="Co-Founder & Lead Organizational Development Partner"
+            bio={`Jenifer Payne brings over 15 years of expertise in organizational development and team transformation. With a background in Human Resources and business administration, she specializes in creating sustainable change within organizations through strategic people development initiatives.
 
-Her approach combines evidence-based methodologies with practical business acumen, helping teams navigate complex organizational challenges while building stronger, more cohesive work environments. Sarah has worked across various industries including healthcare, technology, and non-profit sectors, consistently delivering measurable improvements in team performance and employee engagement.
+Her approach combines evidence-based methodologies with practical business acumen, helping teams navigate complex organizational challenges while building stronger, more cohesive work environments. Jenifer worked with Manufacturing, Media & Entertainment, Consumer Packaging across various industries, consistently delivering measurable improvements in team performance and employee engagement.
 
-Sarah believes that the foundation of any successful organization lies in its people. She champions inclusive leadership practices and helps leaders develop the emotional intelligence necessary to inspire and motivate their teams. Her collaborative style and deep understanding of human behavior make her an invaluable partner in organizational transformation efforts.`}
+Jenifer believes that the foundation of any successful organization lies in its people. She champions inclusive leadership practices and helps leaders develop the emotional intelligence necessary to inspire and motivate their teams. Her collaborative style and deep understanding of human behavior make her an invaluable partner in organizational transformation efforts.`}
             image={teamImages.sarah}
             achievements={wifeAchievements}
             achievementsBold={true}
@@ -77,10 +77,10 @@ Sarah believes that the foundation of any successful organization lies in its pe
               sustainable growth through strategic human capital development.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/contact" className="btn-primary">
+              <a href="/contact" className="btn-primary font-bold">
                 Let's Work Together
               </a>
-              <Link href="/" className="btn-secondary">
+              <Link href="/" className="btn-secondary font-bold">
                 Back to Home
               </Link>
             </div>

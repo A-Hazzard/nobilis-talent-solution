@@ -322,7 +322,7 @@ export default function AuthModal({
                   <Input
                     id="signup-phone"
                     type="tel"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="(678) 920-6605"
                     value={signupData.phone}
                     onChange={(e) => handleInputChange('signup', 'phone', e.target.value)}
                     className="pl-10"

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, Globe, Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Phone, Mail, Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -327,16 +327,6 @@ const ContactPage = () => {
                         <a href="mailto:nobilis.talent@gmail.com" className="text-primary hover:underline text-sm sm:text-base break-all">
                           nobilis.talent@gmail.com
                         </a>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                        <Globe className="w-6 h-6" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-accent text-sm sm:text-base">Availability</div>
-                        <div className="text-primary text-sm sm:text-base">Available globally.</div>
                       </div>
                     </div>
                   </div>

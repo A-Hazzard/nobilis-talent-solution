@@ -6,7 +6,7 @@ import { generalImages } from '@/lib/constants/images';
 
 const CompanySection = () => {
   return (
-    <section className="py-16 lg:py-24">
+    <section className="py-12 lg:py-20">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="border-2 border-primary/20 rounded-3xl p-6 lg:p-8 bg-background/50 backdrop-blur-sm">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -29,7 +29,7 @@ const CompanySection = () => {
                   <div className="mt-6">
                     <Link href="/about">
                       <Button className="btn-primary group">
-                        Read More About Kareem
+                        Learn More About Us
                         <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </Link>

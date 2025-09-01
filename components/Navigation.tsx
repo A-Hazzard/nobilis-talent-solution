@@ -140,7 +140,7 @@ const Navigation = () => {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-gray-700 hover:text-primary transition-smooth px-2 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                    className="text-gray-700 hover:text-primary transition-smooth px-2 py-2 rounded-lg hover:bg-gray-50 text-sm font-bold"
                     onClick={(e) => handleLinkClick(link.href, e)}
                   >
                     {link.label}
@@ -154,7 +154,7 @@ const Navigation = () => {
               {shouldShowPaymentButton && (
                 <a
                   href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
-                  className="btn-secondary font-semibold whitespace-nowrap text-xs px-3 py-1.5"
+                  className="btn-secondary font-bold whitespace-nowrap text-xs px-3 py-1.5"
                 >
                   Pay ${pendingPayment?.baseAmount || '0'}
                 </a>
@@ -232,7 +232,7 @@ const Navigation = () => {
                 </>
               ) : (
                 <>
-                  <Link href="/signup" className="btn-outline text-xs px-3 py-1.5">
+                  <Link href="/signup" className="btn-outline font-bold text-xs px-3 py-1.5">
                     Sign Up
                   </Link>
                 </>
@@ -240,7 +240,7 @@ const Navigation = () => {
   
               <button
                 onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
-                className="btn-primary text-xs px-3 py-1.5"
+                className="btn-primary font-bold text-xs px-3 py-1.5"
               >
                 Book Now
               </button>
@@ -274,7 +274,7 @@ const Navigation = () => {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="flex items-center justify-center text-gray-700 hover:text-primary px-6 py-4 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium touch-manipulation active:scale-98 active:bg-gray-100 min-h-14 text-lg space-x-3"
+                    className="flex items-center justify-center text-gray-700 hover:text-primary px-6 py-4 rounded-xl hover:bg-gray-50 transition-all duration-200 font-bold touch-manipulation active:scale-98 active:bg-gray-100 min-h-14 text-lg space-x-3"
                     onClick={(e) => handleLinkClick(link.href, e)}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -289,7 +289,7 @@ const Navigation = () => {
                 {shouldShowPaymentButton && (
                   <a
                     href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
-                    className="block w-full text-center btn-secondary font-semibold px-4 py-3 rounded-lg"
+                    className="block w-full text-center btn-secondary font-bold px-4 py-3 rounded-lg"
                   >
                     Pay ${pendingPayment?.baseAmount || '0'}
                   </a>
@@ -351,7 +351,7 @@ const Navigation = () => {
                     window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank');
                     setIsOpen(false);
                   }}
-                  className="w-full text-center btn-primary px-4 py-3 rounded-lg"
+                  className="w-full text-center btn-primary font-bold px-4 py-3 rounded-lg"
                 >
                   Book Now
                 </button>

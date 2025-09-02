@@ -222,7 +222,7 @@ export function LeadsTable({
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" side="bottom" sideOffset={8} alignOffset={-4}>
             <DropdownMenuItem onClick={(e) => {
               e.stopPropagation();
               onEdit(lead);

@@ -32,7 +32,7 @@ export default function VerifyEmailPage() {
       // If user is already verified, redirect to appropriate page
       // Only check this if there's no verification token (meaning this is not a sign-up flow)
       if (!token && user?.emailVerified) {
-        router.push(user.role === 'admin' ? '/admin' : '/');
+        router.push(user.role === 'admin' ? '/admin' : '/content');
         return;
       }
 

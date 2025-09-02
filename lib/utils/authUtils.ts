@@ -26,8 +26,8 @@ export function getRedirectPath(user: User | null, isLogin: boolean = false): st
     return '/admin';
   }
 
-  // Regular users go to home page
-  return '/';
+  // Regular users go to content page
+  return '/content';
 }
 
 /**

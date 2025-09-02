@@ -24,28 +24,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { onboardingSchema, type OnboardingFormData } from '@/lib/schemas';
 
 type OnboardingStep = 'welcome' | 'profile' | 'organization' | 'goals' | 'complete';
 
-type OnboardingData = {
-  // Profile step
-  firstName: string;
-  lastName: string;
-  jobTitle: string;
-  phone: string;
-  
-  // Organization step
-  organizationName: string;
-  organizationType: 'startup' | 'small-business' | 'enterprise' | 'nonprofit' | 'other';
-  industryFocus: string;
-  teamSize: string;
-  
-  // Goals step
-  primaryGoals: string[];
-  challengesDescription: string;
-  timeline: string;
-  budget: string;
-};
+// Using the Zod schema type instead of manual type definition
 
 const ORGANIZATION_TYPES = [
   { value: 'startup', label: 'Startup' },
@@ -94,7 +77,7 @@ export default function OnboardingPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [data, setData] = useState<OnboardingData>({
+  const [data, setData] = useState<OnboardingFormData>({
     firstName: '',
     lastName: '',
     jobTitle: '',
@@ -119,7 +102,12 @@ export default function OnboardingPage() {
       
       // Check if user has already completed onboarding
       if (user?.onboardingCompleted) {
-        router.push('/');
+        // Redirect based on user role
+        if (user.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/content');
+        }
         return;
       }
       
@@ -183,6 +171,9 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
+      // Validate form data with Zod
+      const validatedData = onboardingSchema.parse(data);
+      
       // Include Firebase ID token so the API can authenticate you
       const idToken = await (await import('firebase/auth')).getIdToken?.(await (await import('firebase/auth')).getAuth().currentUser!);
       const response = await fetch('/api/auth/complete-onboarding', {
@@ -191,12 +182,18 @@ export default function OnboardingPage() {
           'Content-Type': 'application/json',
           ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(validatedData),
       });
 
       if (response.ok) {
         toast.success('Welcome! Your onboarding is complete.');
-        router.push('/');
+        
+        // Redirect based on user role
+        if (user?.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/content');
+        }
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || 'Failed to complete onboarding');
@@ -233,7 +230,13 @@ export default function OnboardingPage() {
         }),
       });
       if (response.ok) {
-        router.push('/');
+        toast.success('Onboarding completed successfully!');
+        // Redirect based on user role
+        if (user?.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/content');
+        }
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || 'Failed to skip onboarding');

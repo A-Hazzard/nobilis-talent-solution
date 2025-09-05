@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmailService } from '@/lib/services/EmailService';
 import { getBaseUrl } from '@/lib/utils';
+import { randomBytes } from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,21 +14,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // In a real implementation, you would:
-    // 1. Generate a secure reset token
-    // 2. Store it in the database with an expiration
-    // 3. Send the email with the reset link
+    // Generate a secure reset token (similar to Firebase's approach)
+    const resetToken = randomBytes(32).toString('hex');
     
+    // Create the reset link with our custom token
+    const resetLink = `${getBaseUrl()}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    
+    // Send the reset link via our custom email service to maintain the custom template
     const emailService = EmailService.getInstance();
-    const baseUrl = getBaseUrl();
-    
-    // For demo purposes, we'll create a simple reset link
-    // In production, use Firebase Auth or your own token system
-    const resetLink = `${baseUrl}/reset-password?token=demo-token&email=${encodeURIComponent(email)}`;
-    
     const result = await emailService.sendPasswordResetEmail(email, resetLink);
 
     if (result.success) {
+      // In a real implementation, you would store this token in the database
+      // with an expiration time (e.g., 1 hour from now)
+      // For now, we'll just return success
       return NextResponse.json({
         success: true,
         message: 'Password reset email sent successfully'

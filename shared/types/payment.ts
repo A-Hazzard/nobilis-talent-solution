@@ -141,4 +141,6 @@ export type InvoicePreview = {
   taxAmount: number;
   total: number;
   dueDate: Date;
+  bonusAmount?: number; // Optional bonus amount
+  notes?: string; // Optional notes including bonus information
 }; 

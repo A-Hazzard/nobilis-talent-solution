@@ -1,6 +1,6 @@
-import type { InvoicePreview } from '@/shared/types/payment';
-import type { PDFOptions } from '@/lib/types/services';
-import puppeteer from 'puppeteer';
+import type { InvoicePreview } from "@/shared/types/payment";
+import type { PDFOptions } from "@/lib/types/services";
+import puppeteer from "puppeteer";
 
 export class PDFService {
   private static instance: PDFService;
@@ -17,30 +17,39 @@ export class PDFService {
   /**
    * Generate invoice HTML
    */
-  private generateInvoiceHTML(invoice: InvoicePreview, invoiceNumber: string, options: PDFOptions = {}): string {
-    const invoiceDate = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+  private generateInvoiceHTML(
+    invoice: InvoicePreview,
+    invoiceNumber: string,
+    options: PDFOptions = {}
+  ): string {
+    const invoiceDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
 
-    const dueDate = invoice.dueDate.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    const dueDate = invoice.dueDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
 
     // Convert logo to base64 for embedding
-    const fs = require('fs');
-    const path = require('path');
-    let logoBase64 = '';
-    
+    const fs = require("fs");
+    const path = require("path");
+    let logoBase64 = "";
+
     try {
-      const logoPath = path.join(process.cwd(), 'public', 'assets', 'logo-transparent.png');
+      const logoPath = path.join(
+        process.cwd(),
+        "public",
+        "assets",
+        "logo-transparent.png"
+      );
       const logoBuffer = fs.readFileSync(logoPath);
-      logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+      logoBase64 = `data:image/png;base64,${logoBuffer.toString("base64")}`;
     } catch (error) {
-      console.warn('Could not load logo for PDF:', error);
+      console.warn("Could not load logo for PDF:", error);
     }
 
     return `
@@ -51,8 +60,10 @@ export class PDFService {
     <title>Invoice #${invoiceNumber}</title>
     <style>
         @page {
-            size: ${options.format || 'A4'};
-            margin: ${options.margin?.top || '15mm'} ${options.margin?.right || '15mm'} ${options.margin?.bottom || '15mm'} ${options.margin?.left || '15mm'};
+            size: ${options.format || "A4"};
+            margin: ${options.margin?.top || "15mm"} ${
+      options.margin?.right || "15mm"
+    } ${options.margin?.bottom || "15mm"} ${options.margin?.left || "15mm"};
         }
         
         * {
@@ -264,12 +275,18 @@ export class PDFService {
         <!-- Header Section -->
         <div class="header">
             <div class="logo-section">
-                ${logoBase64 ? `<img src="${logoBase64}" alt="Company Logo" class="logo" />` : ''}
+                ${
+                  logoBase64
+                    ? `<img src="${logoBase64}" alt="Company Logo" class="logo" />`
+                    : ""
+                }
                 <div class="company-info">
                     <strong>Nobilis Talent Solutions</strong><br>
-                    Aaron Hazzard<br>
-                    Available globally<br>
-                    Phone: +1 (678) 920-6605<br>
+                    Kareem Payne<br>
+                    3344 Cobb Parkway<br>
+                    STE 200<br>
+                    Acworth, GA, 30101<br>
+                    Phone: +1 (678) 956-1146<br>
                     Email: nobilis.talent@gmail.com
                 </div>
             </div>
@@ -291,7 +308,10 @@ export class PDFService {
                 
                 <div class="balance-due">
                     <div class="balance-label">Balance Due:</div>
-                    <div class="balance-amount">$${invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    <div class="balance-amount">$${invoice.total.toLocaleString(
+                      "en-US",
+                      { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                    )}</div>
                 </div>
             </div>
         </div>
@@ -302,7 +322,7 @@ export class PDFService {
                 <h3>Bill To:</h3>
                 <div class="client-details">
                     ${invoice.clientName}<br>
-                    ${invoice.clientEmail || ''}
+                    ${invoice.clientEmail || ""}
                 </div>
             </div>
         </div>
@@ -318,14 +338,24 @@ export class PDFService {
                 </tr>
             </thead>
             <tbody>
-                ${invoice.items.map(item => `
+                ${invoice.items
+                  .map(
+                    (item) => `
                     <tr>
                         <td>${item.description}</td>
                         <td class="center">${item.quantity}</td>
-                        <td class="right">$${item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="right">$${item.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="right">$${item.unitPrice.toLocaleString(
+                          "en-US",
+                          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                        )}</td>
+                        <td class="right">$${item.total.toLocaleString(
+                          "en-US",
+                          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                        )}</td>
                     </tr>
-                `).join('')}
+                `
+                  )
+                  .join("")}
             </tbody>
         </table>
         
@@ -334,18 +364,37 @@ export class PDFService {
             <table class="totals-table">
                 <tr>
                     <td>Subtotal:</td>
-                    <td>$${invoice.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>$${invoice.subtotal.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}</td>
                 </tr>
+                ${invoice.bonusAmount && invoice.bonusAmount > 0 ? `
                 <tr>
-                    <td>Tax (0%):</td>
-                    <td>$${invoice.taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>Bonus Amount:</td>
+                    <td>$${invoice.bonusAmount.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}</td>
                 </tr>
+                ` : ''}
                 <tr class="total-row">
                     <td>Total:</td>
-                    <td>$${invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>$${invoice.total.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}</td>
                 </tr>
             </table>
         </div>
+        
+        ${invoice.notes ? `
+        <!-- Notes Section -->
+        <div class="notes-section">
+            <h3>Notes:</h3>
+            <p>${invoice.notes}</p>
+        </div>
+        ` : ''}
     </div>
 </body>
 </html>`;
@@ -355,77 +404,87 @@ export class PDFService {
    * Generate invoice PDF using Puppeteer
    */
   async generateInvoicePDF(
-    invoice: InvoicePreview, 
-    invoiceNumber: string, 
+    invoice: InvoicePreview,
+    invoiceNumber: string,
     options: PDFOptions = {}
   ): Promise<{ success: boolean; data?: Buffer; error?: string }> {
     let browser;
     try {
-      console.log('🚀 PDFService: Starting PDF generation for invoice:', invoiceNumber);
-      console.log('🚀 PDFService: Invoice data:', {
+      console.log(
+        "🚀 PDFService: Starting PDF generation for invoice:",
+        invoiceNumber
+      );
+      console.log("🚀 PDFService: Invoice data:", {
         clientName: invoice.clientName,
         total: invoice.total,
         itemsCount: invoice.items?.length,
-        dueDate: invoice.dueDate
+        dueDate: invoice.dueDate,
       });
-      
+
       // Generate the HTML content
       const html = this.generateInvoiceHTML(invoice, invoiceNumber, options);
-      
-      console.log('✅ PDFService: Invoice HTML generated successfully, length:', html.length);
-      
+
+      console.log(
+        "✅ PDFService: Invoice HTML generated successfully, length:",
+        html.length
+      );
+
       // Launch Puppeteer browser
-      console.log('🌐 PDFService: Launching Puppeteer browser...');
+      console.log("🌐 PDFService: Launching Puppeteer browser...");
       browser = await puppeteer.launch({
         headless: true,
         args: [
-          '--no-sandbox', 
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--disable-gpu'
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--no-first-run",
+          "--disable-gpu",
         ],
-        timeout: 60000
+        timeout: 60000,
       });
-      
-      console.log('✅ PDFService: Browser launched successfully');
-      
+
+      console.log("✅ PDFService: Browser launched successfully");
+
       const page = await browser.newPage();
-      
+
       // Set content and wait for it to load
-      console.log('📄 PDFService: Setting page content...');
-      await page.setContent(html, { waitUntil: 'networkidle0' });
-      
-      console.log('✅ PDFService: Page content set, generating PDF...');
-      
+      console.log("📄 PDFService: Setting page content...");
+      await page.setContent(html, { waitUntil: "networkidle0" });
+
+      console.log("✅ PDFService: Page content set, generating PDF...");
+
       // Generate PDF
       const pdfBuffer = await page.pdf({
-        format: options.format || 'A4',
+        format: options.format || "A4",
         printBackground: true,
         margin: {
-          top: options.margin?.top || '15mm',
-          right: options.margin?.right || '15mm',
-          bottom: options.margin?.bottom || '15mm',
-          left: options.margin?.left || '15mm'
-        }
+          top: options.margin?.top || "15mm",
+          right: options.margin?.right || "15mm",
+          bottom: options.margin?.bottom || "15mm",
+          left: options.margin?.left || "15mm",
+        },
       });
-      
-      console.log('✅ PDFService: PDF generated successfully, size:', pdfBuffer.length, 'bytes');
-      
+
+      console.log(
+        "✅ PDFService: PDF generated successfully, size:",
+        pdfBuffer.length,
+        "bytes"
+      );
+
       return {
         success: true,
-        data: Buffer.from(pdfBuffer)
+        data: Buffer.from(pdfBuffer),
       };
     } catch (error) {
-      console.error('❌ PDFService: Error generating invoice PDF:', error);
+      console.error("❌ PDFService: Error generating invoice PDF:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     } finally {
       if (browser) {
-        console.log('🔒 PDFService: Closing browser...');
+        console.log("🔒 PDFService: Closing browser...");
         await browser.close();
       }
     }
@@ -435,7 +494,7 @@ export class PDFService {
    * Generate invoice HTML for email attachment
    */
   async generateInvoiceHTMLForEmail(
-    invoice: InvoicePreview, 
+    invoice: InvoicePreview,
     invoiceNumber: string
   ): Promise<string> {
     return this.generateInvoiceHTML(invoice, invoiceNumber);
@@ -445,7 +504,7 @@ export class PDFService {
    * Get invoice filename
    */
   getInvoiceFilename(invoiceNumber: string): string {
-    const date = new Date().toISOString().split('T')[0];
+    const date = new Date().toISOString().split("T")[0];
     return `invoice-${invoiceNumber}-${date}.pdf`;
   }
-} 
+}

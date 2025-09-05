@@ -12,6 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { validateSignupForm } from '@/lib/utils/validation';
 import { getRedirectPath } from '@/lib/utils/authUtils';
 import { PasswordStrength } from '@/components/ui/password-strength';
+import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
+import TermsOfServiceModal from '@/components/TermsOfServiceModal';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -32,7 +34,11 @@ export default function SignupPage() {
     lastName?: string;
     organization?: string;
     phone?: string;
+    privacyPolicy?: string;
+    termsOfService?: string;
   }>({});
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
 
   const [formData, setFormData] = useState({
@@ -111,6 +117,20 @@ export default function SignupPage() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    // Check privacy policy acceptance
+    if (!privacyAccepted) {
+      setFieldErrors(prev => ({ ...prev, privacyPolicy: 'You must accept the Privacy Policy to continue' }));
+      setIsLoading(false);
+      return;
+    }
+
+    // Check terms of service acceptance
+    if (!termsAccepted) {
+      setFieldErrors(prev => ({ ...prev, termsOfService: 'You must accept the Terms of Service to continue' }));
+      setIsLoading(false);
+      return;
+    }
 
     // Validate form
     const validation = validateSignupForm(formData);
@@ -316,7 +336,7 @@ export default function SignupPage() {
                   id="phone"
                   name="phone"
                   type="tel"
-                  placeholder="(678) 920-6605"
+                  placeholder="(678) 956-1146"
                   value={formData.phone}
                   onChange={handleInputChange}
                   className={`pl-10 ${formData.phone && isFieldValid('phone') ? 'border-green-500' : getFieldError('phone') ? 'border-red-500' : ''}`}
@@ -384,6 +404,72 @@ export default function SignupPage() {
               </div>
               {getFieldError('confirmPassword') && (
                 <p className="text-sm text-red-500">{getFieldError('confirmPassword')}</p>
+              )}
+            </div>
+
+            {/* Privacy Policy Checkbox */}
+            <div className="space-y-2">
+              <div className="flex items-start space-x-2">
+                <input
+                  type="checkbox"
+                  id="privacy-policy"
+                  checked={privacyAccepted}
+                  onChange={(e) => {
+                    setPrivacyAccepted(e.target.checked);
+                    if (e.target.checked) {
+                      setFieldErrors(prev => ({ ...prev, privacyPolicy: undefined }));
+                    }
+                  }}
+                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="privacy-policy" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
+                  I agree to the{' '}
+                  <PrivacyPolicyModal>
+                    <button 
+                      type="button" 
+                      className="text-blue-600 hover:text-blue-500 underline"
+                    >
+                      Privacy Policy
+                    </button>
+                  </PrivacyPolicyModal>
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+              </div>
+              {getFieldError('privacyPolicy') && (
+                <p className="text-sm text-red-500">{getFieldError('privacyPolicy')}</p>
+              )}
+            </div>
+
+            {/* Terms of Service Checkbox */}
+            <div className="space-y-2">
+              <div className="flex items-start space-x-2">
+                <input
+                  type="checkbox"
+                  id="terms-of-service"
+                  checked={termsAccepted}
+                  onChange={(e) => {
+                    setTermsAccepted(e.target.checked);
+                    if (e.target.checked) {
+                      setFieldErrors(prev => ({ ...prev, termsOfService: undefined }));
+                    }
+                  }}
+                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="terms-of-service" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
+                  I agree to the{' '}
+                  <TermsOfServiceModal>
+                    <button 
+                      type="button" 
+                      className="text-blue-600 hover:text-blue-500 underline"
+                    >
+                      Terms of Service
+                    </button>
+                  </TermsOfServiceModal>
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+              </div>
+              {getFieldError('termsOfService') && (
+                <p className="text-sm text-red-500">{getFieldError('termsOfService')}</p>
               )}
             </div>
 

@@ -16,6 +16,7 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   // Firebase provides oobCode in the query. Support both oobCode and token for compatibility.
   const token = searchParams.get("oobCode") || searchParams.get("token");
+  const email = searchParams.get("email");
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,7 +28,10 @@ export default function ResetPasswordPage() {
     if (!token) {
       setError("Invalid or missing reset token.");
     }
-  }, [token]);
+    if (!email) {
+      setError("Invalid or missing email address.");
+    }
+  }, [token, email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +57,7 @@ export default function ResetPasswordPage() {
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password, email }),
       });
       const data = await res.json();
       if (!res.ok) {

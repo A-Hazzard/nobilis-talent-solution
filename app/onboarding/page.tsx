@@ -350,7 +350,7 @@ export default function OnboardingPage() {
             type="tel"
             value={data.phone}
             onChange={(e) => setData(prev => ({ ...prev, phone: e.target.value }))}
-            placeholder="(678) 920-6605"
+            placeholder="(678) 956-1146"
           />
         </div>
 

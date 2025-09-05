@@ -27,6 +27,9 @@ import type { PendingPayment } from '@/shared/types/payment';
 
 interface PaymentWithActions extends PendingPayment {
   id: string;
+  bonusAmount?: number;
+  totalAmount?: number;
+  calculatedTotal?: number;
   actions?: {
     canEdit: boolean;
     canCancel: boolean;

@@ -86,15 +86,17 @@ const HeroSection = () => {
       </div>
 
       {/* Scroll indicator - clickable */}
-      <button 
-        onClick={scrollToNextSection}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hover:scale-110 transition-all duration-300 ease-in-out group cursor-pointer"
-        aria-label="Scroll to next section"
-      >
-        <div className="w-8 h-12 border-2 border-white/70 rounded-full flex flex-col items-center justify-center group-hover:border-white transition-all duration-300 ease-in-out group-hover:shadow-lg">
-          <ChevronDown className="w-4 h-4 text-white/70 group-hover:text-white animate-pulse transition-all duration-300 ease-in-out group-hover:translate-y-1" />
-        </div>
-      </button>
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex justify-center">
+        <button 
+          onClick={scrollToNextSection}
+          className="animate-bounce hover:scale-110 transition-all duration-300 ease-in-out group cursor-pointer"
+          aria-label="Scroll to next section"
+        >
+          <div className="w-8 h-12 border-2 border-white/70 rounded-full flex flex-col items-center justify-center group-hover:border-white transition-all duration-300 ease-in-out group-hover:shadow-lg">
+            <ChevronDown className="w-4 h-4 text-white/70 group-hover:text-white animate-pulse transition-all duration-300 ease-in-out group-hover:translate-y-1" />
+          </div>
+        </button>
+      </div>
     </section>
   );
 };

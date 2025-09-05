@@ -18,54 +18,126 @@ const stripe = process.env.STRIPE_SECRET_KEY
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  const requestId = `webhook_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  console.log(`🚀 [${requestId}] Webhook received at ${new Date().toISOString()}`);
+  console.log(`🔍 [${requestId}] Environment check:`, {
+    hasStripe: !!stripe,
+    hasWebhookSecret: !!webhookSecret,
+    webhookSecretLength: webhookSecret?.length || 0,
+    webhookSecretPreview: webhookSecret ? `${webhookSecret.substring(0, 10)}...` : 'undefined'
+  });
+
   try {
     if (!stripe || !webhookSecret) {
+      const error = 'Stripe is not configured. Please set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET environment variables.';
+      console.error(`❌ [${requestId}] ${error}`);
       return NextResponse.json(
-        { error: 'Stripe is not configured. Please set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET environment variables.' },
+        { error, requestId },
+        { status: 500 }
+      );
+    }
+
+    // Check if webhook secret is still the placeholder
+    if (webhookSecret === 'whsec_your_webhook_secret_here') {
+      const error = 'Webhook secret is still set to placeholder value. Please update STRIPE_WEBHOOK_SECRET with the actual secret from Stripe dashboard.';
+      console.error(`❌ [${requestId}] ${error}`);
+      return NextResponse.json(
+        { error, requestId },
         { status: 500 }
       );
     }
 
     const body = await request.text();
     const signature = request.headers.get('stripe-signature')!;
+    
+    console.log(`📝 [${requestId}] Request details:`, {
+      bodyLength: body.length,
+      hasSignature: !!signature,
+      signatureLength: signature?.length || 0,
+      headers: Object.fromEntries(request.headers.entries())
+    });
 
     let event: Stripe.Event;
 
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      console.log(`✅ [${requestId}] Webhook signature verified successfully`);
     } catch (err) {
-      console.error('Webhook signature verification failed:', err);
+      const error = `Invalid signature: ${err instanceof Error ? err.message : 'Unknown error'}`;
+      console.error(`❌ [${requestId}] ${error}`);
       return NextResponse.json(
-        { error: 'Invalid signature' },
+        { error, requestId },
         { status: 400 }
       );
     }
+
+    console.log(`📨 [${requestId}] Processing event: ${event.type} (ID: ${event.id})`);
 
     // Handle the event
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log('Payment successful for session:', session.id);
+        console.log(`💰 [${requestId}] Payment successful for session:`, {
+          sessionId: session.id,
+          amountTotal: session.amount_total,
+          currency: session.currency,
+          customerEmail: session.customer_details?.email,
+          metadata: session.metadata
+        });
 
         // Update corresponding pending payment if present
         const pendingPaymentId = session.metadata?.pendingPaymentId;
         const clientEmail = session.customer_details?.email || session.metadata?.clientEmail || '';
         const clientName = session.metadata?.clientName || '';
         const amount = session.amount_total ? session.amount_total / 100 : Number(session.metadata?.amount || 0);
+        const baseAmount = session.metadata?.baseAmount ? Number(session.metadata.baseAmount) : 0;
+        const bonusAmount = Math.max(0, amount - baseAmount);
+
+        console.log(`🧮 [${requestId}] Amount calculations:`, {
+          amount,
+          baseAmount,
+          bonusAmount,
+          pendingPaymentId
+        });
 
         if (pendingPaymentId) {
           try {
+            console.log(`📝 [${requestId}] Updating pending payment document:`, pendingPaymentId);
             const ref = doc(db, 'pendingPayments', pendingPaymentId);
-            await updateDoc(ref, {
+            
+            // Get current document to preserve existing data
+            const currentDoc = await getDoc(ref);
+            if (currentDoc.exists()) {
+              const currentData = currentDoc.data();
+              console.log(`📄 [${requestId}] Current pending payment data:`, currentData);
+            }
+
+            const updateData = {
               status: 'completed',
               stripeSessionId: session.id,
               updatedAt: serverTimestamp(),
-              bonusAmount: amount - (session.metadata?.baseAmount ? Number(session.metadata.baseAmount) : 0),
+              bonusAmount: bonusAmount,
               totalAmount: amount,
-            });
+              // Preserve existing fields
+              ...(currentDoc.exists() && {
+                baseAmount: currentDoc.data().baseAmount || baseAmount,
+                description: currentDoc.data().description,
+                clientName: currentDoc.data().clientName,
+                clientEmail: currentDoc.data().clientEmail,
+                notes: currentDoc.data().notes
+              })
+            };
+
+            console.log(`📝 [${requestId}] Update data:`, updateData);
+            await updateDoc(ref, updateData);
+            console.log(`✅ [${requestId}] Pending payment updated successfully`);
           } catch (e) {
-            console.error('Failed to update pending payment status:', e);
+            console.error(`❌ [${requestId}] Failed to update pending payment status:`, e);
           }
+        } else {
+          console.log(`⚠️ [${requestId}] No pendingPaymentId found in session metadata`);
         }
 
         // Send payment confirmation email (receipt)
@@ -73,7 +145,7 @@ export async function POST(request: NextRequest) {
           const invoiceNumber = session.metadata?.invoiceNumber || session.id;
           const emailService = EmailService.getInstance();
           
-          console.log('🔍 Webhook: Starting email process for payment:', {
+          console.log(`📧 [${requestId}] Starting email process for payment:`, {
             invoiceNumber,
             clientEmail,
             clientName,
@@ -81,82 +153,109 @@ export async function POST(request: NextRequest) {
             pendingPaymentId
           });
           
-          // Fetch invoice data and generate PDF (same pattern as new invoices)
-          let invoiceData = null;
+          // Generate PDF invoice with proper amounts (including bonus if applicable)
           let pdfAttachment = undefined;
           
           if (pendingPaymentId) {
             try {
+              console.log(`📄 [${requestId}] Fetching invoice data for PDF generation...`);
               const ref = doc(db, 'pendingPayments', pendingPaymentId);
               const docSnap = await getDoc(ref);
               if (docSnap.exists()) {
                 const pendingPayment = docSnap.data();
-                invoiceData = {
+                const docBaseAmount = Number(pendingPayment.baseAmount || 0);
+                const docTotalAmount = amount;
+                const docBonusAmount = Math.max(0, docTotalAmount - docBaseAmount);
+                
+                console.log(`💰 [${requestId}] Payment amounts from document:`, {
+                  docBaseAmount,
+                  docTotalAmount,
+                  docBonusAmount
+                });
+                
+                // Create items array with base service and bonus if applicable
+                const items = [{
+                  id: '1',
+                  description: pendingPayment.description || 'Leadership Consultation',
+                  quantity: 1,
+                  unitPrice: docBaseAmount,
+                  total: docBaseAmount,
+                  type: 'service' as const
+                }];
+                
+                // Add bonus item if there's a bonus amount
+                if (docBonusAmount > 0) {
+                  items.push({
+                    id: '2',
+                    description: 'Additional Payment (Bonus)',
+                    quantity: 1,
+                    unitPrice: docBonusAmount,
+                    total: docBonusAmount,
+                    type: 'service' as const
+                  });
+                }
+                
+                const invoiceData = {
                   invoiceNumber,
                   clientName: pendingPayment.clientName,
                   clientEmail: pendingPayment.clientEmail,
-                  items: [{
-                    id: '1',
-                    description: pendingPayment.description,
-                    quantity: 1,
-                    unitPrice: pendingPayment.baseAmount,
-                    total: amount,
-                    type: 'service' as const
-                  }],
-                  subtotal: pendingPayment.baseAmount,
+                  items,
+                  subtotal: docTotalAmount,
                   taxAmount: 0,
-                  total: amount,
-                  dueDate: new Date()
+                  total: docTotalAmount,
+                  dueDate: new Date(),
+                  bonusAmount: docBonusAmount,
+                  notes: docBonusAmount > 0 ? `Includes $${docBonusAmount.toFixed(2)} bonus payment` : undefined
                 };
-                console.log('✅ Webhook: Invoice data constructed:', invoiceData);
                 
-                // Generate PDF using the same pattern as new invoices
-                try {
-                  const { PDFService } = await import('@/lib/services/PDFService');
-                  const pdfService = PDFService.getInstance();
-                  console.log('📄 Webhook: Generating PDF for payment confirmation...');
-                  const pdf = await pdfService.generateInvoicePDF(invoiceData, invoiceNumber);
-                  
-                  if (pdf.success && pdf.data) {
-                    pdfAttachment = {
-                      filename: `invoice-${invoiceNumber}.pdf`,
-                      content: pdf.data,
-                      contentType: 'application/pdf'
-                    };
-                    console.log('✅ Webhook: PDF generated successfully, size:', pdf.data.length, 'bytes');
-                  } else {
-                    console.log('❌ Webhook: PDF generation failed:', pdf.error);
-                  }
-                } catch (pdfError) {
-                  console.error('❌ Webhook: PDF generation error:', pdfError);
+                console.log(`📄 [${requestId}] Invoice data for PDF:`, invoiceData);
+                console.log(`📄 [${requestId}] Generating PDF for payment confirmation...`);
+                
+                const { PDFService } = await import('@/lib/services/PDFService');
+                const pdfService = PDFService.getInstance();
+                const pdf = await pdfService.generateInvoicePDF(invoiceData, invoiceNumber);
+                
+                if (pdf.success && pdf.data) {
+                  pdfAttachment = {
+                    filename: `invoice-${invoiceNumber}.pdf`,
+                    content: pdf.data,
+                    contentType: 'application/pdf'
+                  };
+                  console.log(`✅ [${requestId}] PDF generated successfully, size:`, pdf.data.length, 'bytes');
+                } else {
+                  console.log(`❌ [${requestId}] PDF generation failed:`, pdf.error);
                 }
               } else {
-                console.log('❌ Webhook: Pending payment document not found');
+                console.log(`❌ [${requestId}] Pending payment document not found`);
               }
             } catch (fetchError) {
-              console.error('❌ Webhook: Failed to fetch invoice data:', fetchError);
+              console.error(`❌ [${requestId}] Failed to fetch invoice data:`, fetchError);
             }
           } else {
-            console.log('⚠️ Webhook: No pendingPaymentId found in session metadata');
+            console.log(`⚠️ [${requestId}] No pendingPaymentId found in session metadata`);
           }
           
           if (clientEmail) {
-            console.log('📧 Webhook: Sending payment confirmation email...');
+            console.log(`📧 [${requestId}] Sending payment confirmation email...`);
             const emailResult = await emailService.sendPaymentConfirmationWithPDF({
               to: clientEmail,
               clientName: clientName || clientEmail,
               invoiceNumber,
-              amount,
+              amount: amount,
               paymentMethod: session.payment_method_types?.[0] || 'card',
               transactionId: session.payment_intent?.toString() || session.id,
               pdfAttachment
             });
-            console.log('📧 Webhook: Email result:', emailResult);
+            console.log(`📧 [${requestId}] Email result:`, emailResult);
+            
+            if (!emailResult.success) {
+              console.error(`❌ [${requestId}] Email sending failed:`, emailResult.error);
+            }
           } else {
-            console.log('❌ Webhook: No client email found');
+            console.log(`❌ [${requestId}] No client email found`);
           }
         } catch (e) {
-          console.error('❌ Webhook: Failed to send payment confirmation email:', e);
+          console.error(`❌ [${requestId}] Failed to send payment confirmation email:`, e);
         }
 
         break;
@@ -164,23 +263,27 @@ export async function POST(request: NextRequest) {
         
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('Payment intent succeeded:', paymentIntent.id);
+        console.log(`✅ [${requestId}] Payment intent succeeded:`, paymentIntent.id);
         break;
         
       case 'payment_intent.payment_failed':
         const failedPayment = event.data.object as Stripe.PaymentIntent;
-        console.log('Payment failed:', failedPayment.id);
+        console.log(`❌ [${requestId}] Payment failed:`, failedPayment.id);
         break;
         
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`ℹ️ [${requestId}] Unhandled event type: ${event.type}`);
     }
 
-    return NextResponse.json({ received: true });
+    const duration = Date.now() - startTime;
+    console.log(`✅ [${requestId}] Webhook processed successfully in ${duration}ms`);
+    return NextResponse.json({ received: true, requestId, duration });
+
   } catch (error) {
-    console.error('Webhook error:', error);
+    const duration = Date.now() - startTime;
+    console.error(`❌ [${requestId}] Webhook error after ${duration}ms:`, error);
     return NextResponse.json(
-      { error: 'Webhook handler failed' },
+      { error: 'Webhook handler failed', requestId, duration },
       { status: 500 }
     );
   }

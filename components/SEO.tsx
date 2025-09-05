@@ -70,7 +70,7 @@ export default function SEO({
     image: 'https://payneleadership.com/assets/kareem-profile.jpg',
     url: 'https://payneleadership.com',
     sameAs: [
-      'https://linkedin.com/in/kareempayne',
+      'https://www.linkedin.com/company/nobilis-talent-solutions/',
       'https://twitter.com/kareempayne'
     ]
   };

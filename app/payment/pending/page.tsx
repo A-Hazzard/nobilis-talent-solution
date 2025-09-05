@@ -326,7 +326,7 @@ export default function PendingPaymentPage() {
           </div>
 
           {/* Payment Button */}
-          <div className="text-center">
+          <div className="text-center flex flex-col items-center">
             <button
               onClick={handlePayment}
               disabled={isProcessing}

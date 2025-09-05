@@ -2,6 +2,8 @@
 
 import { Mail, Phone, Linkedin, Instagram } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import PrivacyPolicyModal from './PrivacyPolicyModal';
+import TermsOfServiceModal from './TermsOfServiceModal';
 
 const Footer = () => {
   const [isClient, setIsClient] = useState(false);
@@ -33,39 +35,39 @@ const Footer = () => {
   return (
     <footer className="bg-accent text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-        {/* Brand Section */}
-        <div className="mb-12 text-center">
-          <h3 className="text-2xl font-bold mb-4">Nobilis Talent Solutions</h3>
-          <p className="text-white/80 mb-6 leading-relaxed max-w-2xl mx-auto">
-            Transforming leaders and organizations through proven coaching methodologies 
-            and practical leadership development.
-          </p>
-          <div className="flex space-x-4 justify-center">
-            <a
-              href="https://www.linkedin.com/company/108357874/admin/dashboard/"
-              className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-primary transition-smooth"
-              aria-label="LinkedIn"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Linkedin className="w-5 h-5" />
-            </a>
+        {/* Four Column Grid Layout */}
+        <div className="grid md:grid-cols-4 gap-8">
+          {/* Brand Section - Left Column */}
+          <div className="md:col-span-1">
+            <h3 className="text-xl font-bold mb-4">Nobilis Talent Solutions</h3>
+            <p className="text-white/80 mb-6 leading-relaxed text-sm">
+              Transforming leaders and organizations through proven coaching methodologies 
+              and practical leadership development.
+            </p>
+            <div className="flex space-x-3">
+              <a
+                href="https://www.linkedin.com/company/nobilis-talent-solutions/"
+                className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-primary transition-smooth"
+                aria-label="LinkedIn"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Linkedin className="w-4 h-4" />
+              </a>
 
-            <a
-              href="https://www.instagram.com/nobilis.talent"
-              className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-primary transition-smooth"
-              aria-label="Instagram"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Instagram className="w-5 h-5" />
-            </a>
+              <a
+                href="https://www.instagram.com/nobilis.talent"
+                className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-primary transition-smooth"
+                aria-label="Instagram"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+            </div>
           </div>
-        </div>
 
-        {/* Three Column Grid for Links, Services, Contact */}
-        <div className="grid md:grid-cols-3 gap-8 text-center md:text-left">
-          {/* Quick Links */}
+          {/* Quick Links - Second Column */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-3">
@@ -73,7 +75,7 @@ const Footer = () => {
                 <li key={link.href}>
                   <a
                     href={link.href}
-                    className="text-white/80 hover:text-primary transition-smooth font-bold"
+                    className="text-white/80 hover:text-primary transition-smooth text-sm"
                   >
                     {link.label}
                   </a>
@@ -82,44 +84,49 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Services */}
+          {/* Services - Third Column */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Services</h4>
             <ul className="space-y-3">
               {services.map((service) => (
                 <li key={service}>
-                  <span className="text-white/80 text-sm">{service}</span>
+                  <a
+                    href="/services"
+                    className="text-white/80 hover:text-primary transition-smooth text-sm block"
+                  >
+                    {service}
+                  </a>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact Info - Right Column */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact</h4>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center">
-                <Mail className="w-5 h-5 mr-3 text-primary" />
+                <Mail className="w-4 h-4 mr-3 text-primary" />
                 <a
                   href="mailto:nobilis.talent@gmail.com"
-                  className="text-white/80 hover:text-primary transition-smooth"
+                  className="text-white/80 hover:text-primary transition-smooth text-sm"
                 >
                   nobilis.talent@gmail.com
                 </a>
               </div>
               <div className="flex items-center">
-                <Phone className="w-5 h-5 mr-3 text-primary" />
+                <Phone className="w-4 h-4 mr-3 text-primary" />
                 <a
-                  href="tel:+15551234567"
-                  className="text-white/80 hover:text-primary transition-smooth"
+                  href="tel:+16789561146"
+                  className="text-white/80 hover:text-primary transition-smooth text-sm"
                 >
                   (678) 920-6605
                 </a>
               </div>
-              <div className="mt-6">
+              <div className="mt-4">
                 <button
                   onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
-                  className="bg-primary text-white px-6 py-3 rounded-full font-bold hover:bg-primary-light transition-smooth inline-block"
+                  className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-light transition-smooth text-sm"
                 >
                   Book Consultation
                 </button>
@@ -132,15 +139,19 @@ const Footer = () => {
         <div className="border-t border-white/20 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-white/60 text-sm mb-4 md:mb-0">
-              © 2025 Nobilis Talent Solutions. All rights reserved.
+              © 2024 Nobilis Talent Solutions. All rights reserved.
             </div>
             <div className="flex space-x-6 text-sm">
-              <a href="#" className="text-white/60 hover:text-primary transition-smooth">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-white/60 hover:text-primary transition-smooth">
-                Terms of Service
-              </a>
+              <PrivacyPolicyModal>
+                <button className="text-white/60 hover:text-primary transition-smooth">
+                  Privacy Policy
+                </button>
+              </PrivacyPolicyModal>
+              <TermsOfServiceModal>
+                <button className="text-white/60 hover:text-primary transition-smooth">
+                  Terms of Service
+                </button>
+              </TermsOfServiceModal>
             </div>
           </div>
         </div>

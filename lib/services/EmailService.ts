@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import type { EmailData, InvoiceEmailData } from "@/lib/types/services";
 import { getBaseUrl } from "@/lib/utils";
+import { formatUSDCurrency } from "@/lib/utils/currency";
 
 export class EmailService {
   private static instance: EmailService;
@@ -63,8 +64,7 @@ export class EmailService {
                   
                   <div class="footer">
                       <p>Nobilis Talent Solutions<br>
-                      Available globally<br>
-                      +1 (678) 920-6605 | nobilis.talent@gmail.com</p>
+                      +1 (678) 956-1146 | nobilis.talent@gmail.com</p>
                   </div>
               </div>
           </body>
@@ -320,7 +320,7 @@ export class EmailService {
           <li><a href="${baseUrl}/blog">Leadership Blog</a></li>
         </ul>
         
-        <p>If you have any urgent questions, feel free to call us directly at (678) 920-6605.</p>
+        <p>If you have any urgent questions, feel free to call us directly at (678) 956-1146.</p>
         
         <p>Best regards,<br>
         Kareem Payne<br>
@@ -567,7 +567,7 @@ export class EmailService {
         <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
           <h4>Payment Details:</h4>
           <p><strong>Invoice Number:</strong> ${data.invoiceNumber}</p>
-          <p><strong>Amount Paid:</strong> $${data.amount.toFixed(2)}</p>
+          <p><strong>Amount Paid:</strong> ${formatUSDCurrency(data.amount)}</p>
           <p><strong>Payment Method:</strong> ${data.paymentMethod}</p>
           <p><strong>Transaction ID:</strong> ${data.transactionId}</p>
           <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>

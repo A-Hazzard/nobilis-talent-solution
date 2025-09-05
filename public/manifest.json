@@ -74,7 +74,7 @@
       "description": "Access leadership development resources",
       "url": "/content",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
-    },
+    }
 
   ]
 }

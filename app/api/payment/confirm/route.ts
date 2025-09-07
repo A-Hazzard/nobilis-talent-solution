@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/lib/firebase/config';
-import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, getDoc, addDoc, collection } from 'firebase/firestore';
 import { EmailService } from '@/lib/services/EmailService';
 
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -75,6 +75,63 @@ export async function POST(request: NextRequest) {
           console.log('📝 Payment Confirm: Update data:', updateData);
           await updateDoc(ref, updateData);
           console.log('✅ Payment Confirm: Pending payment updated successfully');
+
+          // Create invoice record in the invoices collection
+          try {
+            console.log('📄 Payment Confirm: Creating invoice record...');
+            const pendingPaymentData = snap.data();
+            if (!pendingPaymentData) {
+              throw new Error('Pending payment data not found');
+            }
+            
+            const invoiceData = {
+              invoiceNumber,
+              clientName: pendingPaymentData.clientName,
+              clientEmail: pendingPaymentData.clientEmail,
+              items: [
+                {
+                  id: '1',
+                  description: pendingPaymentData.description || 'Leadership Consultation',
+                  quantity: 1,
+                  unitPrice: pendingPaymentData.baseAmount || baseAmount,
+                  total: pendingPaymentData.baseAmount || baseAmount,
+                  type: 'service'
+                }
+              ],
+              subtotal: amountTotal,
+              taxAmount: 0,
+              total: amountTotal,
+              currency: 'USD',
+              status: 'paid' as const,
+              issueDate: new Date(),
+              dueDate: new Date(),
+              paidAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              stripeSessionId: session.id,
+              transactionId: transactionId,
+              bonusAmount: bonusAmount,
+              notes: bonusAmount > 0 ? `Includes $${bonusAmount.toFixed(2)} bonus payment` : undefined
+            };
+
+            // Add bonus item if there's a bonus amount
+            if (bonusAmount > 0) {
+              invoiceData.items.push({
+                id: '2',
+                description: 'Additional Payment (Bonus)',
+                quantity: 1,
+                unitPrice: bonusAmount,
+                total: bonusAmount,
+                type: 'service'
+              });
+            }
+
+            const invoiceRef = await addDoc(collection(db, 'invoices'), invoiceData);
+            console.log('✅ Payment Confirm: Invoice record created successfully:', invoiceRef.id);
+          } catch (invoiceError) {
+            console.error('❌ Payment Confirm: Failed to create invoice record:', invoiceError);
+            // Don't fail the entire process if invoice creation fails
+          }
         } else {
           console.log('ℹ️ Payment Confirm: Payment already marked as completed');
         }

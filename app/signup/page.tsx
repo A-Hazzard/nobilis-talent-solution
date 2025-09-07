@@ -12,8 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { validateSignupForm } from '@/lib/utils/validation';
 import { getRedirectPath } from '@/lib/utils/authUtils';
 import { PasswordStrength } from '@/components/ui/password-strength';
-import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
-import TermsOfServiceModal from '@/components/TermsOfServiceModal';
+import Link from 'next/link';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -424,14 +423,14 @@ export default function SignupPage() {
                 />
                 <label htmlFor="privacy-policy" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
                   I agree to the{' '}
-                  <PrivacyPolicyModal>
-                    <button 
-                      type="button" 
-                      className="text-blue-600 hover:text-blue-500 underline"
-                    >
-                      Privacy Policy
-                    </button>
-                  </PrivacyPolicyModal>
+                  <Link 
+                    href="/privacy-policy"
+                    className="text-blue-600 hover:text-blue-500 underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Privacy Policy
+                  </Link>
                   <span className="text-red-500 ml-1">*</span>
                 </label>
               </div>
@@ -457,14 +456,14 @@ export default function SignupPage() {
                 />
                 <label htmlFor="terms-of-service" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
                   I agree to the{' '}
-                  <TermsOfServiceModal>
-                    <button 
-                      type="button" 
-                      className="text-blue-600 hover:text-blue-500 underline"
-                    >
-                      Terms of Service
-                    </button>
-                  </TermsOfServiceModal>
+                  <Link 
+                    href="/terms-of-service"
+                    className="text-blue-600 hover:text-blue-500 underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Terms of Service
+                  </Link>
                   <span className="text-red-500 ml-1">*</span>
                 </label>
               </div>

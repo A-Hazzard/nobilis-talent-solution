@@ -2,8 +2,6 @@
 
 import { Mail, Phone, Linkedin, Instagram } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import PrivacyPolicyModal from './PrivacyPolicyModal';
-import TermsOfServiceModal from './TermsOfServiceModal';
 
 const Footer = () => {
   const [isClient, setIsClient] = useState(false);
@@ -142,16 +140,18 @@ const Footer = () => {
               © 2024 Nobilis Talent Solutions. All rights reserved.
             </div>
             <div className="flex space-x-6 text-sm">
-              <PrivacyPolicyModal>
-                <button className="text-white/60 hover:text-primary transition-smooth">
-                  Privacy Policy
-                </button>
-              </PrivacyPolicyModal>
-              <TermsOfServiceModal>
-                <button className="text-white/60 hover:text-primary transition-smooth">
-                  Terms of Service
-                </button>
-              </TermsOfServiceModal>
+              <a 
+                href="/privacy-policy"
+                className="text-white/60 hover:text-primary transition-smooth"
+              >
+                Privacy Policy
+              </a>
+              <a 
+                href="/terms-of-service"
+                className="text-white/60 hover:text-primary transition-smooth"
+              >
+                Terms of Service
+              </a>
             </div>
           </div>
         </div>

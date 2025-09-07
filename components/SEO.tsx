@@ -22,7 +22,7 @@ export default function SEO({
   title = 'Nobilis Talent Solutions — Where strategy meets humanity',
   description = 'Helping People and Organizations Thrive. Human Capital Alchemist and Coach helping leaders and teams unlock potential, navigate change, and build cultures where people and performance flourish.',
   keywords = 'executive coaching, leadership development, organizational consulting, business strategy, team building, leadership training, executive mentoring, professional development, human capital, talent solutions',
-  image = '/assets/hero-leadership.jpg',
+  image = '/assets/hero.jpg',
   url = 'https://payneleadership.com',
   type = 'website',
   author = 'Kareem Payne',

@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     siteName: 'Nobilis Talent Solutions',
     images: [
       {
-        url: '/assets/hero-leadership.jpg',
+        url: '/assets/hero.jpg',
         width: 1200,
         height: 630,
         alt: 'Nobilis Talent Solutions - Leadership Development',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Nobilis Talent Solutions - Where Strategy Meets Humanity',
     description: 'We help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results.',
-    images: ['/assets/hero-leadership.jpg'],
+    images: ['/assets/hero.jpg'],
   },
   robots: {
     index: true,

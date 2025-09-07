@@ -6,10 +6,19 @@ import { useEffect } from 'react';
 
 const HeroSection = () => {
   const scrollToNextSection = () => {
-    document.getElementById('about')?.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    });
+    const servicesElement = document.getElementById('services');
+    if (servicesElement) {
+      servicesElement.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    } else {
+      // Fallback: scroll down by viewport height
+      window.scrollBy({
+        top: window.innerHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   useEffect(() => {
@@ -25,7 +34,7 @@ const HeroSection = () => {
       {/* Background with overlay */}
       <div className="absolute inset-0 z-0">
         <Image 
-          src="/assets/hero-leadership.jpg" 
+          src="/assets/hero.jpg" 
           alt="Leadership coaching" 
           fill
           className="object-cover"
@@ -86,13 +95,13 @@ const HeroSection = () => {
       </div>
 
       {/* Scroll indicator - clickable */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex justify-center">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex justify-center z-20">
         <button 
           onClick={scrollToNextSection}
-          className="animate-bounce hover:scale-110 transition-all duration-300 ease-in-out group cursor-pointer"
-          aria-label="Scroll to next section"
+          className="animate-bounce hover:scale-110 transition-all duration-300 ease-in-out group cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent rounded-full"
+          aria-label="Scroll to services section"
         >
-          <div className="w-8 h-12 border-2 border-white/70 rounded-full flex flex-col items-center justify-center group-hover:border-white transition-all duration-300 ease-in-out group-hover:shadow-lg">
+          <div className="w-8 h-12 border-2 border-white/70 rounded-full flex flex-col items-center justify-center group-hover:border-white transition-all duration-300 ease-in-out group-hover:shadow-lg bg-white/10 backdrop-blur-sm">
             <ChevronDown className="w-4 h-4 text-white/70 group-hover:text-white animate-pulse transition-all duration-300 ease-in-out group-hover:translate-y-1" />
           </div>
         </button>

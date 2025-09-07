@@ -64,7 +64,7 @@ curl -X POST http://localhost:3000/api/payment/webhook/test \
 Watch your server console for detailed logs. Each webhook request gets a unique ID:
 
 ```
-🚀 [webhook_1234567890_abc123] Webhook received at 2024-01-15T10:30:00.000Z
+🚀 [webhook_1234567890_abc123] Webhook received at 2025-01-15T10:30:00.000Z
 🔍 [webhook_1234567890_abc123] Environment check: { hasStripe: true, hasWebhookSecret: true, ... }
 📝 [webhook_1234567890_abc123] Request details: { bodyLength: 1234, hasSignature: true, ... }
 ✅ [webhook_1234567890_abc123] Webhook signature verified successfully

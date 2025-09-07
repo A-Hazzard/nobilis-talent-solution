@@ -137,7 +137,7 @@ const Footer = () => {
         <div className="border-t border-white/20 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-white/60 text-sm mb-4 md:mb-0">
-              © 2024 Nobilis Talent Solutions. All rights reserved.
+              © 2025 Nobilis Talent Solutions. All rights reserved.
             </div>
             <div className="flex space-x-6 text-sm">
               <a 

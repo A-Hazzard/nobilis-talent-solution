@@ -1,15 +1,6 @@
 import { CheckCircle } from "lucide-react";
-import Image, { StaticImageData } from "next/image";
-
-interface TeamMemberProps {
-  name: string;
-  title: string;
-  bio: string;
-  image: string | StaticImageData;
-  achievements: string[];
-  achievementsBold?: boolean;
-  reverseLayout?: boolean;
-}
+import Image from "next/image";
+import type { TeamMemberProps } from '@/lib/types/components';
 
 const TeamMember = ({
   name,

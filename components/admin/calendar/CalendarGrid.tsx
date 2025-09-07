@@ -4,16 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MonthPicker } from '@/components/ui/month-picker';
 import { CalendarIcon } from 'lucide-react';
-import type { CalendarEvent } from '@/shared/types/entities';
 import { CalendarUtils } from '@/lib/utils/calendarUtils';
-
-interface CalendarGridProps {
-  currentMonth: Date;
-  events: CalendarEvent[];
-  onMonthChange: (direction: 'prev' | 'next') => void;
-  onMonthSet?: (date: Date) => void;
-  onEventClick: (event: CalendarEvent) => void;
-}
+import type { CalendarGridProps } from '@/lib/types/components';
 
 /**
  * Calendar grid component displaying monthly view with events

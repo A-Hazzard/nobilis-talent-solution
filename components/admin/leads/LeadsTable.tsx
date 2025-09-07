@@ -26,14 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Edit, Trash2, Mail, Phone, CreditCard } from 'lucide-react';
 import type { Lead } from '@/shared/types/entities';
-
-interface LeadsTableProps {
-  leads: Lead[];
-  onEdit: (lead: Lead) => void;
-  onDelete: (id: string) => void;
-  onGeneratePaymentLink: (lead: Lead) => void;
-  formatDate: (date: Date) => string;
-}
+import type { LeadsTableProps } from '@/lib/types/components';
 
 /**
  * Table component for displaying leads

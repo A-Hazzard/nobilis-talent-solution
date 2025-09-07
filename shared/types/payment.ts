@@ -1,4 +1,4 @@
-
+// Payment-related types for the application
 
 export type PaymentConfirmation = {
   sessionId: string;
@@ -7,6 +7,10 @@ export type PaymentConfirmation = {
   email: string;
   date: string;
   transactionId: string;
+  invoiceNumber?: string;
+  baseAmount?: string;
+  bonusAmount?: string;
+  totalAmount?: string;
 };
 
 export type StripeWebhookEvent = {
@@ -16,7 +20,7 @@ export type StripeWebhookEvent = {
   };
 };
 
-// New types for dynamic payment links
+// Payment link types
 export type PaymentLink = {
   id: string;
   clientName: string;
@@ -44,13 +48,14 @@ export type PaymentLinkResponse = {
   stripePaymentLinkId: string;
 };
 
-// New types for pending payments shown to logged-in users
+// Pending payment types
 export type PendingPayment = {
   id: string;
   clientEmail: string;
   clientName: string;
   baseAmount: number;
-  bonusAmount?: number; // Optional tip/bonus amount
+  bonusAmount?: number;
+  totalAmount?: number;
   description: string;
   status: 'pending' | 'completed' | 'cancelled' | 'overdue';
   createdAt: Date;
@@ -141,6 +146,10 @@ export type InvoicePreview = {
   taxAmount: number;
   total: number;
   dueDate: Date;
-  bonusAmount?: number; // Optional bonus amount
-  notes?: string; // Optional notes including bonus information
-}; 
+  bonusAmount?: number;
+  notes?: string;
+};
+
+// Payment status types
+export type PaymentStatus = 'pending' | 'completed' | 'cancelled' | 'overdue';
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';

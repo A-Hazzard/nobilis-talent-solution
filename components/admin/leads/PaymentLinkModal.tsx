@@ -9,14 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
 import { PaymentLinkService } from '@/lib/services/PaymentLinkService';
-import type { Lead } from '@/shared/types/entities';
 import type { PendingPaymentResponse } from '@/shared/types/payment';
-
-interface PaymentLinkModalProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  lead: Lead | null;
-}
+import type { PaymentLinkModalProps } from '@/lib/types/components';
 
 export function PaymentLinkModal({ isOpen, onOpenChange, lead }: PaymentLinkModalProps) {
   const [amount, setAmount] = useState('');

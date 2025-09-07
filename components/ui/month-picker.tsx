@@ -12,11 +12,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-interface MonthPickerProps {
-  date: Date
-  onDateChange: (date: Date) => void
-  className?: string
-}
+import type { MonthPickerProps } from '@/lib/types/components';
 
 export function MonthPicker({
   date,

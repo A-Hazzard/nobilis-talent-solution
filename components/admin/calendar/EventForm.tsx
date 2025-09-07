@@ -11,26 +11,9 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CalendarEvent } from '@/shared/types/entities';
-import type { EventFormData } from '@/lib/types/hooks';
+import type { EventFormProps } from '@/lib/types/components';
 
-interface EventFormProps {
-  isOpen: boolean;
-  editingEvent: CalendarEvent | null;
-  form: EventFormData;
-  formError: string | null;
-  onClose: () => void;
-  onSubmit: (e: React.FormEvent) => Promise<void>;
-  onFormChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onTypeChange: (value: string) => void;
-  onTimeChange: (field: 'startTime' | 'endTime', value: string) => void;
-  onDateChange: (date: Date | undefined) => void;
-}
-
-interface TimeOption {
-  value: string;
-  display: string;
-}
+import type { TimeOption } from '@/lib/types/components';
 
 /**
  * Event form modal component for creating and editing events

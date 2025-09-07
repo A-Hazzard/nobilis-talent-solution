@@ -1,53 +1,47 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+/**
+ * Utility functions for the application
+ */
 
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+/**
+ * Combines class names using clsx and tailwind-merge
+ * This is the standard cn utility function used throughout the app
+ */
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
- * Get the current domain and base URL dynamically
- * This ensures links work correctly regardless of the domain
+ * Gets the base URL for the application
+ * Handles both development and production environments
  */
-export function getCurrentDomain(): string {
+export function getBaseUrl(): string {
   if (typeof window !== 'undefined') {
-    // Client-side: use the current window location
+    // Client-side
     return window.location.origin;
   }
   
-  // Server-side: use environment variable or fallback
-  // Check for VERCEL_URL first (for Vercel deployments)
   if (process.env.VERCEL_URL) {
+    // Vercel deployment
     return `https://${process.env.VERCEL_URL}`;
   }
   
-  // Check for custom app URL
   if (process.env.NEXT_PUBLIC_APP_URL) {
+    // Custom environment variable
     return process.env.NEXT_PUBLIC_APP_URL;
   }
   
-  // Check for host header (for other deployments)
-  if (process.env.HOST) {
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    return `${protocol}://${process.env.HOST}`;
-  }
-  
-  // Fallback to localhost for development
+  // Fallback for development
   return 'http://localhost:3000';
 }
 
-/**
- * Get the current base URL with protocol
- */
-export function getBaseUrl(): string {
-  return getCurrentDomain();
-}
-
-/**
- * Create a full URL from a path
- */
-export function createUrl(path: string): string {
-  const baseUrl = getBaseUrl();
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${baseUrl}${cleanPath}`;
-}
+// Re-export all utility functions from other files
+export * from './auditUtils';
+export * from './authUtils';
+export * from './calendarUtils';
+export * from './currency';
+export * from './migrateAuthProvider';
+export * from './testimonialUtils';
+export * from './validation';

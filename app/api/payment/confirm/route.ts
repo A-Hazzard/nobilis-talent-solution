@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         
         if (currentStatus !== 'completed') {
           const updateData = {
-            status: 'completed',
+            status: 'completed' as const,
             stripeSessionId: session.id,
             updatedAt: serverTimestamp(),
             bonusAmount: bonusAmount,
@@ -67,7 +67,8 @@ export async function POST(request: NextRequest) {
               description: snap.data().description,
               clientName: snap.data().clientName,
               clientEmail: snap.data().clientEmail,
-              notes: snap.data().notes
+              notes: snap.data().notes,
+              invoiceNumber: invoiceNumber
             })
           };
 

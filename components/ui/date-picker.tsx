@@ -13,14 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-interface DatePickerProps {
-  date?: Date
-  onDateChange: (date: Date | undefined) => void
-  placeholder?: string
-  disabled?: boolean
-  className?: string
-  disabledDates?: (date: Date) => boolean
-}
+import type { DatePickerProps } from '@/lib/types/components';
 
 export function DatePicker({
   date,

@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
+import type { PaymentConfirmation } from '@/shared/types/payment';
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const [paymentDetails, setPaymentDetails] = useState<any>(null);
+  const [paymentDetails, setPaymentDetails] = useState<PaymentConfirmation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,18 +24,30 @@ export default function PaymentSuccessPage() {
           });
           const data = await res.json();
           setPaymentDetails({
+            sessionId: sessionId,
             amount: data.amount,
             service: data.service,
             email: data.email,
             date: data.date,
+            transactionId: data.transactionId,
+            invoiceNumber: data.invoiceNumber,
+            baseAmount: data.baseAmount,
+            bonusAmount: data.bonusAmount,
+            totalAmount: data.totalAmount,
           });
         } catch {
           // Fallback to minimal display
           setPaymentDetails({
+            sessionId: sessionId || '',
             amount: '$0.00',
             service: 'Leadership Consultation',
             email: '',
             date: new Date().toLocaleDateString(),
+            transactionId: '',
+            invoiceNumber: '',
+            baseAmount: '$0.00',
+            bonusAmount: '$0.00',
+            totalAmount: '$0.00',
           });
         } finally {
           setIsLoading(false);

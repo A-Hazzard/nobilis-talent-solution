@@ -24,18 +24,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/lib/hooks/use-toast';
 import type { PendingPayment } from '@/shared/types/payment';
-
-interface PaymentWithActions extends PendingPayment {
-  id: string;
-  bonusAmount?: number;
-  totalAmount?: number;
-  calculatedTotal?: number;
-  actions?: {
-    canEdit: boolean;
-    canCancel: boolean;
-    canComplete: boolean;
-  };
-}
+import type { PaymentWithActions } from '@/lib/types/components';
 
 export default function AdminPaymentsPage() {
   const { toast } = useToast();

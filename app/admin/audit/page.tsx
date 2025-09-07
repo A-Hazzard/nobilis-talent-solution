@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Download, Activity } from 'lucide-react';
-import type { AuditLog } from '@/shared/types/audit';
 import { 
   formatTimeAgo, 
   getEntityIcon, 
@@ -21,17 +20,7 @@ import { useToast } from '@/lib/hooks/use-toast';
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
 
-interface AuditLogsState {
-  logs: AuditLog[];
-  isLoading: boolean;
-  currentPage: number;
-  totalPages: number;
-  totalLogs: number;
-  searchTerm: string;
-  entityTypeFilter: string;
-  actionFilter: string;
-  error: string | null;
-}
+import type { AuditLogsState } from '@/lib/types/components';
 
 export default function AuditLogsPage() {
   const { toast } = useToast();

@@ -10,7 +10,7 @@ const CompanySection = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="border-2 border-primary/20 rounded-3xl p-6 lg:p-8 bg-background/50 backdrop-blur-sm">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div data-animate>
+              <div>
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-6">
                   About Nobilis Talent Solutions
                 </h2>
@@ -37,7 +37,7 @@ const CompanySection = () => {
                 </div>
               </div>
 
-              <div className="relative" data-animate>
+              <div className="relative">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-medium">
                   <Image
                     src={generalImages.chart}

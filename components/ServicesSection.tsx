@@ -76,7 +76,7 @@ const ServicesSection = () => {
     <section id="services" className="pt-14 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-10" data-animate>
+        <div className="text-center mb-10">
           <h2 className="text-section text-accent mb-6">Services</h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Explore our coaching, consulting, and training solutions designed to elevate individual and organizational performance.
@@ -86,7 +86,7 @@ const ServicesSection = () => {
         {/* Services Grid - Show only 3 on landing page */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12">
           {landingPageServices.map((service) => (
-            <Card key={service.title} className="group h-full overflow-hidden hover-glow" data-animate>
+            <Card key={service.title} className="group h-full overflow-hidden hover-glow">
               <div className="relative h-40 w-full overflow-hidden">
                 <Image
                   src={service.image}

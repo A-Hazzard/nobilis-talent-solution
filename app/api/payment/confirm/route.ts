@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { db } from '@/lib/firebase/config';
-import { doc, updateDoc, serverTimestamp, getDoc, addDoc, collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
+import { getAdminFirestore } from '@/lib/firebase/admin';
 import { EmailService } from '@/lib/services/EmailService';
 
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -16,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
     }
 
-    const { sessionId } = await request.json();
+    const { sessionId, skipEmail } = await request.json();
     if (!sessionId) {
       return NextResponse.json({ error: 'sessionId is required' }, { status: 400 });
     }
@@ -26,6 +25,9 @@ export async function POST(request: NextRequest) {
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ['payment_intent'],
     });
+    
+    console.log('🔍 Payment Confirm: Session metadata:', session.metadata);
+    console.log('🔍 Payment Confirm: Session amount_total:', session.amount_total);
 
     const clientEmail = (session.customer_details?.email || (session.metadata?.clientEmail as string) || '').trim();
     const clientName = (session.metadata?.clientName as string) || '';
@@ -34,6 +36,21 @@ export async function POST(request: NextRequest) {
     const invoiceNumber = (session.metadata?.invoiceNumber as string) || sessionId;
     const baseAmount = session.metadata?.baseAmount ? Number(session.metadata.baseAmount) : 0;
     const bonusAmount = Math.max(0, amountTotal - baseAmount);
+    
+    console.log('🔍 Payment Confirm: Extracted values:', {
+      pendingPaymentId,
+      invoiceNumber,
+      baseAmount,
+      bonusAmount,
+      amountTotal
+    });
+    
+    console.log('💰 Payment Confirm: Amount breakdown:', {
+      amountTotal,
+      baseAmount,
+      bonusAmount,
+      calculation: `${amountTotal} - ${baseAmount} = ${bonusAmount}`
+    });
     const transactionId = (typeof session.payment_intent === 'object' && session.payment_intent?.id)
       ? session.payment_intent.id
       : (session.payment_intent as string) || sessionId;
@@ -46,53 +63,90 @@ export async function POST(request: NextRequest) {
       invoiceNumber
     });
 
+    // Utility: remove undefined values so Firestore doesn't reject writes
+    const pruneUndefined = <T extends Record<string, any>>(obj: T): T => {
+      const result: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        if (value !== undefined) {
+          result[key] = value;
+        }
+      }
+      return result as T;
+    };
+
     // Update Firestore document with complete payment information
+    console.log('🔥 FIREBASE: Initializing Firestore connection...');
+    const db = getAdminFirestore();
+    console.log('🔥 FIREBASE: Firestore connection established successfully');
+    
     if (pendingPaymentId) {
       try {
-        console.log('📝 Payment Confirm: Updating pending payment document:', pendingPaymentId);
-        const ref = doc(db, 'pendingPayments', pendingPaymentId);
-        const snap = await getDoc(ref);
-        const currentStatus = snap.exists() ? (snap.data().status as string) : undefined;
+        console.log('🔥 FIREBASE: Updating existing pending payment document:', pendingPaymentId);
+        const ref = db.collection('pendingPayments').doc(pendingPaymentId);
+        console.log('🔥 FIREBASE: Getting document snapshot...');
+        const snap = await ref.get();
+        console.log('🔥 FIREBASE: Document exists:', snap.exists);
+        const currentStatus = snap.exists ? (snap.data()?.status as string) : undefined;
+        console.log('🔥 FIREBASE: Current status:', currentStatus);
         
         if (currentStatus !== 'completed') {
-          const updateData = {
+          const updateDataRaw = {
             status: 'completed' as const,
             stripeSessionId: session.id,
-            updatedAt: serverTimestamp(),
-            bonusAmount: bonusAmount,
-            totalAmount: amountTotal,
+            updatedAt: new Date(),
+            bonusAmount: bonusAmount, // Always save bonus amount, even if 0
+            totalAmount: amountTotal, // Always save total amount
             // Preserve existing fields
-            ...(snap.exists() && {
-              baseAmount: snap.data().baseAmount || baseAmount,
-              description: snap.data().description,
-              clientName: snap.data().clientName,
-              clientEmail: snap.data().clientEmail,
-              notes: snap.data().notes,
+            ...(snap.exists && {
+              baseAmount: snap.data()?.baseAmount || baseAmount,
+              description: snap.data()?.description,
+              clientName: snap.data()?.clientName,
+              clientEmail: snap.data()?.clientEmail,
+              notes: snap.data()?.notes,
               invoiceNumber: invoiceNumber
             })
           };
 
-          console.log('📝 Payment Confirm: Update data:', updateData);
-          await updateDoc(ref, updateData);
-          console.log('✅ Payment Confirm: Pending payment updated successfully');
+          // Only include notes when we actually have text; remove undefined values
+          if (bonusAmount > 0) {
+            (updateDataRaw as any).notes = `Includes $${bonusAmount.toFixed(2)} bonus payment`;
+          }
+          const updateData = pruneUndefined(updateDataRaw);
+
+          console.log('🔥 FIREBASE: Update data for pending payment:', updateData);
+          console.log('🔥 FIREBASE: Bonus amount being saved:', bonusAmount, 'Type:', typeof bonusAmount);
+          console.log('🔥 FIREBASE: Attempting to update pending payment document...');
+          await ref.update(updateData);
+          console.log('🔥 FIREBASE: ✅ Pending payment updated successfully with bonus amount:', bonusAmount);
+          
+          // Verify the update by reading the document back
+          console.log('🔥 FIREBASE: Verifying update by reading document back...');
+          const verifySnap = await ref.get();
+          if (verifySnap.exists) {
+            const updatedData = verifySnap.data();
+            console.log('🔥 FIREBASE: ✅ Document verification - Status:', updatedData?.status);
+            console.log('🔥 FIREBASE: ✅ Document verification - Bonus Amount:', updatedData?.bonusAmount);
+            console.log('🔥 FIREBASE: ✅ Document verification - Total Amount:', updatedData?.totalAmount);
+          } else {
+            console.log('🔥 FIREBASE: ❌ Document not found after update!');
+          }
 
           // Find and update the most recent invoice for this client
           try {
-            console.log('📄 Payment Confirm: Looking for existing invoice for client:', clientEmail);
+            console.log('🔥 FIREBASE: Looking for existing invoice for client:', clientEmail);
             const pendingPaymentData = snap.data();
             if (!pendingPaymentData) {
               throw new Error('Pending payment data not found');
             }
 
             // Query for the most recent invoice for this client email
-            const invoiceQuery = query(
-              collection(db, 'invoices'),
-              where('clientEmail', '==', clientEmail),
-              orderBy('createdAt', 'desc'),
-              limit(1)
-            );
-
-            const invoiceSnapshot = await getDocs(invoiceQuery);
+            console.log('🔥 FIREBASE: Querying invoices collection for client email:', clientEmail);
+            const invoiceSnapshot = await db.collection('invoices')
+              .where('clientEmail', '==', clientEmail)
+              .orderBy('createdAt', 'desc')
+              .limit(1)
+              .get();
+            console.log('🔥 FIREBASE: Invoice query completed. Found', invoiceSnapshot.size, 'invoices');
             
             if (!invoiceSnapshot.empty) {
               // Found an existing invoice - update it to paid
@@ -100,19 +154,22 @@ export async function POST(request: NextRequest) {
               const invoiceId = invoiceDoc.id;
               const invoiceData = invoiceDoc.data();
               
-              console.log('📄 Payment Confirm: Found existing invoice:', invoiceId, 'Status:', invoiceData.status);
+              console.log('🔥 FIREBASE: Found existing invoice:', invoiceId, 'Status:', invoiceData.status);
+              console.log('🔥 FIREBASE: Current invoice data:', invoiceData);
               
               // Update the invoice to paid status
-              const updateData: any = {
+              const invoiceUpdateRaw: any = {
                 status: 'paid' as const,
                 paidAt: new Date(),
-                updatedAt: serverTimestamp(),
+                updatedAt: new Date(),
                 stripeSessionId: session.id,
                 transactionId: transactionId,
                 bonusAmount: bonusAmount,
                 total: amountTotal,
                 notes: bonusAmount > 0 ? `Includes $${bonusAmount.toFixed(2)} bonus payment` : undefined
               };
+              const updateData = pruneUndefined(invoiceUpdateRaw);
+              console.log('🔥 FIREBASE: Invoice update data:', updateData);
 
               // Update items if there's a bonus amount
               if (bonusAmount > 0) {
@@ -133,13 +190,26 @@ export async function POST(request: NextRequest) {
                 updateData.items = existingItems;
               }
 
-              await updateDoc(doc(db, 'invoices', invoiceId), updateData);
-              console.log('✅ Payment Confirm: Invoice updated to paid status:', invoiceId);
+              console.log('🔥 FIREBASE: Attempting to update invoice document:', invoiceId);
+              await db.collection('invoices').doc(invoiceId).update(updateData);
+              console.log('🔥 FIREBASE: ✅ Invoice updated to paid status:', invoiceId);
+              
+              // Verify the invoice update
+              console.log('🔥 FIREBASE: Verifying invoice update...');
+              const verifyInvoiceSnap = await db.collection('invoices').doc(invoiceId).get();
+              if (verifyInvoiceSnap.exists) {
+                const updatedInvoiceData = verifyInvoiceSnap.data();
+                console.log('🔥 FIREBASE: ✅ Invoice verification - Status:', updatedInvoiceData?.status);
+                console.log('🔥 FIREBASE: ✅ Invoice verification - Bonus Amount:', updatedInvoiceData?.bonusAmount);
+                console.log('🔥 FIREBASE: ✅ Invoice verification - Total:', updatedInvoiceData?.total);
+              } else {
+                console.log('🔥 FIREBASE: ❌ Invoice not found after update!');
+              }
             } else {
               // No existing invoice found - create a new one
-              console.log('📄 Payment Confirm: No existing invoice found, creating new one...');
+              console.log('🔥 FIREBASE: No existing invoice found, creating new one...');
               
-              const newInvoiceData = {
+              const newInvoiceRaw = {
                 invoiceNumber,
                 clientName: pendingPaymentData.clientName,
                 clientEmail: pendingPaymentData.clientEmail,
@@ -171,7 +241,7 @@ export async function POST(request: NextRequest) {
 
               // Add bonus item if there's a bonus amount
               if (bonusAmount > 0) {
-                newInvoiceData.items.push({
+                newInvoiceRaw.items.push({
                   id: '2',
                   description: 'Additional Payment (Bonus)',
                   quantity: 1,
@@ -181,109 +251,146 @@ export async function POST(request: NextRequest) {
                 });
               }
 
-              const invoiceRef = await addDoc(collection(db, 'invoices'), newInvoiceData);
-              console.log('✅ Payment Confirm: New invoice created and marked as paid:', invoiceRef.id);
+              const newInvoiceData = pruneUndefined(newInvoiceRaw);
+              console.log('🔥 FIREBASE: Creating new invoice with data:', newInvoiceData);
+              const invoiceRef = await db.collection('invoices').add(newInvoiceData);
+              console.log('🔥 FIREBASE: ✅ New invoice created and marked as paid:', invoiceRef.id);
+              
+              // Verify the new invoice creation
+              console.log('🔥 FIREBASE: Verifying new invoice creation...');
+              const verifyNewInvoiceSnap = await invoiceRef.get();
+              if (verifyNewInvoiceSnap.exists) {
+                const newInvoiceData = verifyNewInvoiceSnap.data();
+                console.log('🔥 FIREBASE: ✅ New invoice verification - Status:', newInvoiceData?.status);
+                console.log('🔥 FIREBASE: ✅ New invoice verification - Bonus Amount:', newInvoiceData?.bonusAmount);
+                console.log('🔥 FIREBASE: ✅ New invoice verification - Total:', newInvoiceData?.total);
+              } else {
+                console.log('🔥 FIREBASE: ❌ New invoice not found after creation!');
+              }
             }
           } catch (invoiceError) {
             console.error('❌ Payment Confirm: Failed to update/create invoice:', invoiceError);
             // Don't fail the entire process if invoice update fails
           }
         } else {
-          console.log('ℹ️ Payment Confirm: Payment already marked as completed');
+          console.log('🔥 FIREBASE: Payment already marked as completed');
         }
       } catch (e) {
-        console.error('❌ Payment Confirm: Firestore update failed:', e);
+        console.error('🔥 FIREBASE: ❌ Firestore update failed:', e);
       }
     } else {
-      console.log('⚠️ Payment Confirm: No pendingPaymentId found in session metadata');
+      // No pendingPaymentId - create a new pending payment document for tracking
+      console.log('🔥 FIREBASE: No pendingPaymentId found, creating new pending payment document');
+      try {
+        const newPendingPaymentRaw = {
+          clientName: clientName || 'Unknown Client',
+          clientEmail: clientEmail || 'unknown@example.com',
+          baseAmount: baseAmount,
+          bonusAmount: bonusAmount,
+          totalAmount: amountTotal,
+          description: session.metadata?.optionName || 'Leadership Consultation',
+          status: 'completed' as const,
+          stripeSessionId: session.id,
+          invoiceNumber: invoiceNumber,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          notes: bonusAmount > 0 ? `Includes $${bonusAmount.toFixed(2)} bonus payment` : undefined
+        };
+
+        const newPendingPaymentData = pruneUndefined(newPendingPaymentRaw);
+        console.log('🔥 FIREBASE: Creating new pending payment with data:', newPendingPaymentData);
+        const newPendingPaymentRef = await db.collection('pendingPayments').add(newPendingPaymentData);
+        console.log('🔥 FIREBASE: ✅ New pending payment created with ID:', newPendingPaymentRef.id);
+        
+        // Verify the new pending payment creation
+        console.log('🔥 FIREBASE: Verifying new pending payment creation...');
+        const verifyNewPendingSnap = await newPendingPaymentRef.get();
+        if (verifyNewPendingSnap.exists) {
+          const newPendingData = verifyNewPendingSnap.data();
+          console.log('🔥 FIREBASE: ✅ New pending payment verification - Status:', newPendingData?.status);
+          console.log('🔥 FIREBASE: ✅ New pending payment verification - Bonus Amount:', newPendingData?.bonusAmount);
+          console.log('🔥 FIREBASE: ✅ New pending payment verification - Total Amount:', newPendingData?.totalAmount);
+        } else {
+          console.log('🔥 FIREBASE: ❌ New pending payment not found after creation!');
+        }
+      } catch (e) {
+        console.error('🔥 FIREBASE: ❌ Failed to create new pending payment:', e);
+      }
     }
 
-    // Generate PDF invoice and send enhanced email
+    console.log('🔥 FIREBASE: ===== FIREBASE OPERATIONS COMPLETED =====');
+    console.log('🔥 FIREBASE: Summary - PendingPaymentId:', pendingPaymentId ? 'Updated existing' : 'Created new');
+    console.log('🔥 FIREBASE: Summary - Client Email:', clientEmail);
+    console.log('🔥 FIREBASE: Summary - Amount Total:', amountTotal);
+    console.log('🔥 FIREBASE: Summary - Bonus Amount:', bonusAmount);
+    console.log('🔥 FIREBASE: Summary - Invoice Number:', invoiceNumber);
+
+    // Generate PDF invoice and send enhanced email (only if not skipping)
     try {
-      if (clientEmail) {
+      if (clientEmail && !skipEmail) {
         console.log('📧 Payment Confirm: Starting enhanced email process...');
         const emailService = EmailService.getInstance();
         
         // Generate PDF invoice with proper amounts (including bonus if applicable)
         let pdfAttachment = undefined;
         
-        if (pendingPaymentId) {
-          try {
-            console.log('📄 Payment Confirm: Fetching invoice data for PDF generation...');
-            const ref = doc(db, 'pendingPayments', pendingPaymentId);
-            const docSnap = await getDoc(ref);
-            if (docSnap.exists()) {
-              const pendingPayment = docSnap.data();
-              const docBaseAmount = Number(pendingPayment.baseAmount || baseAmount);
-              const docTotalAmount = amountTotal;
-              const docBonusAmount = Math.max(0, docTotalAmount - docBaseAmount);
-              
-              console.log('💰 Payment Confirm: Payment amounts from document:', {
-                docBaseAmount,
-                docTotalAmount,
-                docBonusAmount
-              });
-              
-              // Create items array with base service and bonus if applicable
-              const items = [{
-                id: '1',
-                description: pendingPayment.description || 'Leadership Consultation',
-                quantity: 1,
-                unitPrice: docBaseAmount,
-                total: docBaseAmount,
-                type: 'service' as const
-              }];
-              
-              // Add bonus item if there's a bonus amount
-              if (docBonusAmount > 0) {
-                items.push({
-                  id: '2',
-                  description: 'Additional Payment (Bonus)',
-                  quantity: 1,
-                  unitPrice: docBonusAmount,
-                  total: docBonusAmount,
-                  type: 'service' as const
-                });
-              }
-              
-              const invoiceData = {
-                invoiceNumber,
-                clientName: pendingPayment.clientName,
-                clientEmail: pendingPayment.clientEmail,
-                items,
-                subtotal: docTotalAmount,
-                taxAmount: 0,
-                total: docTotalAmount,
-                dueDate: new Date(),
-                bonusAmount: docBonusAmount,
-                notes: docBonusAmount > 0 ? `Includes $${docBonusAmount.toFixed(2)} bonus payment` : undefined
-              };
-              
-              console.log('📄 Payment Confirm: Invoice data for PDF:', invoiceData);
-              console.log('📄 Payment Confirm: Generating PDF for payment confirmation...');
-              
-              const { PDFService } = await import('@/lib/services/PDFService');
-              const pdfService = PDFService.getInstance();
-              const pdf = await pdfService.generateInvoicePDF(invoiceData, invoiceNumber);
-              
-              if (pdf.success && pdf.data) {
-                pdfAttachment = {
-                  filename: `invoice-${invoiceNumber}.pdf`,
-                  content: pdf.data,
-                  contentType: 'application/pdf'
-                };
-                console.log('✅ Payment Confirm: PDF generated successfully, size:', pdf.data.length, 'bytes');
-              } else {
-                console.log('❌ Payment Confirm: PDF generation failed:', pdf.error);
-              }
-            } else {
-              console.log('❌ Payment Confirm: Pending payment document not found');
-            }
-          } catch (fetchError) {
-            console.error('❌ Payment Confirm: Failed to fetch invoice data:', fetchError);
+        try {
+          console.log('📄 Payment Confirm: Preparing invoice data for PDF generation...');
+          
+          // Create items array with base service and bonus if applicable
+          const items = [{
+            id: '1',
+            description: session.metadata?.optionName || 'Leadership Consultation',
+            quantity: 1,
+            unitPrice: baseAmount,
+            total: baseAmount,
+            type: 'service' as const
+          }];
+          
+          // Add bonus item if there's a bonus amount
+          if (bonusAmount > 0) {
+            items.push({
+              id: '2',
+              description: 'Additional Payment (Bonus)',
+              quantity: 1,
+              unitPrice: bonusAmount,
+              total: bonusAmount,
+              type: 'service' as const
+            });
           }
-        } else {
-          console.log('⚠️ Payment Confirm: No pendingPaymentId found for PDF generation');
+          
+          const invoiceData = {
+            invoiceNumber,
+            clientName: clientName || 'Unknown Client',
+            clientEmail: clientEmail || 'unknown@example.com',
+            items,
+            subtotal: amountTotal,
+            taxAmount: 0,
+            total: amountTotal,
+            dueDate: new Date(),
+            bonusAmount: bonusAmount,
+            notes: bonusAmount > 0 ? `Includes $${bonusAmount.toFixed(2)} bonus payment` : undefined
+          };
+          
+          console.log('📄 Payment Confirm: Invoice data for PDF:', invoiceData);
+          console.log('📄 Payment Confirm: Generating PDF for payment confirmation...');
+          
+          const { PDFService } = await import('@/lib/services/PDFService');
+          const pdfService = PDFService.getInstance();
+          const pdf = await pdfService.generateInvoicePDF(invoiceData, invoiceNumber);
+          
+          if (pdf.success && pdf.data) {
+            pdfAttachment = {
+              filename: `invoice-${invoiceNumber}.pdf`,
+              content: pdf.data,
+              contentType: 'application/pdf'
+            };
+            console.log('✅ Payment Confirm: PDF generated successfully, size:', pdf.data.length, 'bytes');
+          } else {
+            console.log('❌ Payment Confirm: PDF generation failed:', pdf.error);
+          }
+        } catch (pdfError) {
+          console.error('❌ Payment Confirm: Failed to generate PDF:', pdfError);
         }
         
         console.log('📧 Payment Confirm: Sending enhanced payment confirmation email...');

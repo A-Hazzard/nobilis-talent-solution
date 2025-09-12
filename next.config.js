@@ -68,6 +68,10 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
+          {
+            key: 'Content-Security-Policy',
+            value: "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://apis.google.com https://accounts.google.com https://assets.calendly.com https://va.vercel-scripts.com https://vitals.vercel-insights.com; object-src 'none'; base-uri 'self';",
+          },
         ],
       },
     ];

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { getAdminFirestore } from '@/lib/firebase/admin';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,12 +14,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all payments for this user and process in memory to avoid complex indexes
-    const allPaymentsQuery = query(
-      collection(db, 'pendingPayments'),
-      where('clientEmail', '==', email)
-    );
-    
-    const allPaymentsSnapshot = await getDocs(allPaymentsQuery);
+    const db = getAdminFirestore();
+    const allPaymentsSnapshot = await db.collection('pendingPayments')
+      .where('clientEmail', '==', email)
+      .get();
     
     let pendingPayment = null;
     let hasPendingPayment = false;
@@ -50,13 +47,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Check invoices collection for pending invoices (simple query)
-    const invoiceQuery = query(
-      collection(db, 'invoices'),
-      where('clientEmail', '==', email),
-      where('status', '==', 'pending')
-    );
-    
-    const invoiceSnapshot = await getDocs(invoiceQuery);
+    const invoiceSnapshot = await db.collection('invoices')
+      .where('clientEmail', '==', email)
+      .where('status', '==', 'pending')
+      .get();
     
     let hasLatestInvoicePending = false;
     let latestInvoice = null;

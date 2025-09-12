@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { db } from '@/lib/firebase/config';
-import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { getAdminFirestore } from '@/lib/firebase/admin';
 import { EmailService } from '@/lib/services/EmailService';
 
 // Check if Stripe secret key is available
@@ -105,11 +104,12 @@ export async function POST(request: NextRequest) {
         if (pendingPaymentId) {
           try {
             console.log(`📝 [${requestId}] Updating pending payment document:`, pendingPaymentId);
-            const ref = doc(db, 'pendingPayments', pendingPaymentId);
+            const db = getAdminFirestore();
+            const ref = db.collection('pendingPayments').doc(pendingPaymentId);
             
             // Get current document to preserve existing data
-            const currentDoc = await getDoc(ref);
-            if (currentDoc.exists()) {
+            const currentDoc = await ref.get();
+            if (currentDoc.exists) {
               const currentData = currentDoc.data();
               console.log(`📄 [${requestId}] Current pending payment data:`, currentData);
             }
@@ -117,21 +117,21 @@ export async function POST(request: NextRequest) {
             const updateData = {
               status: 'completed',
               stripeSessionId: session.id,
-              updatedAt: serverTimestamp(),
+              updatedAt: new Date(),
               bonusAmount: bonusAmount,
               totalAmount: amount,
               // Preserve existing fields
-              ...(currentDoc.exists() && {
-                baseAmount: currentDoc.data().baseAmount || baseAmount,
-                description: currentDoc.data().description,
-                clientName: currentDoc.data().clientName,
-                clientEmail: currentDoc.data().clientEmail,
-                notes: currentDoc.data().notes
+              ...(currentDoc.exists && {
+                baseAmount: currentDoc.data()?.baseAmount || baseAmount,
+                description: currentDoc.data()?.description,
+                clientName: currentDoc.data()?.clientName,
+                clientEmail: currentDoc.data()?.clientEmail,
+                notes: currentDoc.data()?.notes
               })
             };
 
             console.log(`📝 [${requestId}] Update data:`, updateData);
-            await updateDoc(ref, updateData);
+            await ref.update(updateData);
             console.log(`✅ [${requestId}] Pending payment updated successfully`);
           } catch (e) {
             console.error(`❌ [${requestId}] Failed to update pending payment status:`, e);
@@ -159,11 +159,12 @@ export async function POST(request: NextRequest) {
           if (pendingPaymentId) {
             try {
               console.log(`📄 [${requestId}] Fetching invoice data for PDF generation...`);
-              const ref = doc(db, 'pendingPayments', pendingPaymentId);
-              const docSnap = await getDoc(ref);
-              if (docSnap.exists()) {
+              const db = getAdminFirestore();
+              const ref = db.collection('pendingPayments').doc(pendingPaymentId);
+              const docSnap = await ref.get();
+              if (docSnap.exists) {
                 const pendingPayment = docSnap.data();
-                const docBaseAmount = Number(pendingPayment.baseAmount || 0);
+                const docBaseAmount = Number(pendingPayment?.baseAmount || 0);
                 const docTotalAmount = amount;
                 const docBonusAmount = Math.max(0, docTotalAmount - docBaseAmount);
                 
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
                 // Create items array with base service and bonus if applicable
                 const items = [{
                   id: '1',
-                  description: pendingPayment.description || 'Leadership Consultation',
+                  description: pendingPayment?.description || 'Leadership Consultation',
                   quantity: 1,
                   unitPrice: docBaseAmount,
                   total: docBaseAmount,
@@ -197,8 +198,8 @@ export async function POST(request: NextRequest) {
                 
                 const invoiceData = {
                   invoiceNumber,
-                  clientName: pendingPayment.clientName,
-                  clientEmail: pendingPayment.clientEmail,
+                  clientName: pendingPayment?.clientName,
+                  clientEmail: pendingPayment?.clientEmail,
                   items,
                   subtotal: docTotalAmount,
                   taxAmount: 0,

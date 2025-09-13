@@ -4,16 +4,12 @@ import Navigation from '@/components/Navigation';
 import AboutSection from '@/components/AboutSection';
 import StickyCallButton from '@/components/StickyCallButton';
 import ScrollToTop from '@/components/ScrollToTop';
-import { useScrollAnimations, useParallax } from '@/lib/hooks/useScrollAnimations';
 import { useEffect } from 'react';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
 
 export default function AboutPage() {
-  useScrollAnimations();
-  useParallax();
-
   useEffect(() => {
     // Add page load animation
     document.body.classList.add('page-enter');

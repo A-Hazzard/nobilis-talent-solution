@@ -125,9 +125,12 @@ export class ResourcesService {
     isPublic?: boolean;
     limit?: number;
     search?: string;
-  } = {}): Promise<{ resources: Resource[]; error?: string }> {
+    page?: number;
+    pageSize?: number;
+    offset?: number;
+  } = {}): Promise<{ resources: Resource[]; total?: number; hasMore?: boolean; error?: string }> {
     try {
-      const { category, type, isPublic, limit: pageLimit, search } = options;
+      const { category, type, isPublic, limit: pageLimit, search, page, pageSize, offset } = options;
 
       // Build query - avoid composite indexes by using minimal constraints
       const constraints = [];
@@ -175,7 +178,23 @@ export class ResourcesService {
       // Always sort by createdAt in memory
       resources.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-      return { resources };
+      // Handle pagination
+      const total = resources.length;
+      let paginatedResources = resources;
+      
+      if (page && pageSize) {
+        const startIndex = offset || (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        paginatedResources = resources.slice(startIndex, endIndex);
+      } else if (pageLimit) {
+        paginatedResources = resources.slice(0, pageLimit);
+      }
+      
+      return { 
+        resources: paginatedResources,
+        total: total,
+        hasMore: page && pageSize ? (offset || (page - 1) * pageSize) + pageSize < total : false
+      };
     } catch (error) {
       console.error('Error fetching resources:', error);
       return { resources: [], error: 'Failed to fetch resources' };

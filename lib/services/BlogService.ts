@@ -74,9 +74,12 @@ export class BlogService {
     tag?: string;
     limit?: number;
     search?: string;
-  } = {}): Promise<{ posts: BlogPost[]; error?: string }> {
+    page?: number;
+    pageSize?: number;
+    offset?: number;
+  } = {}): Promise<{ posts: BlogPost[]; total?: number; hasMore?: boolean; error?: string }> {
     try {
-      const { status, category, tag, limit: pageLimit, search } = options;
+      const { status, category, tag, limit: pageLimit, search, page, pageSize, offset } = options;
       
       // Build query - avoid composite indexes by using minimal constraints
       const constraints = [];
@@ -127,7 +130,23 @@ export class BlogService {
       // Always sort by createdAt in memory
       posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       
-      return { posts };
+      // Handle pagination
+      const total = posts.length;
+      let paginatedPosts = posts;
+      
+      if (page && pageSize) {
+        const startIndex = offset || (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        paginatedPosts = posts.slice(startIndex, endIndex);
+      } else if (pageLimit) {
+        paginatedPosts = posts.slice(0, pageLimit);
+      }
+      
+      return { 
+        posts: paginatedPosts,
+        total: total,
+        hasMore: page && pageSize ? (offset || (page - 1) * pageSize) + pageSize < total : false
+      };
     } catch (error) {
       console.error('Error fetching blog posts:', error);
       return { posts: [], error: 'Failed to fetch blog posts' };

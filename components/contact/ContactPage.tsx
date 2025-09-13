@@ -1,7 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Phone, Mail, Calendar, Send, Clock, CheckCircle, AlertCircle, Building } from 'lucide-react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Register ScrollTrigger plugin
+gsap.registerPlugin(ScrollTrigger);
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +14,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const ContactPage = () => {
+  // Refs for GSAP animations
+  const heroRef = useRef<HTMLDivElement>(null);
+  const heroStatsRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+  const contactInfoRef = useRef<HTMLDivElement>(null);
+  const trustIndicatorsRef = useRef<HTMLDivElement>(null);
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -89,27 +102,181 @@ const ContactPage = () => {
     }
   };
 
+  // GSAP Animations
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Hero section animation
+      if (heroRef.current) {
+        const heroContent = heroRef.current.querySelector('.max-w-7xl');
+        if (heroContent) {
+          gsap.fromTo(heroContent.children, 
+            {
+              opacity: 0,
+              y: 50,
+            },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 1,
+              stagger: 0.2,
+              ease: "power2.out"
+            }
+          );
+        }
+      }
+
+      // Hero stats animation
+      if (heroStatsRef.current) {
+        gsap.fromTo(heroStatsRef.current.children,
+          {
+            opacity: 0,
+            y: 30,
+            scale: 0.9,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power2.out",
+            delay: 0.6
+          }
+        );
+      }
+
+      // Header animation
+      if (headerRef.current) {
+        gsap.fromTo(headerRef.current,
+          {
+            opacity: 0,
+            y: 30,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: headerRef.current,
+              start: "top 80%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+
+      // Form animation
+      if (formRef.current) {
+        gsap.fromTo(formRef.current,
+          {
+            opacity: 0,
+            x: -50,
+          },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: formRef.current,
+              start: "top 80%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+
+      // Contact info animation
+      if (contactInfoRef.current) {
+        gsap.fromTo(contactInfoRef.current,
+          {
+            opacity: 0,
+            x: 50,
+          },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.8,
+            delay: 0.2,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: contactInfoRef.current,
+              start: "top 80%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+
+      // Trust indicators animation
+      if (trustIndicatorsRef.current) {
+        gsap.fromTo(trustIndicatorsRef.current,
+          {
+            opacity: 0,
+            y: 30,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: trustIndicatorsRef.current,
+              start: "top 80%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+
+    });
+
+    return () => ctx.revert(); // Cleanup
+  }, []);
+
   return (
     <div className="pt-20 bg-background">
-      {/* Hero Section */}
-      <section className="py-16 lg:py-24 gradient-subtle">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16" data-animate>
-            <h1 className="text-hero text-accent mb-6">
-              Get In Touch
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Ready to start your transformation? Let's discuss how we can help you and your organization unlock your full potential.
-            </p>
+      {/* Hero Section with Moving Gradient */}
+      <div 
+        ref={heroRef}
+        className="moving-gradient bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_200%] text-white py-20 relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center relative z-10">
+          <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
+            <span className="text-white">Get </span>
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              In Touch
+            </span>
+          </h1>
+          <p className="text-xl lg:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+            Ready to start your transformation? Let's discuss how we can help you and your organization unlock your full potential.
+          </p>
+          
+          {/* Contact Quick Stats */}
+          <div ref={heroStatsRef} className="grid grid-cols-3 gap-8 pt-8 border-t border-white/20 max-w-2xl mx-auto">
+            <div className="text-center">
+              <div className="text-3xl lg:text-4xl font-bold text-white mb-2">24hr</div>
+              <div className="text-white/80 text-sm lg:text-base">Response Time</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl lg:text-4xl font-bold text-white mb-2">Free</div>
+              <div className="text-white/80 text-sm lg:text-base">Consultation</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl lg:text-4xl font-bold text-white mb-2">100%</div>
+              <div className="text-white/80 text-sm lg:text-base">Confidential</div>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Contact Form Section */}
       <section className="py-16 lg:py-32 bg-background overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-center mb-12 lg:mb-16 animate-fade-up">
+          <div ref={headerRef} className="text-center mb-12 lg:mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-accent mb-4 lg:mb-6">
               Let's Start Your Leadership Journey
             </h2>
@@ -121,7 +288,7 @@ const ContactPage = () => {
 
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 max-w-full">
             {/* Contact Form */}
-            <div className="animate-fade-up order-2 lg:order-1 min-w-0">
+            <div ref={formRef} className="order-2 lg:order-1 min-w-0">
               <div className="card-feature p-4 sm:p-6 lg:p-8 max-w-full">
                 <div className="flex items-center mb-6 lg:mb-8">
                   <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3 flex-shrink-0" />
@@ -299,7 +466,7 @@ const ContactPage = () => {
             </div>
 
             {/* Contact Information */}
-            <div className="animate-fade-up order-1 lg:order-2 min-w-0" style={{ animationDelay: '0.2s' }}>
+            <div ref={contactInfoRef} className="order-1 lg:order-2 min-w-0">
               <div className="space-y-6 lg:space-y-8">
                 {/* Contact Details */}
                 <div className="card-elevated p-4 sm:p-6 lg:p-8 max-w-full">
@@ -383,7 +550,7 @@ const ContactPage = () => {
           </div>
 
           {/* Trust Indicators */}
-          <div className="mt-12 lg:mt-16 text-center animate-fade-up">
+          <div ref={trustIndicatorsRef} className="mt-12 lg:mt-16 text-center">
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 text-xs sm:text-sm text-muted-foreground px-4">
               <div className="flex items-center justify-center">
                 <div className="w-2 h-2 bg-primary rounded-full mr-2 flex-shrink-0"></div>

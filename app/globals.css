@@ -507,6 +507,11 @@ body {
   }
 }
 
+/* Moving gradient animation */
+.moving-gradient {
+  animation: gradient-shift 8s ease-in-out infinite;
+}
+
 /* Rich Text Editor Prose Styles */
 @layer components {
   .prose {

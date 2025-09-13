@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Search,
   Calendar,
@@ -32,12 +31,16 @@ import {
 import { BlogPost, Resource } from '@/shared/types/entities';
 import ResourceDownloadModal from '@/components/ResourceDownloadModal';
 import AuthModal from '@/components/AuthModal';
-import { BlogService } from '@/lib/services/BlogService';
-import { ResourcesService } from '@/lib/services/ResourcesService';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { 
+  BlogPostSkeleton, 
+  ResourceSkeleton, 
+  SearchSkeleton
+} from '@/components/ui/content-skeleton';
+import { ContentPagination } from '@/components/ui/content-pagination';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -87,20 +90,28 @@ export default function ContentPage() {
   
   // Blog Posts State
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [filteredBlogPosts, setFilteredBlogPosts] = useState<BlogPost[]>([]);
   const [blogSearchTerm, setBlogSearchTerm] = useState('');
   const [selectedBlogCategory, setSelectedBlogCategory] = useState<string>('all');
+  const [blogPage, setBlogPage] = useState(1);
+  const [blogTotalPages, setBlogTotalPages] = useState(1);
+  
   // Resources State
   const [resources, setResources] = useState<Resource[]>([]);
-  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
   const [resourceSearchTerm, setResourceSearchTerm] = useState('');
   const [selectedResourceCategory, setSelectedResourceCategory] = useState<string>('all');
   const [selectedResourceType, setSelectedResourceType] = useState<string>('all');
+  const [resourcePage, setResourcePage] = useState(1);
+  const [resourceTotalPages, setResourceTotalPages] = useState(1);
 
   // Loading States
   const [isLoadingBlogs, setIsLoadingBlogs] = useState(true);
   const [isLoadingResources, setIsLoadingResources] = useState(true);
+  const [isSearchingBlogs, setIsSearchingBlogs] = useState(false);
+  const [isSearchingResources, setIsSearchingResources] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
+
+  // Constants
+  const PAGE_SIZE = 12;
 
   // Modal State
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
@@ -123,12 +134,12 @@ export default function ContentPage() {
   }, []);
 
   useEffect(() => {
-    filterBlogPosts();
-  }, [blogPosts, blogSearchTerm, selectedBlogCategory]);
-
-  useEffect(() => {
-    filterResources();
-  }, [resources, resourceSearchTerm, selectedResourceCategory, selectedResourceType]);
+    if (activeTab === 'blog') {
+      loadBlogPosts();
+    } else {
+      loadResources();
+    }
+  }, [activeTab]);
 
   // GSAP Animations
   useEffect(() => {
@@ -199,98 +210,162 @@ export default function ContentPage() {
     return () => {
       gradientAnimation.kill();
     };
-  }, [filteredResources]);
+  }, [resources]);
 
-  // Replace API fetches with direct service calls
-  const loadBlogPosts = async () => {
-    setIsLoadingBlogs(true);
+  // Debounced search function
+  const debounce = useCallback((func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(null, args), delay);
+    };
+  }, []);
+
+  const loadBlogPosts = async (page = 1, search = '', category = 'all', _useBackend = false) => {
+    const isSearching = search !== '' || category !== 'all';
+    
+    if (isSearching) {
+      setIsSearchingBlogs(true);
+    } else {
+      setIsLoadingBlogs(true);
+    }
+
     try {
-      const blogService = new BlogService();
-      const response = await blogService.getAll({ status: 'published' });
-      if (response.error) {
-        console.error('Failed to load blog posts:', response.error);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: PAGE_SIZE.toString(),
+        ...(search && { search }),
+        ...(category !== 'all' && { category })
+      });
+
+      const response = await fetch(`/api/content/blog?${params}`);
+      const data = await response.json();
+
+      if (data.error) {
+        console.error('Failed to load blog posts:', data.error);
         setBlogPosts([]);
       } else {
         // Ensure all date fields are Date objects
-        const posts = response.posts.map(post => ({
+        const posts = data.posts.map((post: any) => ({
           ...post,
           createdAt: post.createdAt instanceof Date ? post.createdAt : new Date(post.createdAt),
           updatedAt: post.updatedAt instanceof Date ? post.updatedAt : new Date(post.updatedAt),
           publishedAt: post.publishedAt ? (post.publishedAt instanceof Date ? post.publishedAt : new Date(post.publishedAt)) : undefined,
         }));
+        
         setBlogPosts(posts);
+        setBlogTotalPages(data.totalPages || 1);
+        setBlogPage(page);
       }
     } catch (error) {
       console.error('Error loading blog posts:', error);
       setBlogPosts([]);
     } finally {
       setIsLoadingBlogs(false);
+      setIsSearchingBlogs(false);
     }
   };
 
-  const loadResources = async () => {
-    setIsLoadingResources(true);
+  const loadResources = async (page = 1, search = '', category = 'all', type = 'all', _useBackend = false) => {
+    const isSearching = search !== '' || category !== 'all' || type !== 'all';
+    
+    if (isSearching) {
+      setIsSearchingResources(true);
+    } else {
+      setIsLoadingResources(true);
+    }
+
     try {
-      const resourcesService = new ResourcesService();
-      const response = await resourcesService.getAll({ isPublic: true });
-      if (response.error) {
-        console.error('Failed to load resources:', response.error);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: PAGE_SIZE.toString(),
+        ...(search && { search }),
+        ...(category !== 'all' && { category }),
+        ...(type !== 'all' && { type })
+      });
+
+      const response = await fetch(`/api/content/resources?${params}`);
+      const data = await response.json();
+
+      if (data.error) {
+        console.error('Failed to load resources:', data.error);
         setResources([]);
       } else {
         // Ensure all date fields are Date objects
-        const resources = response.resources.map(resource => ({
+        const resources = data.resources.map((resource: any) => ({
           ...resource,
           createdAt: resource.createdAt instanceof Date ? resource.createdAt : new Date(resource.createdAt),
           updatedAt: resource.updatedAt instanceof Date ? resource.updatedAt : new Date(resource.updatedAt),
         }));
+        
         setResources(resources);
+        setResourceTotalPages(data.totalPages || 1);
+        setResourcePage(page);
       }
     } catch (error) {
       console.error('Error loading resources:', error);
       setResources([]);
     } finally {
       setIsLoadingResources(false);
+      setIsSearchingResources(false);
     }
   };
 
-  const filterBlogPosts = () => {
-    let filtered = blogPosts;
+  // Debounced search handlers
+  const debouncedBlogSearch = useCallback(
+    debounce((search: string, category: string) => {
+      setBlogPage(1);
+      loadBlogPosts(1, search, category, search.length > 0 || category !== 'all');
+    }, 500),
+    []
+  );
 
-    if (blogSearchTerm) {
-      filtered = filtered.filter(post =>
-        post.title.toLowerCase().includes(blogSearchTerm.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(blogSearchTerm.toLowerCase()) ||
-        (post.tags && post.tags.some(tag => tag.toLowerCase().includes(blogSearchTerm.toLowerCase())))
-      );
-    }
+  const debouncedResourceSearch = useCallback(
+    debounce((search: string, category: string, type: string) => {
+      setResourcePage(1);
+      loadResources(1, search, category, type, search.length > 0 || category !== 'all' || type !== 'all');
+    }, 500),
+    []
+  );
 
-    if (selectedBlogCategory !== 'all') {
-      filtered = filtered.filter(post => post.category === selectedBlogCategory);
-    }
-
-    setFilteredBlogPosts(filtered);
+  // Search and filter handlers
+  const handleBlogSearch = (search: string) => {
+    setBlogSearchTerm(search);
+    debouncedBlogSearch(search, selectedBlogCategory);
   };
 
-  const filterResources = () => {
-    let filtered = resources;
+  const handleBlogCategoryChange = (category: string) => {
+    setSelectedBlogCategory(category);
+    setBlogPage(1);
+    debouncedBlogSearch(blogSearchTerm, category);
+  };
 
-    if (resourceSearchTerm) {
-      filtered = filtered.filter(resource =>
-        resource.title.toLowerCase().includes(resourceSearchTerm.toLowerCase()) ||
-        resource.description.toLowerCase().includes(resourceSearchTerm.toLowerCase()) ||
-        (resource.tags && resource.tags.some(tag => tag.toLowerCase().includes(resourceSearchTerm.toLowerCase())))
-      );
-    }
+  const handleResourceSearch = (search: string) => {
+    setResourceSearchTerm(search);
+    debouncedResourceSearch(search, selectedResourceCategory, selectedResourceType);
+  };
 
-    if (selectedResourceCategory !== 'all') {
-      filtered = filtered.filter(resource => resource.category === selectedResourceCategory);
-    }
+  const handleResourceCategoryChange = (category: string) => {
+    setSelectedResourceCategory(category);
+    setResourcePage(1);
+    debouncedResourceSearch(resourceSearchTerm, category, selectedResourceType);
+  };
 
-    if (selectedResourceType !== 'all') {
-      filtered = filtered.filter(resource => resource.type === selectedResourceType);
-    }
+  const handleResourceTypeChange = (type: string) => {
+    setSelectedResourceType(type);
+    setResourcePage(1);
+    debouncedResourceSearch(resourceSearchTerm, selectedResourceCategory, type);
+  };
 
-    setFilteredResources(filtered);
+  // Pagination handlers
+  const handleBlogPageChange = (page: number) => {
+    setBlogPage(page);
+    loadBlogPosts(page, blogSearchTerm, selectedBlogCategory, blogSearchTerm.length > 0 || selectedBlogCategory !== 'all');
+  };
+
+  const handleResourcePageChange = (page: number) => {
+    setResourcePage(page);
+    loadResources(page, resourceSearchTerm, selectedResourceCategory, selectedResourceType, resourceSearchTerm.length > 0 || selectedResourceCategory !== 'all' || selectedResourceType !== 'all');
   };
 
   const handleViewPost = (slug: string) => {
@@ -524,6 +599,9 @@ export default function ContentPage() {
           {/* Blog Posts Tab */}
           <TabsContent value="blog" className="space-y-6">
             {/* Blog Search and Filters */}
+            {isLoadingBlogs && blogPosts.length === 0 ? (
+              <SearchSkeleton />
+            ) : (
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-4 sm:p-6 lg:p-8 mb-6 lg:mb-8">
               <div className="flex flex-col sm:flex-row gap-4 lg:gap-6">
                 <div className="flex-1">
@@ -532,12 +610,12 @@ export default function ContentPage() {
                     <Input
                       placeholder="Search blog posts..."
                       value={blogSearchTerm}
-                      onChange={(e) => setBlogSearchTerm(e.target.value)}
+                      onChange={(e) => handleBlogSearch(e.target.value)}
                       className="pl-10 lg:pl-12 h-10 lg:h-12 text-base lg:text-lg border-2 border-gray-200 focus:border-primary rounded-xl"
                     />
                   </div>
                 </div>
-                <Select value={selectedBlogCategory} onValueChange={setSelectedBlogCategory}>
+                <Select value={selectedBlogCategory} onValueChange={handleBlogCategoryChange}>
                   <SelectTrigger className="w-full sm:w-48 h-10 lg:h-12 border-2 border-gray-200 focus:border-primary rounded-xl">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
@@ -550,6 +628,7 @@ export default function ContentPage() {
                 </Select>
               </div>
             </div>
+            )}
 
             {/* Featured Blog Posts */}
             {featuredBlogPosts.length > 0 && (
@@ -634,10 +713,10 @@ export default function ContentPage() {
             {isLoadingBlogs ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Skeleton key={i} className="h-80" />
+                  <BlogPostSkeleton key={i} />
                 ))}
               </div>
-            ) : filteredBlogPosts.filter(post => !featuredBlogPosts.some(fbp => fbp.id === post.id)).length === 0 ? (
+            ) : blogPosts.filter(post => !featuredBlogPosts.some(fbp => fbp.id === post.id)).length === 0 ? (
               <div className="text-center py-8 lg:py-12">
                 <FileText className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">No blog posts found</h3>
@@ -645,7 +724,7 @@ export default function ContentPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-                {filteredBlogPosts.filter(post => !featuredBlogPosts.some(fbp => fbp.id === post.id)).map((post) => (
+                {blogPosts.filter(post => !featuredBlogPosts.some(fbp => fbp.id === post.id)).map((post) => (
                   <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     {post.featuredImage && (
                       <div className="aspect-video overflow-hidden">
@@ -688,11 +767,24 @@ export default function ContentPage() {
                 ))}
               </div>
             )}
+            
+            {/* Blog Posts Pagination */}
+            {blogTotalPages > 1 && (
+              <ContentPagination
+                currentPage={blogPage}
+                totalPages={blogTotalPages}
+                onPageChange={handleBlogPageChange}
+                isLoading={isSearchingBlogs}
+              />
+            )}
           </TabsContent>
 
           {/* Resources Tab */}
           <TabsContent value="resources" className="space-y-6">
             {/* Resources Search and Filters */}
+            {isLoadingResources && resources.length === 0 ? (
+              <SearchSkeleton />
+            ) : (
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-4 sm:p-6 lg:p-8 mb-6 lg:mb-8">
               <div className="flex flex-col sm:flex-row gap-4 lg:gap-6">
                 {/* Search */}
@@ -702,14 +794,14 @@ export default function ContentPage() {
                     <Input
                       placeholder="Search resources..."
                       value={resourceSearchTerm}
-                      onChange={(e) => setResourceSearchTerm(e.target.value)}
+                      onChange={(e) => handleResourceSearch(e.target.value)}
                       className="pl-10 lg:pl-12 h-10 lg:h-12 text-base lg:text-lg border-2 border-gray-200 focus:border-primary rounded-xl"
                     />
                   </div>
                 </div>
 
                 {/* Category Filter */}
-                <Select value={selectedResourceCategory} onValueChange={setSelectedResourceCategory}>
+                <Select value={selectedResourceCategory} onValueChange={handleResourceCategoryChange}>
                   <SelectTrigger className="w-full sm:w-48 h-10 lg:h-12 border-2 border-gray-200 focus:border-primary rounded-xl">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
@@ -724,7 +816,7 @@ export default function ContentPage() {
                 </Select>
 
                 {/* Type Filter */}
-                <Select value={selectedResourceType} onValueChange={setSelectedResourceType}>
+                <Select value={selectedResourceType} onValueChange={handleResourceTypeChange}>
                   <SelectTrigger className="w-full sm:w-48 h-10 lg:h-12 border-2 border-gray-200 focus:border-primary rounded-xl">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
@@ -739,6 +831,7 @@ export default function ContentPage() {
                 </Select>
               </div>
             </div>
+            )}
 
             {/* Featured Resources */}
             {featuredResources.length > 0 && (
@@ -855,7 +948,7 @@ export default function ContentPage() {
                     All Resources
                   </h2>
                   <p className="text-sm lg:text-base text-gray-600 mt-2">
-                    {filteredResources.filter(r => !r.featured && !featuredResources.some(fr => fr.id === r.id)).length} resources available
+                    {resources.filter(r => !r.featured && !featuredResources.some(fr => fr.id === r.id)).length} resources available
                   </p>
                 </div>
               </div>
@@ -863,10 +956,10 @@ export default function ContentPage() {
               {isLoadingResources ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
                   {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                    <Skeleton key={i} className="h-80" />
+                    <ResourceSkeleton key={i} />
                   ))}
                 </div>
-              ) : filteredResources.filter(r => !r.featured && !featuredResources.some(fr => fr.id === r.id)).length === 0 ? (
+              ) : resources.filter(r => !r.featured && !featuredResources.some(fr => fr.id === r.id)).length === 0 ? (
                 <div className="text-center py-8 lg:py-12">
                   <Download className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">No resources found</h3>
@@ -877,7 +970,7 @@ export default function ContentPage() {
                   ref={cardsRef}
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6"
                 >
-                  {filteredResources.filter(r => !r.featured && !featuredResources.some(fr => fr.id === r.id)).map((resource) => (
+                  {resources.filter(r => !r.featured && !featuredResources.some(fr => fr.id === r.id)).map((resource) => (
                     <Card key={resource.id} className="group hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-primary/30 overflow-hidden">
                       {resource.thumbnailUrl ? (
                         <div className="relative h-40 overflow-hidden">
@@ -949,6 +1042,16 @@ export default function ContentPage() {
                     </Card>
                   ))}
                 </div>
+              )}
+              
+              {/* Resources Pagination */}
+              {resourceTotalPages > 1 && (
+                <ContentPagination
+                  currentPage={resourcePage}
+                  totalPages={resourceTotalPages}
+                  onPageChange={handleResourcePageChange}
+                  isLoading={isSearchingResources}
+                />
               )}
             </div>
           </TabsContent>

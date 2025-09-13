@@ -51,20 +51,6 @@ export default function ProfileModal({ isOpen, onClose, user }: ProfileModalProp
     }
   }, [user]);
 
-  // Debug logging
-  console.log('ProfileModal render:', { 
-    isOpen, 
-    user: user ? {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      createdAt: user.createdAt,
-      lastLoginAt: user.lastLoginAt
-    } : 'null' 
-  });
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));

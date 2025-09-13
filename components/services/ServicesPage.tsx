@@ -1,9 +1,21 @@
+import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle, Users, Target, TrendingUp, Award, Lightbulb, BookOpen, UserCheck } from 'lucide-react';
 import { serviceImages } from '@/lib/constants/images';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Register ScrollTrigger plugin
+gsap.registerPlugin(ScrollTrigger);
 
 const ServicesPage = () => {
+  // Refs for GSAP animations
+  const heroRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const whyChooseRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+
   // All 8 services with correct content
   const services = [
     {
@@ -95,12 +107,190 @@ const ServicesPage = () => {
     }
   ];
 
+  // GSAP Animations
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Hero section animation
+      if (heroRef.current) {
+        gsap.fromTo(heroRef.current.children, 
+          {
+            opacity: 0,
+            y: 50,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power2.out"
+          }
+        );
+      }
+
+      // Timeline services animation
+      if (timelineRef.current) {
+        const serviceItems = timelineRef.current.querySelectorAll('.service-item');
+        serviceItems.forEach((item, index) => {
+          gsap.fromTo(item,
+            {
+              opacity: 0,
+              y: 80,
+              scale: 0.95,
+            },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.8,
+              delay: index * 0.2,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: item,
+                start: "top 80%",
+                end: "bottom 20%",
+                toggleActions: "play none none reverse"
+              }
+            }
+          );
+        });
+
+        // Timeline line animation
+        const timelineLine = timelineRef.current.querySelector('.timeline-line');
+        if (timelineLine) {
+          gsap.fromTo(timelineLine,
+            { scaleY: 0 },
+            {
+              scaleY: 1,
+              duration: 1.5,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: timelineRef.current,
+                start: "top 60%",
+                end: "bottom 40%",
+                scrub: 1
+              }
+            }
+          );
+        }
+
+        // Timeline dots animation
+        const timelineDots = timelineRef.current.querySelectorAll('.timeline-dot');
+        timelineDots.forEach((dot, index) => {
+          gsap.fromTo(dot,
+            { scale: 0, opacity: 0 },
+            {
+              scale: 1,
+              opacity: 1,
+              duration: 0.5,
+              delay: index * 0.3,
+              ease: "back.out(1.7)",
+              scrollTrigger: {
+                trigger: dot,
+                start: "top 80%",
+                toggleActions: "play none none reverse"
+              }
+            }
+          );
+        });
+
+        // Service images animation
+        const serviceImages = timelineRef.current.querySelectorAll('.service-image');
+        serviceImages.forEach((image, index) => {
+          gsap.fromTo(image,
+            {
+              opacity: 0,
+              scale: 0.8,
+              rotationY: 15,
+            },
+            {
+              opacity: 1,
+              scale: 1,
+              rotationY: 0,
+              duration: 0.8,
+              delay: index * 0.2 + 0.3,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: image,
+                start: "top 80%",
+                toggleActions: "play none none reverse"
+              }
+            }
+          );
+        });
+      }
+
+      // Why Choose section animation
+      if (whyChooseRef.current) {
+        const whyChooseItems = whyChooseRef.current.querySelectorAll('.why-choose-item');
+        gsap.fromTo(whyChooseItems,
+          {
+            opacity: 0,
+            y: 60,
+            scale: 0.9,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: whyChooseRef.current,
+              start: "top 70%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+
+      // CTA button animation
+      if (ctaRef.current) {
+        gsap.fromTo(ctaRef.current,
+          {
+            opacity: 0,
+            y: 30,
+            scale: 0.95,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.6,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: ctaRef.current,
+              start: "top 80%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+
+        // Add floating animation to CTA button
+        const ctaButton = ctaRef.current.querySelector('a');
+        if (ctaButton) {
+          gsap.to(ctaButton, {
+            y: -5,
+            duration: 2,
+            repeat: -1,
+            yoyo: true,
+            ease: "power2.inOut",
+            delay: 1
+          });
+        }
+      }
+
+    });
+
+    return () => ctx.revert(); // Cleanup
+  }, []);
+
   return (
     <div className="pt-20 bg-background">
       {/* Hero Section */}
       <section className="py-16 lg:py-24 gradient-subtle">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16" data-animate>
+          <div ref={heroRef} className="text-center mb-16">
             <h1 className="text-hero text-accent mb-6">
               Our Services
             </h1>
@@ -114,9 +304,9 @@ const ServicesPage = () => {
       {/* Services Timeline */}
       <section className="py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="relative">
+          <div ref={timelineRef} className="relative">
             {/* Centered Timeline Line */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-secondary to-primary/30 hidden lg:block transform -translate-x-1/2"></div>
+            <div className="timeline-line absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-secondary to-primary/30 hidden lg:block transform -translate-x-1/2 origin-top"></div>
             
             {/* Services Timeline */}
             <div className="space-y-20">
@@ -125,12 +315,12 @@ const ServicesPage = () => {
                 const isEven = index % 2 === 0;
                 
                 return (
-                  <div key={service.title} id={service.id} className="relative" data-animate>
+                  <div key={service.title} id={service.id} className="service-item relative">
                     {/* Timeline Dot */}
-                    <div className="absolute left-1/2 top-8 w-4 h-4 bg-primary rounded-full border-4 border-white shadow-lg hidden lg:block z-10 transform -translate-x-1/2"></div>
+                    <div className="timeline-dot absolute left-1/2 top-8 w-4 h-4 bg-primary rounded-full border-4 border-white shadow-lg hidden lg:block z-10 transform -translate-x-1/2"></div>
                     
                     {/* Service Number */}
-                    <div className="absolute left-1/2 top-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold hidden lg:flex transform -translate-x-1/2 z-20">
+                    <div className="absolute left-1/2 top-0 w-8 h-8 bg-primary text-white rounded-full items-center justify-center text-sm font-bold hidden lg:flex transform -translate-x-1/2 z-20">
                       {String(index + 1).padStart(2, '0')}
                     </div>
                     
@@ -154,12 +344,12 @@ const ServicesPage = () => {
                       
                       {/* Image Section */}
                       <div className={`${isEven ? 'lg:order-2' : 'lg:order-1'} relative`}>
-                        <div className="relative h-80 lg:h-96 rounded-2xl overflow-hidden shadow-lg">
+                        <div className="service-image relative h-80 lg:h-96 rounded-2xl overflow-hidden shadow-lg group cursor-pointer">
                           <Image
                             src={service.image}
                             alt={service.title}
                             fill
-                            className="object-cover"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
@@ -168,10 +358,10 @@ const ServicesPage = () => {
                               }
                             }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent transition-opacity duration-300 group-hover:opacity-80" />
                           <div className="absolute bottom-4 right-4">
-                            <div className="bg-white/90 backdrop-blur-sm rounded-full p-3">
-                              <IconComponent className="h-6 w-6 text-primary" />
+                            <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+                              <IconComponent className="h-6 w-6 text-primary transition-colors duration-300 group-hover:text-white" />
                             </div>
                           </div>
                         </div>
@@ -188,7 +378,7 @@ const ServicesPage = () => {
       {/* Why Choose Nobilis Talent Solutions Section */}
       <section className="py-16 lg:py-24 gradient-subtle">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16" data-animate>
+          <div ref={whyChooseRef} className="text-center mb-16">
             <h2 className="text-section text-accent mb-6">
               Why Choose Nobilis Talent Solutions
             </h2>
@@ -201,7 +391,7 @@ const ServicesPage = () => {
             {whyChoosePoints.map((point) => {
               const IconComponent = point.icon;
               return (
-                <div key={point.title} className="text-center" data-animate>
+                <div key={point.title} className="why-choose-item text-center">
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
                     <IconComponent className="h-8 w-8 text-primary" />
                   </div>
@@ -214,7 +404,7 @@ const ServicesPage = () => {
             })}
           </div>
 
-          <div className="text-center mt-16" data-animate>
+          <div ref={ctaRef} className="text-center mt-16">
             <Link href="/contact" className="btn-primary font-bold">
               Start Your Transformation
             </Link>

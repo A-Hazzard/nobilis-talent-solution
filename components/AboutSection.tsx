@@ -1,8 +1,20 @@
+import React, { useEffect, useRef } from 'react';
 import Link from "next/link";
 import TeamMember from "./about/TeamMember";
 import { teamImages } from "@/lib/constants/images";
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Register ScrollTrigger plugin
+gsap.registerPlugin(ScrollTrigger);
 
 const AboutSection = () => {
+  // Refs for GSAP animations
+  const headerRef = useRef<HTMLDivElement>(null);
+  const kareemRef = useRef<HTMLDivElement>(null);
+  const jeniferRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+
   const kareemAchievements = [
     "200+ entrepreneurs and team members trained",
     "10+ keynotes delivered",
@@ -18,11 +30,105 @@ const AboutSection = () => {
     "100% client satisfaction rate",
   ];
 
+  // GSAP Animations
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Header section animation
+      if (headerRef.current) {
+        gsap.fromTo(headerRef.current.children, 
+          {
+            opacity: 0,
+            y: 50,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power2.out"
+          }
+        );
+      }
+
+      // Kareem's section animation
+      if (kareemRef.current) {
+        gsap.fromTo(kareemRef.current,
+          {
+            opacity: 0,
+            y: 80,
+            scale: 0.95,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: kareemRef.current,
+              start: "top 80%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+
+      // Jenifer's section animation
+      if (jeniferRef.current) {
+        gsap.fromTo(jeniferRef.current,
+          {
+            opacity: 0,
+            y: 80,
+            scale: 0.95,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: jeniferRef.current,
+              start: "top 80%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+
+      // CTA section animation
+      if (ctaRef.current) {
+        gsap.fromTo(ctaRef.current,
+          {
+            opacity: 0,
+            y: 30,
+            scale: 0.95,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.6,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: ctaRef.current,
+              start: "top 80%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+
+    });
+
+    return () => ctx.revert(); // Cleanup
+  }, []);
+
   return (
     <section id="about" className="py-16 lg:py-24 gradient-subtle">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Meet the Team Header */}
-        <div className="text-center mb-20 md:mb-24 lg:mb-28" data-animate>
+        <div ref={headerRef} className="text-center mb-20 md:mb-24 lg:mb-28">
           <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
             Meet the Team
           </h1>
@@ -34,7 +140,7 @@ const AboutSection = () => {
         </div>
 
         {/* Kareem's Section */}
-        <div className="mb-24 md:mb-32 lg:mb-40" data-animate>
+        <div ref={kareemRef} className="mb-24 md:mb-32 lg:mb-40">
           <TeamMember
             name="Kareem T. Payne"
             title="Founder & Chief Talent Strategist"
@@ -50,7 +156,7 @@ Whether in a boardroom, training room, or community hall, his message is consist
         </div>
 
         {/* Jenifer's Section */}
-        <div className="mb-24 md:mb-32 lg:mb-40" data-animate>
+        <div ref={jeniferRef} className="mb-24 md:mb-32 lg:mb-40">
           <TeamMember
             name="Jenifer Payne"
             title="Co-Founder & Lead Organizational Development Partner"
@@ -67,7 +173,7 @@ Jenifer believes that the foundation of any successful organization lies in its 
         </div>
 
         {/* Call to Action */}
-        <div className="text-center mt-16" data-animate>
+        <div ref={ctaRef} className="text-center mt-16">
           <div className="border-2 border-primary/20 rounded-3xl p-8 bg-background/50 backdrop-blur-sm">
             <h3 className="text-2xl font-bold mb-4">
               Ready to Transform Your Organization?

@@ -9,15 +9,25 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') as Resource['type'] | null;
     const search = searchParams.get('search');
     const limit = searchParams.get('limit');
+    const page = searchParams.get('page');
+    const pageSize = searchParams.get('pageSize');
 
     const resourcesService = new ResourcesService();
     
+    // Calculate pagination
+    const currentPage = page ? parseInt(page) : 1;
+    const itemsPerPage = pageSize ? parseInt(pageSize) : (limit ? parseInt(limit) : 20);
+    const offset = (currentPage - 1) * itemsPerPage;
+
     const response = await resourcesService.getAll({
       isPublic: true,
       category: category || undefined,
       type: type || undefined,
       search: search || undefined,
       limit: limit ? parseInt(limit) : undefined,
+      page: currentPage,
+      pageSize: itemsPerPage,
+      offset: offset
     });
 
     if (response.error) {
@@ -29,7 +39,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       resources: response.resources,
-      count: response.resources.length
+      total: response.total || response.resources.length,
+      page: currentPage,
+      pageSize: itemsPerPage,
+      totalPages: response.total ? Math.ceil(response.total / itemsPerPage) : 1,
+      hasMore: response.hasMore || false
     });
   } catch (error) {
     console.error('Error in resources API route:', error);

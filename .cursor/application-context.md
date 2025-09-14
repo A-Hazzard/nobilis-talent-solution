@@ -442,3 +442,4 @@ export default function Component() {
 ---
 
 This context file provides a comprehensive overview of the Nobilis Talent Solutions platform. Use this as reference when working on any part of the system to maintain consistency and understand the broader context of your changes.
+

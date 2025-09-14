@@ -121,8 +121,8 @@ export const SCHEMA_TYPES = {
     legalName: BUSINESS_INFO.legalName,
     description: BUSINESS_INFO.description,
     url: SITE_CONFIG.url,
-    logo: `${SITE_CONFIG.url}/assets/logo.png`,
-    image: `${SITE_CONFIG.url}/assets/logo-transparent.png`,
+    logo: `${SITE_CONFIG.url}/assets/og-image.png`,
+    image: `${SITE_CONFIG.url}/assets/og-image.png`,
     address: {
       '@type': 'PostalAddress',
       streetAddress: BUSINESS_INFO.address.street,
@@ -244,7 +244,7 @@ export const META_TAGS = {
     siteName: BUSINESS_INFO.name,
     title: `${BUSINESS_INFO.name} - ${BUSINESS_INFO.tagline}`,
     description: BUSINESS_INFO.description,
-    image: `${SITE_CONFIG.url}/assets/logo-transparent.png`,
+    image: `${SITE_CONFIG.url}/assets/hero.jpg`,
     imageWidth: 1200,
     imageHeight: 630,
     imageAlt: `${BUSINESS_INFO.name} - Leadership Development`,
@@ -255,7 +255,7 @@ export const META_TAGS = {
     creator: '@nobilis_talent',
     title: `${BUSINESS_INFO.name} - ${BUSINESS_INFO.tagline}`,
     description: BUSINESS_INFO.description,
-    image: `${SITE_CONFIG.url}/assets/logo-transparent.png`,
+    image: `${SITE_CONFIG.url}/assets/hero.jpg`,
   },
   local: {
     'geo.region': 'US-GA',

@@ -377,10 +377,10 @@ export default function TermsOfServicePage() {
                       <div className="flex items-center space-x-3">
                         <Mail className="h-5 w-5 text-blue-600" />
                         <a 
-                          href="mailto:support@nobilistalent.com" 
+                          href="mailto:nobilis.talent@gmail.com" 
                           className="text-blue-600 hover:text-blue-500 hover:underline"
                         >
-                          support@nobilistalent.com
+                          nobilis.talent@gmail.com
                         </a>
                       </div>
                       <div className="flex items-center space-x-3">

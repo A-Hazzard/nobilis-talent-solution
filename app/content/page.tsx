@@ -872,13 +872,20 @@ export default function ContentPage() {
                           {post.readTime || 5} min read
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {post.tags?.slice(0, 2).map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-4 min-h-[1.5rem]">
+                          {post.tags.slice(0, 3).map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs px-2 py-1 truncate max-w-[120px]">
+                              {tag}
+                            </Badge>
+                          ))}
+                          {post.tags.length > 3 && (
+                            <Badge variant="outline" className="text-xs px-2 py-1 bg-gray-50">
+                              +{post.tags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                       <Button 
                         onClick={() => handleViewPost(post.slug)}
                         className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border-0 h-12 rounded-xl"
@@ -983,9 +990,12 @@ export default function ContentPage() {
                             alt={resource.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
-                          <div className="absolute top-4 left-4">
+                          <div className="absolute top-4 left-4 flex flex-col gap-2">
                             <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0">
                               Featured
+                            </Badge>
+                            <Badge variant="secondary" className="bg-white/90 text-gray-800">
+                              {categoryLabels[resource.category] || resource.category}
                             </Badge>
                           </div>
                           <div className="absolute top-4 right-4">
@@ -996,9 +1006,12 @@ export default function ContentPage() {
                         </div>
                       ) : (
                         <div className="relative h-48 bg-gradient-to-br from-primary/5 to-secondary/10">
-                          <div className="absolute top-4 left-4">
+                          <div className="absolute top-4 left-4 flex flex-col gap-2">
                             <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0">
                               Featured
+                            </Badge>
+                            <Badge variant="secondary" className="bg-white/90 text-gray-800">
+                              {categoryLabels[resource.category] || resource.category}
                             </Badge>
                           </div>
                           <div className="absolute top-4 right-4">
@@ -1038,13 +1051,20 @@ export default function ContentPage() {
                             {resource.createdAt.toLocaleDateString()}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {resource.tags?.slice(0, 2).map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
+                        {resource.tags && resource.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-4 min-h-[1.5rem]">
+                            {resource.tags.slice(0, 3).map((tag) => (
+                              <Badge key={tag} variant="outline" className="text-xs px-2 py-1 truncate max-w-[120px]">
+                                {tag}
+                              </Badge>
+                            ))}
+                            {resource.tags.length > 3 && (
+                              <Badge variant="outline" className="text-xs px-2 py-1 bg-gray-50">
+                                +{resource.tags.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
                         <Button 
                           onClick={() => handleDownloadClick(resource.id)}
                           className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border-0 h-12 rounded-xl"
@@ -1098,16 +1118,22 @@ export default function ContentPage() {
                             alt={resource.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
-                          <div className="absolute top-4 left-4">
+                          <div className="absolute top-4 left-4 flex flex-col gap-2">
                             <Badge variant="secondary" className="bg-white/90 text-gray-800">
+                              {categoryLabels[resource.category] || resource.category}
+                            </Badge>
+                            <Badge variant="outline" className="bg-white/90 text-gray-700 border-gray-300">
                               {typeLabels[resource.type] || resource.type}
                             </Badge>
                           </div>
                         </div>
                       ) : (
                         <div className="relative h-48 bg-gradient-to-br from-primary/5 to-secondary/10">
-                          <div className="absolute top-4 left-4">
+                          <div className="absolute top-4 left-4 flex flex-col gap-2">
                             <Badge variant="secondary" className="bg-white/90 text-gray-800">
+                              {categoryLabels[resource.category] || resource.category}
+                            </Badge>
+                            <Badge variant="outline" className="bg-white/90 text-gray-700 border-gray-300">
                               {typeLabels[resource.type] || resource.type}
                             </Badge>
                           </div>
@@ -1143,13 +1169,20 @@ export default function ContentPage() {
                             {resource.createdAt.toLocaleDateString()}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {resource.tags?.slice(0, 2).map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
+                        {resource.tags && resource.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-4 min-h-[1.5rem]">
+                            {resource.tags.slice(0, 3).map((tag) => (
+                              <Badge key={tag} variant="outline" className="text-xs px-2 py-1 truncate max-w-[120px]">
+                                {tag}
+                              </Badge>
+                            ))}
+                            {resource.tags.length > 3 && (
+                              <Badge variant="outline" className="text-xs px-2 py-1 bg-gray-50">
+                                +{resource.tags.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
                         <Button 
                           onClick={() => handleDownloadClick(resource.id)}
                           className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border-0 h-12 rounded-xl"

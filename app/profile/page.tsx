@@ -160,6 +160,7 @@ export default function ProfilePage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Use the specific error message from the API response
         throw new Error(data.error || 'Failed to change password');
       }
 
@@ -176,6 +177,13 @@ export default function ProfilePage() {
       setPasswordError(errorMessage);
       toast.error(errorMessage);
       console.error('Password change error:', error);
+      
+      // Clear password fields on error for security
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
     } finally {
       setLoading(false);
     }

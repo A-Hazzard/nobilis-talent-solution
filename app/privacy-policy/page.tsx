@@ -373,7 +373,7 @@ export default function PrivacyPolicyPage() {
                     </div>
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4">
                       <p className="text-sm text-blue-800">
-                        <strong>To exercise your rights:</strong> Contact us at support@nobilistalent.com
+                        <strong>To exercise your rights:</strong> Contact us at nobilis.talent@gmail.com
                       </p>
                     </div>
                   </div>
@@ -433,10 +433,10 @@ export default function PrivacyPolicyPage() {
                       <div className="flex items-center space-x-3">
                         <Mail className="h-5 w-5 text-blue-600" />
                         <a 
-                          href="mailto:support@nobilistalent.com" 
+                          href="mailto:nobilis.talent@gmail.com" 
                           className="text-blue-600 hover:text-blue-500 hover:underline"
                         >
-                          support@nobilistalent.com
+                          nobilis.talent@gmail.com
                         </a>
                       </div>
                       <div className="flex items-start space-x-3">

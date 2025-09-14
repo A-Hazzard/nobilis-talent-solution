@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Menu, X, LogOut, User, ChevronDown, Home, User as UserIcon, Settings, FileText, Phone } from 'lucide-react';
 import ProfileModal from '@/components/admin/ProfileModal';
 import { usePendingPayment } from '@/lib/hooks/usePendingPayment';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import logo  from "@/public/assets/logo-transparent.png"
@@ -17,14 +17,38 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, isAuthenticated, signOut } = useAuth();
+  const searchParams = useSearchParams();
   
-  // Use authenticated user's email or fallback to demo email
-  const userEmail = user?.email || 'john@company.com';
-  const { pendingPayment, shouldShowPaymentButton } = usePendingPayment(userEmail);
-
   const pathname = usePathname();
   const isHomePage = pathname === '/';
   const isAdminPage = pathname.startsWith('/admin');
+  const isPaymentSuccessPage = pathname === '/payment/success';
+  
+  // Get email from URL params if on payment success page, otherwise use authenticated user's email
+  const urlEmail = searchParams.get('email');
+  const clientName = searchParams.get('client');
+  
+  // Additional state for payment success page specific logic
+  const [paymentSuccessEmail, setPaymentSuccessEmail] = useState<string | null>(null);
+  
+  // For payment success page, try to get email from URL or stored email, otherwise use authenticated user's email
+  const finalEmail = isPaymentSuccessPage && urlEmail ? urlEmail : 
+                    isPaymentSuccessPage && paymentSuccessEmail ? paymentSuccessEmail : 
+                    (user?.email || 'john@company.com');
+  
+  const { pendingPayment, shouldShowPaymentButton } = usePendingPayment(finalEmail);
+  
+  // Effect to get email from payment details when on payment success page
+  useEffect(() => {
+    if (isPaymentSuccessPage && !urlEmail && clientName) {
+      // Try to extract email from the page if available
+      // This will be set by the payment success page component
+      const storedEmail = sessionStorage.getItem('payment_success_email');
+      if (storedEmail) {
+        setPaymentSuccessEmail(storedEmail);
+      }
+    }
+  }, [isPaymentSuccessPage, urlEmail, clientName]);
 
   // Navigation links for home page (hash links for smooth scrolling)
   const homeNavLinks = [
@@ -153,7 +177,7 @@ const Navigation = () => {
             <div className="hidden lg:flex items-center space-x-2 lg:pr-6">
               {shouldShowPaymentButton && (
                 <a
-                  href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
+                  href={`/payment/pending?email=${encodeURIComponent(finalEmail)}`}
                   className="btn-secondary font-bold whitespace-nowrap text-xs px-3 py-1.5"
                 >
                   Pay ${pendingPayment?.baseAmount || '0'}
@@ -288,7 +312,7 @@ const Navigation = () => {
               <div className="pt-4 space-y-3">
                 {shouldShowPaymentButton && (
                   <a
-                    href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
+                    href={`/payment/pending?email=${encodeURIComponent(finalEmail)}`}
                     className="block w-full text-center btn-secondary font-bold px-4 py-3 rounded-lg"
                   >
                     Pay ${pendingPayment?.baseAmount || '0'}

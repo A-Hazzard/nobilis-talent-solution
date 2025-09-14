@@ -1119,22 +1119,33 @@ export default function ContentPage() {
                     <Label htmlFor="blogFeatured" className="text-right">
                       Featured
                     </Label>
-                    <div className="col-span-3 flex items-center space-x-2">
-                      <Checkbox
-                        id="blogFeatured"
-                        checked={formData.featured}
-                        onCheckedChange={(checked) =>
-                          setFormData({
-                            ...formData,
-                            featured: checked as boolean,
-                          })
-                        }
-                        
-                      />
-                      <Label htmlFor="blogFeatured" className="text-sm">
-                        Feature this blog post in the "Featured Blog Posts"
-                        section
-                      </Label>
+                    <div className="col-span-3 flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="blogFeatured"
+                          checked={formData.featured}
+                          onCheckedChange={(checked) => {
+                            const currentFeaturedCount = posts.filter((post) => post.featured).length;
+                            const isAlreadyFeatured = posts.some((post) => post.featured && post.id === editingPost?.id);
+                            
+                            if (checked && currentFeaturedCount >= 3 && !isAlreadyFeatured) {
+                              toast.error("Maximum of 3 featured blog posts allowed. Please unfeature another blog post first.");
+                              return;
+                            }
+                            
+                            setFormData({
+                              ...formData,
+                              featured: checked as boolean,
+                            });
+                          }}
+                          disabled={posts.filter((post) => post.featured).length >= 3 && !formData.featured}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="blogFeatured" className="text-sm">
+                          Feature this blog post in the "Featured Blog Posts"
+                          section
+                        </Label>
+                      </div>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span>
                           ({3 - posts.filter((post) => post.featured).length}{" "}
@@ -1142,8 +1153,8 @@ export default function ContentPage() {
                         </span>
                         {posts.filter((post) => post.featured).length >= 3 &&
                           !formData.featured && (
-                            <span className="text-red-500">
-                              • Max featured posts reached
+                            <span className="text-red-500 font-medium">
+                              • Maximum featured blog posts reached. Remove a featured blog post to add this one.
                             </span>
                           )}
                       </div>
@@ -1551,23 +1562,34 @@ export default function ContentPage() {
                     <Label htmlFor="resourceFeatured" className="text-right">
                       Featured
                     </Label>
-                <div className="col-span-3 flex items-center space-x-2">
-                      <Checkbox
-                    id="resourceFeatured"
-                    checked={resourceFormData.featured}
-                        onCheckedChange={(checked) =>
-                          setResourceFormData({
-                            ...resourceFormData,
-                            featured: checked as boolean,
-                          })
-                        }
-                        className="h-4 w-4"
-                  />
-                  <Label htmlFor="resourceFeatured" className="text-sm">
-                        Feature this resource in the "Featured Resources"
-                        section (max 3 featured resources)
-                  </Label>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="col-span-3 flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="resourceFeatured"
+                          checked={resourceFormData.featured}
+                          onCheckedChange={(checked) => {
+                            const currentFeaturedCount = resources.filter((resource) => resource.featured).length;
+                            const isAlreadyFeatured = resources.some((resource) => resource.featured && resource.id === editingResource?.id);
+                            
+                            if (checked && currentFeaturedCount >= 3 && !isAlreadyFeatured) {
+                              toast.error("Maximum of 3 featured resources allowed. Please unfeature another resource first.");
+                              return;
+                            }
+                            
+                            setResourceFormData({
+                              ...resourceFormData,
+                              featured: checked as boolean,
+                            });
+                          }}
+                          disabled={resources.filter((resource) => resource.featured).length >= 3 && !resourceFormData.featured}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="resourceFeatured" className="text-sm">
+                          Feature this resource in the "Featured Resources"
+                          section (max 3 featured resources)
+                        </Label>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span>
                           (
                           {3 -
@@ -1578,11 +1600,11 @@ export default function ContentPage() {
                         {resources.filter((resource) => resource.featured)
                           .length >= 3 &&
                           !resourceFormData.featured && (
-                            <span className="text-red-500">
-                              • Max featured resources reached
+                            <span className="text-red-500 font-medium">
+                              • Maximum featured resources reached. Remove a featured resource to add this one.
                             </span>
                     )}
-                  </div>
+                      </div>
                 </div>
               </div>
 
@@ -2452,18 +2474,29 @@ export default function ContentPage() {
               <Label htmlFor="edit-blog-featured" className="text-right">
                 Featured
               </Label>
-              <div className="col-span-3 flex items-center space-x-2">
-                <Checkbox
-                  id="edit-blog-featured"
-                  checked={formData.featured}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, featured: checked as boolean })
-                  }
-                  className="h-4 w-4"
-                />
-                <Label htmlFor="edit-blog-featured" className="text-sm">
-                  Feature this blog post in the "Featured Blog Posts" section
-                </Label>
+              <div className="col-span-3 flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-blog-featured"
+                    checked={formData.featured}
+                    onCheckedChange={(checked) => {
+                      const currentFeaturedCount = posts.filter((post) => post.featured).length;
+                      const isAlreadyFeatured = posts.some((post) => post.featured && post.id === editingPost?.id);
+                      
+                      if (checked && currentFeaturedCount >= 3 && !isAlreadyFeatured) {
+                        toast.error("Maximum of 3 featured blog posts allowed. Please unfeature another blog post first.");
+                        return;
+                      }
+                      
+                      setFormData({ ...formData, featured: checked as boolean });
+                    }}
+                    disabled={posts.filter((post) => post.featured).length >= 3 && !formData.featured}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="edit-blog-featured" className="text-sm">
+                    Feature this blog post in the "Featured Blog Posts" section
+                  </Label>
+                </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>
                     ({3 - posts.filter((post) => post.featured).length} featured
@@ -2471,8 +2504,8 @@ export default function ContentPage() {
                   </span>
                   {posts.filter((post) => post.featured).length >= 3 &&
                     !formData.featured && (
-                      <span className="text-red-500">
-                        • Max featured posts reached
+                      <span className="text-red-500 font-medium">
+                        • Maximum featured blog posts reached. Remove a featured blog post to add this one.
                       </span>
                     )}
                 </div>
@@ -2952,22 +2985,33 @@ export default function ContentPage() {
               <Label htmlFor="edit-resource-featured" className="text-right">
                 Featured
               </Label>
-              <div className="col-span-3 flex items-center space-x-2">
-                <Checkbox
-                  id="edit-resource-featured"
-                  checked={resourceFormData.featured}
-                  onCheckedChange={(checked) =>
-                    setResourceFormData({
-                      ...resourceFormData,
-                      featured: checked as boolean,
-                    })
-                  }
-                  className="h-4 w-4"
-                />
-                <Label htmlFor="edit-resource-featured" className="text-sm">
-                  Feature this resource in the "Featured Resources" section (max
-                  3 featured resources)
-                </Label>
+              <div className="col-span-3 flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-resource-featured"
+                    checked={resourceFormData.featured}
+                    onCheckedChange={(checked) => {
+                      const currentFeaturedCount = resources.filter((resource) => resource.featured).length;
+                      const isAlreadyFeatured = resources.some((resource) => resource.featured && resource.id === editingResource?.id);
+                      
+                      if (checked && currentFeaturedCount >= 3 && !isAlreadyFeatured) {
+                        toast.error("Maximum of 3 featured resources allowed. Please unfeature another resource first.");
+                        return;
+                      }
+                      
+                      setResourceFormData({
+                        ...resourceFormData,
+                        featured: checked as boolean,
+                      });
+                    }}
+                    disabled={resources.filter((resource) => resource.featured).length >= 3 && !resourceFormData.featured}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="edit-resource-featured" className="text-sm">
+                    Feature this resource in the "Featured Resources" section (max
+                    3 featured resources)
+                  </Label>
+                </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>
                     (
@@ -2979,8 +3023,8 @@ export default function ContentPage() {
                   {resources.filter((resource) => resource.featured).length >=
                     3 &&
                     !resourceFormData.featured && (
-                      <span className="text-red-500">
-                        • Max featured resources reached
+                      <span className="text-red-500 font-medium">
+                        • Maximum featured resources reached. Remove a featured resource to add this one.
                       </span>
                   )}
                 </div>

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from '@/lib/helpers/auth';
 import { auth } from '@/lib/firebase/config';
 import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
-import { logAuditAction } from '@/lib/utils/auditUtils';
 import { validatePassword } from '@/lib/utils/validation';
 
 export async function POST(request: NextRequest) {
@@ -35,14 +34,33 @@ export async function POST(request: NextRequest) {
     try {
       await signInWithEmailAndPassword(auth, authResult.user.email, currentPassword);
     } catch (error: any) {
+      console.error('Password verification error:', error);
       if (error.code === 'auth/wrong-password') {
         return NextResponse.json(
-          { error: 'Current password is incorrect' },
+          { error: 'The current password you entered is incorrect. Please check your password and try again.' },
+          { status: 400 }
+        );
+      }
+      if (error.code === 'auth/user-not-found') {
+        return NextResponse.json(
+          { error: 'User account not found. Please contact support.' },
+          { status: 400 }
+        );
+      }
+      if (error.code === 'auth/too-many-requests') {
+        return NextResponse.json(
+          { error: 'Too many failed attempts. Please wait a few minutes before trying again.' },
+          { status: 400 }
+        );
+      }
+      if (error.code === 'auth/invalid-email') {
+        return NextResponse.json(
+          { error: 'Invalid email address. Please contact support.' },
           { status: 400 }
         );
       }
       return NextResponse.json(
-        { error: 'Failed to verify current password' },
+        { error: 'Unable to verify your current password. Please make sure you entered it correctly and try again.' },
         { status: 400 }
       );
     }
@@ -59,18 +77,8 @@ export async function POST(request: NextRequest) {
 
       await updatePassword(currentUser, newPassword);
 
-      // Log audit action
-      await logAuditAction({
-        action: 'update',
-        entity: 'auth',
-        entityId: authResult.user.uid,
-        timestamp: Date.now(),
-        details: {
-          title: 'Password changed',
-          email: authResult.user.email,
-          action: 'password_change'
-        }
-      });
+      // Note: Password changes are intentionally NOT logged in audit trail for security reasons
+      // We only log that a password change occurred, without any sensitive data
 
       return NextResponse.json({
         success: true,

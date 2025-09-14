@@ -11,7 +11,61 @@ export default function PaymentSuccessPage() {
   const sessionId = searchParams.get('session_id');
   const [paymentDetails, setPaymentDetails] = useState<PaymentConfirmation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'unknown'>('unknown');
+  const [pollingAttempts, setPollingAttempts] = useState(0);
   const hasCalledRef = useRef(false);
+
+  // Function to check payment status
+  const checkPaymentStatus = async (email: string): Promise<'pending' | 'paid' | 'unknown'> => {
+    try {
+      console.log('🔍 Payment Success: Checking payment status for email:', email);
+      const response = await fetch(`/api/payment/user-status?email=${encodeURIComponent(email)}`);
+      const data = await response.json();
+      
+      console.log('🔍 Payment Success: Payment status response:', data);
+      
+      if (data.shouldShowPaymentButton) {
+        return 'pending';
+      } else if (data.hasCompletedPayment) {
+        return 'paid';
+      } else {
+        return 'unknown';
+      }
+    } catch (error) {
+      console.error('❌ Payment Success: Error checking payment status:', error);
+      return 'unknown';
+    }
+  };
+
+  // Polling function to check payment status up to 3 times
+  const pollPaymentStatus = async (email: string) => {
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      setPollingAttempts(attempts);
+      
+      console.log(`🔍 Payment Success: Polling attempt ${attempts}/${maxAttempts} for email:`, email);
+      
+      const status = await checkPaymentStatus(email);
+      setPaymentStatus(status);
+      
+      console.log(`🔍 Payment Success: Status after attempt ${attempts}:`, status);
+      
+      if (status === 'paid') {
+        console.log('✅ Payment Success: Payment confirmed as paid, stopping polling');
+        break;
+      } else if (status === 'pending' && attempts < maxAttempts) {
+        console.log(`⏳ Payment Success: Payment still pending, waiting before next attempt...`);
+        // Wait 2 seconds before next attempt
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } else {
+        console.log(`❌ Payment Success: Max attempts reached or unknown status, stopping polling`);
+        break;
+      }
+    }
+  };
 
   useEffect(() => {
     if (!sessionId) return;
@@ -50,6 +104,13 @@ export default function PaymentSuccessPage() {
               bonusAmount: data.bonusAmount,
               totalAmount: data.totalAmount,
             });
+            
+            // Start polling payment status if we have an email
+            if (data.email) {
+              // Store email in sessionStorage for navigation component
+              sessionStorage.setItem('payment_success_email', data.email);
+              pollPaymentStatus(data.email);
+            }
           } catch {
             // Fallback to minimal display
             setPaymentDetails({
@@ -94,6 +155,13 @@ export default function PaymentSuccessPage() {
               totalAmount: data.totalAmount,
             });
             
+            // Start polling payment status if we have an email
+            if (data.email) {
+              // Store email in sessionStorage for navigation component
+              sessionStorage.setItem('payment_success_email', data.email);
+              pollPaymentStatus(data.email);
+            }
+            
             // Mark this session as processed to prevent duplicate emails on reload
             sessionStorage.setItem(processedKey, 'true');
           } catch {
@@ -126,6 +194,11 @@ export default function PaymentSuccessPage() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-lg text-muted-foreground">Verifying your payment...</p>
+            {pollingAttempts > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Checking payment status... (Attempt {pollingAttempts}/3)
+              </p>
+            )}
           </div>
         </div>
         {/* Footer rendered globally in RootLayout */}
@@ -249,7 +322,45 @@ export default function PaymentSuccessPage() {
             )}
           </div>
 
-        
+          {/* Payment Status Notice */}
+          {paymentStatus === 'pending' && pollingAttempts >= 3 && (
+            <div className="card-elevated p-4 sm:p-6 rounded-2xl mb-8 bg-yellow-50 border border-yellow-200">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 bg-yellow-500 rounded-full flex-shrink-0 mt-0.5"></div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-yellow-800 font-semibold text-base sm:text-lg mb-2">
+                    Payment Processing
+                  </h3>
+                  <p className="text-yellow-700 text-sm sm:text-base">
+                    Your payment is still being processed. This can take a few minutes. 
+                    You will receive a confirmation email once the payment is complete.
+                  </p>
+                  <p className="text-yellow-600 text-xs sm:text-sm mt-2">
+                    If you don't receive confirmation within 15 minutes, please contact us at{' '}
+                    <a href="mailto:nobilis.talent@gmail.com" className="underline hover:no-underline">
+                      nobilis.talent@gmail.com
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {paymentStatus === 'paid' && (
+            <div className="card-elevated p-4 sm:p-6 rounded-2xl mb-8 bg-green-50 border border-green-200">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 bg-green-500 rounded-full flex-shrink-0 mt-0.5"></div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-green-800 font-semibold text-base sm:text-lg mb-2">
+                    Payment Confirmed
+                  </h3>
+                  <p className="text-green-700 text-sm sm:text-base">
+                    Your payment has been successfully processed and confirmed in our system.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="text-center space-y-4">

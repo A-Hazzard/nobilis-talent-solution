@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   authors: [{ name: 'Kareem Payne' }, { name: 'Jennifer Payne' }],
   creator: 'Nobilis Talent Solutions',
   publisher: 'Nobilis Talent Solutions',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
   formatDetection: {
     email: false,
     address: false,

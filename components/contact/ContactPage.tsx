@@ -491,8 +491,8 @@ const ContactPage = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold text-accent text-sm sm:text-base">Email</div>
-                        <a href="mailto:nobilis.talent@gmail.com" className="text-primary hover:underline text-sm sm:text-base break-all">
-                          nobilis.talent@gmail.com
+                        <a href="mailto:support@nobilistalent.com" className="text-primary hover:underline text-sm sm:text-base break-all">
+                          support@nobilistalent.com
                         </a>
                       </div>
                     </div>

@@ -5,8 +5,8 @@
 
 export const SITE_CONFIG = {
   name: 'Nobilis Talent Solutions',
-  url: 'https://nobilis-talent-solutions.com',
-  domain: 'nobilis-talent-solutions.com',
+  url: 'https://nobilistalent.com',
+  domain: 'nobilistalent.com',
   locale: 'en_US',
   defaultLanguage: 'en',
   supportedLanguages: ['en'],
@@ -20,22 +20,22 @@ export const BUSINESS_INFO = {
   tagline: 'Where Strategy Meets Humanity',
   industry: 'Professional Services',
   category: 'Leadership Development & Organizational Consulting',
-  founded: '2024',
+  founded: '2025',
   address: {
-    street: '123 Business Street',
-    city: 'New York',
-    state: 'NY',
-    zipCode: '10001',
+    street: '3344 Cobb Parkway, STE 200',
+    city: 'Acworth',
+    state: 'GA',
+    zipCode: '30101',
     country: 'United States',
   },
   contact: {
-    phone: '+1 (555) 123-4567',
-    email: 'info@nobilis-talent-solutions.com',
-    website: 'https://nobilis-talent-solutions.com',
+    phone: '(678) 920-6605',
+    email: 'support@nobilistalent.com',
+    website: 'https://nobilistalent.com',
   },
   social: {
-    linkedin: 'https://linkedin.com/company/nobilis-talent-solutions',
-    instagram: 'https://instagram.com/nobilis_talent_solutions',
+    linkedin: 'https://www.linkedin.com/company/nobilis-talent-solutions/',
+    instagram: 'https://www.instagram.com/nobilis.talent',
   },
   team: [
     {
@@ -45,10 +45,10 @@ export const BUSINESS_INFO = {
       bio: 'Kareem specializes in strategic leadership development and organizational transformation.',
     },
     {
-      name: 'Jenifer Payne',
+      name: 'Jennifer Payne',
       title: 'Co-Founder & Lead Organizational Development Partner',
       role: 'Organizational Development Specialist',
-      bio: 'Jenifer focuses on human resources and organizational development with expertise in Manufacturing, Media & Entertainment, and Consumer Packaging.',
+      bio: 'Jennifer focuses on human resources and organizational development with expertise in Manufacturing, Media & Entertainment, and Consumer Packaging.',
     },
   ],
   services: [
@@ -95,11 +95,11 @@ export const SEO_KEYWORDS = {
     'team building workshops',
   ],
   local: [
-    'leadership coaching New York',
-    'executive coaching NYC',
-    'organizational consulting New York',
-    'team development New York',
-    'human resources consulting NYC',
+    'leadership coaching Georgia',
+    'executive coaching Atlanta',
+    'organizational consulting Georgia',
+    'team development Georgia',
+    'human resources consulting Atlanta',
   ],
   question: [
     'how to develop leadership skills',
@@ -122,7 +122,7 @@ export const SCHEMA_TYPES = {
     description: BUSINESS_INFO.description,
     url: SITE_CONFIG.url,
     logo: `${SITE_CONFIG.url}/assets/logo.png`,
-    image: `${SITE_CONFIG.url}/assets/hero.jpg`,
+    image: `${SITE_CONFIG.url}/assets/logo-transparent.png`,
     address: {
       '@type': 'PostalAddress',
       streetAddress: BUSINESS_INFO.address.street,
@@ -149,7 +149,7 @@ export const SCHEMA_TYPES = {
       },
       {
         '@type': 'Person',
-        name: 'Jenifer Payne',
+        name: 'Jennifer Payne',
         jobTitle: 'Co-Founder & Lead Organizational Development Partner',
       },
     ],
@@ -170,8 +170,8 @@ export const SCHEMA_TYPES = {
     url: SITE_CONFIG.url,
     serviceType: 'Leadership Development & Organizational Consulting',
     areaServed: [
-      'New York',
-      'New York City',
+      'Georgia',
+      'Acworth',
       'United States',
     ],
     hasOfferCatalog: {
@@ -206,10 +206,10 @@ export const SCHEMA_TYPES = {
         'Team Development',
       ],
     },
-    jenifer: {
+    jennifer: {
       '@context': 'https://schema.org',
       '@type': 'Person',
-      name: 'Jenifer Payne',
+      name: 'Jennifer Payne',
       jobTitle: 'Co-Founder & Lead Organizational Development Partner',
       description: 'Organizational Development Specialist with expertise in Manufacturing, Media & Entertainment, and Consumer Packaging.',
       worksFor: {
@@ -232,7 +232,7 @@ export const META_TAGS = {
     title: `${BUSINESS_INFO.name} - ${BUSINESS_INFO.tagline}`,
     description: BUSINESS_INFO.description,
     keywords: SEO_KEYWORDS.primary.join(', '),
-    author: 'Kareem Payne, Jenifer Payne',
+    author: 'Kareem Payne, Jennifer Payne',
     robots: 'index, follow',
     viewport: 'width=device-width, initial-scale=1',
     charset: 'utf-8',
@@ -244,7 +244,7 @@ export const META_TAGS = {
     siteName: BUSINESS_INFO.name,
     title: `${BUSINESS_INFO.name} - ${BUSINESS_INFO.tagline}`,
     description: BUSINESS_INFO.description,
-    image: `${SITE_CONFIG.url}/assets/hero.jpg`,
+    image: `${SITE_CONFIG.url}/assets/logo-transparent.png`,
     imageWidth: 1200,
     imageHeight: 630,
     imageAlt: `${BUSINESS_INFO.name} - Leadership Development`,
@@ -255,12 +255,12 @@ export const META_TAGS = {
     creator: '@nobilis_talent',
     title: `${BUSINESS_INFO.name} - ${BUSINESS_INFO.tagline}`,
     description: BUSINESS_INFO.description,
-    image: `${SITE_CONFIG.url}/assets/hero.jpg`,
+    image: `${SITE_CONFIG.url}/assets/logo-transparent.png`,
   },
   local: {
-    'geo.region': 'US-NY',
-    'geo.placename': 'New York',
-    'geo.position': '40.7128;-74.0060',
-    'ICBM': '40.7128, -74.0060',
+    'geo.region': 'US-GA',
+    'geo.placename': 'Acworth',
+    'geo.position': '34.0659;-84.6769',
+    'ICBM': '34.0659, -84.6769',
   },
 };

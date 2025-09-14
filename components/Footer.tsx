@@ -34,9 +34,9 @@ const Footer = () => {
     <footer className="bg-accent text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
         {/* Four Column Grid Layout */}
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand Section - Left Column */}
-          <div className="md:col-span-1">
+          <div className="col-span-1 sm:col-span-2 md:col-span-1">
             <h3 className="text-xl font-bold mb-4">Nobilis Talent Solutions</h3>
             <p className="text-white/80 mb-6 leading-relaxed text-sm">
               Transforming leaders and organizations through proven coaching methodologies 
@@ -66,7 +66,7 @@ const Footer = () => {
           </div>
 
           {/* Quick Links - Second Column */}
-          <div>
+          <div className="md:ml-10">
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
@@ -106,10 +106,10 @@ const Footer = () => {
               <div className="flex items-center">
                 <Mail className="w-4 h-4 mr-3 text-primary" />
                 <a
-                  href="mailto:nobilis.talent@gmail.com"
+                  href="mailto:support@nobilistalent.com"
                   className="text-white/80 hover:text-primary transition-smooth text-sm"
                 >
-                  nobilis.talent@gmail.com
+                  support@nobilistalent.com
                 </a>
               </div>
               <div className="flex items-center">

@@ -5,6 +5,7 @@
 
 import Head from 'next/head';
 import { generateServiceSchema, generateBreadcrumbSchema, generateFAQSchema, generateArticleSchema } from '@/lib/seo/schema';
+import { SITE_CONFIG, BUSINESS_INFO } from '@/lib/seo/config';
 
 interface PageSEOProps {
   title?: string;
@@ -46,10 +47,10 @@ export default function PageSEO({
   noindex = false,
   nofollow = false,
 }: PageSEOProps) {
-  const fullTitle = title ? `${title} - Nobilis Talent Solutions` : 'Nobilis Talent Solutions - Where Strategy Meets Humanity';
-  const fullDescription = description || 'We help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results. Strategic leadership development and organizational transformation.';
-  const fullUrl = url ? `https://nobilis-talent-solutions.com${url}` : 'https://nobilis-talent-solutions.com';
-  const fullImage = image.startsWith('http') ? image : `https://nobilis-talent-solutions.com${image}`;
+  const fullTitle = title ? `${title} - ${BUSINESS_INFO.name}` : `${BUSINESS_INFO.name} - ${BUSINESS_INFO.tagline}`;
+  const fullDescription = description || BUSINESS_INFO.description;
+  const fullUrl = url ? `${SITE_CONFIG.url}${url}` : SITE_CONFIG.url;
+  const fullImage = image.startsWith('http') ? image : `${SITE_CONFIG.url}${image}`;
 
   const robotsContent = [
     noindex ? 'noindex' : 'index',
@@ -93,8 +94,8 @@ export default function PageSEO({
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={fullTitle} />
-      <meta property="og:site_name" content="Nobilis Talent Solutions" />
-      <meta property="og:locale" content="en_US" />
+      <meta property="og:site_name" content={BUSINESS_INFO.name} />
+      <meta property="og:locale" content={SITE_CONFIG.locale} />
 
       {/* Twitter Cards */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -104,8 +105,8 @@ export default function PageSEO({
       <meta name="twitter:image:alt" content={fullTitle} />
 
       {/* Local SEO */}
-      <meta name="geo.region" content="US-NY" />
-      <meta name="geo.placename" content="New York" />
+      <meta name="geo.region" content={`US-${BUSINESS_INFO.address.state}`} />
+      <meta name="geo.placename" content={BUSINESS_INFO.address.city} />
       <meta name="geo.position" content="40.7128;-74.0060" />
       <meta name="ICBM" content="40.7128, -74.0060" />
 

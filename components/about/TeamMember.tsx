@@ -145,7 +145,7 @@ const TeamMember = ({
                 quality={90}
                 priority
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                className="w-full h-auto object-cover rounded-3xl shadow-strong hover-float"
+                className="w-full h-auto object-cover rounded-3xl hover-float team-member-image"
               />
             </div>
           </div>

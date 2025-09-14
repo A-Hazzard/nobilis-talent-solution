@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: META_TAGS.default.title,
   description: META_TAGS.default.description,
   keywords: META_TAGS.default.keywords,
-  authors: [{ name: 'Kareem Payne' }, { name: 'Jenifer Payne' }],
+  authors: [{ name: 'Kareem Payne' }, { name: 'Jennifer Payne' }],
   creator: 'Nobilis Talent Solutions',
   publisher: 'Nobilis Talent Solutions',
   formatDetection: {
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: 'your-google-verification-code',
+    google: process.env.GOOGLE_SITE_VERIFICATION,
   },
   other: {
     ...META_TAGS.local,

@@ -337,8 +337,8 @@ export default function PaymentSuccessPage() {
                   </p>
                   <p className="text-yellow-600 text-xs sm:text-sm mt-2">
                     If you don't receive confirmation within 15 minutes, please contact us at{' '}
-                    <a href="mailto:nobilis.talent@gmail.com" className="underline hover:no-underline">
-                      nobilis.talent@gmail.com
+                    <a href="mailto:support@nobilistalent.com" className="underline hover:no-underline">
+                      support@nobilistalent.com
                     </a>
                   </p>
                 </div>
@@ -374,8 +374,8 @@ export default function PaymentSuccessPage() {
             
             <div className="text-sm text-muted-foreground">
               Questions? Contact us at{' '}
-              <a href="mailto:nobilis.talent@gmail.com" className="text-primary hover:underline">
-                nobilis.talent@gmail.com
+              <a href="mailto:support@nobilistalent.com" className="text-primary hover:underline">
+                support@nobilistalent.com
               </a>
             </div>
           </div>

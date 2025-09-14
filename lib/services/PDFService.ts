@@ -287,7 +287,7 @@ export class PDFService {
                     STE 200<br>
                     Acworth, GA, 30101<br>
                     Phone: +1 (678) 956-1146<br>
-                    Email: nobilis.talent@gmail.com
+                    Email: support@nobilistalent.com
                 </div>
             </div>
             

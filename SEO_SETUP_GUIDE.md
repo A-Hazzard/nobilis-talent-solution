@@ -29,9 +29,9 @@
 
 #### **A. Google Search Console**
 1. Go to [Google Search Console](https://search.google.com/search-console)
-2. Add property: `https://nobilis-talent-solutions.com`
+2. Add property: `https://nobilistalent.com`
 3. Verify ownership (use HTML file method)
-4. Submit sitemap: `https://nobilis-talent-solutions.com/sitemap.xml`
+4. Submit sitemap: `https://nobilistalent.com/sitemap.xml`
 5. Request indexing for all pages
 
 #### **B. Google My Business** (for local SEO)
@@ -41,7 +41,7 @@
    - Business name: "Nobilis Talent Solutions"
    - Address: [Your actual business address]
    - Phone: [Your actual phone number]
-   - Website: `https://nobilis-talent-solutions.com`
+   - Website: `https://nobilistalent.com`
    - Business hours
    - Services offered
 4. Add photos and encourage reviews

@@ -64,7 +64,7 @@ export class EmailService {
                   
                   <div class="footer">
                       <p>Nobilis Talent Solutions<br>
-                      +1 (678) 956-1146 | nobilis.talent@gmail.com</p>
+                      +1 (678) 956-1146 | support@nobilistalent.com</p>
                   </div>
               </div>
           </body>

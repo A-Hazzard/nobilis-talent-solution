@@ -3,7 +3,7 @@
  * Based on the comprehensive SEO implementation guide
  */
 
-import { BUSINESS_INFO, SCHEMA_TYPES } from './config';
+import { BUSINESS_INFO, SCHEMA_TYPES, SITE_CONFIG } from './config';
 
 export function generateOrganizationSchema() {
   return SCHEMA_TYPES.organization;
@@ -13,7 +13,7 @@ export function generateProfessionalServiceSchema() {
   return SCHEMA_TYPES.professionalService;
 }
 
-export function generatePersonSchema(person: 'kareem' | 'jenifer') {
+export function generatePersonSchema(person: 'kareem' | 'jennifer') {
   return SCHEMA_TYPES.person[person];
 }
 
@@ -26,13 +26,13 @@ export function generateServiceSchema(serviceName: string, description?: string)
     provider: {
       '@type': 'Organization',
       name: BUSINESS_INFO.name,
-      url: 'https://nobilis-talent-solutions.com',
+      url: SITE_CONFIG.url,
     },
     serviceType: serviceName,
     areaServed: [
-      'New York',
-      'New York City',
-      'United States',
+      BUSINESS_INFO.address.city,
+      BUSINESS_INFO.address.state,
+      BUSINESS_INFO.address.country,
     ],
     offers: {
       '@type': 'Offer',
@@ -94,12 +94,12 @@ export function generateArticleSchema(article: {
       name: BUSINESS_INFO.name,
       logo: {
         '@type': 'ImageObject',
-        url: 'https://nobilis-talent-solutions.com/assets/logo.png',
+        url: 'https://nobilistalent.com/assets/logo.png',
       },
     },
     datePublished: article.datePublished,
     dateModified: article.dateModified || article.datePublished,
-    image: article.image || 'https://nobilis-talent-solutions.com/assets/hero.jpg',
+    image: article.image || 'https://nobilistalent.com/assets/hero.jpg',
     url: article.url,
   };
 }
@@ -110,7 +110,7 @@ export function generateLocalBusinessSchema() {
     '@type': 'LocalBusiness',
     name: BUSINESS_INFO.name,
     description: BUSINESS_INFO.description,
-    url: 'https://nobilis-talent-solutions.com',
+    url: 'https://nobilistalent.com',
     telephone: BUSINESS_INFO.contact.phone,
     email: BUSINESS_INFO.contact.email,
     address: {

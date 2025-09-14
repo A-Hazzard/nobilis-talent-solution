@@ -720,6 +720,18 @@ body {
   .bg-gradient-subtle {
     background: var(--gradient-subtle);
   }
+
+  /* Team member image background removal */
+  .team-member-image {
+    background: #efefef !important;
+    mix-blend-mode: multiply;
+    box-shadow: none !important;
+  }
+  
+  .team-member-image:hover {
+    filter: contrast(1.15) brightness(1.1) saturate(1.2);
+    box-shadow: none !important;
+  }
 }
 
 /* Line clamp utilities */

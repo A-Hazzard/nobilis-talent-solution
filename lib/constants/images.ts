@@ -9,7 +9,7 @@ import coaching from '@/public/assets/coaching.jpg';
 import growthMetrics from '@/public/assets/growth-metrics.svg';
 import heroLeadership from '@/public/assets/hero.jpg';
 import kareemProfile from '@/public/assets/kareem.png';
-import sarahProfile from '@/public/assets/sarah.jpeg';
+import sarahProfile from '@/public/assets/sarah.png';
 import leadershipDevelopmentDesign from '@/public/assets/leaderShipDevelopmentDesign.jpg';
 import logoTransparent from '@/public/assets/logo-transparent.png';
 import performanceManagementDesign from '@/public/assets/performanceManagementDesign.jpg';

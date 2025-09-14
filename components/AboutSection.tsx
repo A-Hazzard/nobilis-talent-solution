@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import TeamMember from "./about/TeamMember";
 import { teamImages } from "@/lib/constants/images";
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 // Register ScrollTrigger plugin
 gsap.registerPlugin(ScrollTrigger);
@@ -35,7 +35,8 @@ const AboutSection = () => {
     const ctx = gsap.context(() => {
       // Header section animation
       if (headerRef.current) {
-        gsap.fromTo(headerRef.current.children, 
+        gsap.fromTo(
+          headerRef.current.children,
           {
             opacity: 0,
             y: 50,
@@ -45,14 +46,15 @@ const AboutSection = () => {
             y: 0,
             duration: 1,
             stagger: 0.2,
-            ease: "power2.out"
+            ease: "power2.out",
           }
         );
       }
 
       // Kareem's section animation
       if (kareemRef.current) {
-        gsap.fromTo(kareemRef.current,
+        gsap.fromTo(
+          kareemRef.current,
           {
             opacity: 0,
             y: 80,
@@ -67,15 +69,16 @@ const AboutSection = () => {
             scrollTrigger: {
               trigger: kareemRef.current,
               start: "top 80%",
-              toggleActions: "play none none reverse"
-            }
+              toggleActions: "play none none reverse",
+            },
           }
         );
       }
 
       // Jenifer's section animation
       if (jeniferRef.current) {
-        gsap.fromTo(jeniferRef.current,
+        gsap.fromTo(
+          jeniferRef.current,
           {
             opacity: 0,
             y: 80,
@@ -90,15 +93,16 @@ const AboutSection = () => {
             scrollTrigger: {
               trigger: jeniferRef.current,
               start: "top 80%",
-              toggleActions: "play none none reverse"
-            }
+              toggleActions: "play none none reverse",
+            },
           }
         );
       }
 
       // CTA section animation
       if (ctaRef.current) {
-        gsap.fromTo(ctaRef.current,
+        gsap.fromTo(
+          ctaRef.current,
           {
             opacity: 0,
             y: 30,
@@ -113,12 +117,11 @@ const AboutSection = () => {
             scrollTrigger: {
               trigger: ctaRef.current,
               start: "top 80%",
-              toggleActions: "play none none reverse"
-            }
+              toggleActions: "play none none reverse",
+            },
           }
         );
       }
-
     });
 
     return () => ctx.revert(); // Cleanup
@@ -155,16 +158,16 @@ Whether in a boardroom, training room, or community hall, his message is consist
           />
         </div>
 
-        {/* Jenifer's Section */}
+        {/* Jennifer's Section */}
         <div ref={jeniferRef} className="mb-24 md:mb-32 lg:mb-40">
           <TeamMember
-            name="Jenifer Payne"
+            name="Jennifer Payne"
             title="Co-Founder & Lead Organizational Development Partner"
-            bio={`Jenifer Payne brings over 15 years of expertise in organizational development and team transformation. With a background in Human Resources and business administration, she specializes in creating sustainable change within organizations through strategic people development initiatives.
+            bio={`Jennifer Payne brings over 15 years of expertise in organizational development and team transformation. With a background in Human Resources and business administration, she specializes in creating sustainable change within organizations through strategic people development initiatives.
 
-Her approach combines evidence-based methodologies with practical business acumen, helping teams navigate complex organizational challenges while building stronger, more cohesive work environments. Jenifer worked with Manufacturing, Media & Entertainment, Consumer Packaging across various industries, consistently delivering measurable improvements in team performance and employee engagement.
+Her approach combines evidence-based methodologies with practical business acumen, helping teams navigate complex organizational challenges while building stronger, more cohesive work environments. Jennifer worked with Manufacturing, Media & Entertainment, Consumer Packaging across various industries, consistently delivering measurable improvements in team performance and employee engagement.
 
-Jenifer believes that the foundation of any successful organization lies in its people. She champions inclusive leadership practices and helps leaders develop the emotional intelligence necessary to inspire and motivate their teams. Her collaborative style and deep understanding of human behavior make her an invaluable partner in organizational transformation efforts.`}
+Jennifer believes that the foundation of any successful organization lies in its people. She champions inclusive leadership practices and helps leaders develop the emotional intelligence necessary to inspire and motivate their teams. Her collaborative style and deep understanding of human behavior make her an invaluable partner in organizational transformation efforts.`}
             image={teamImages.sarah}
             achievements={wifeAchievements}
             achievementsBold={true}

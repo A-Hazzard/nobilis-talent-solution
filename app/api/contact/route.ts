@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { getAdminFirestore } from '@/lib/firebase/admin';
 import { EmailService } from '@/lib/services/EmailService';
 import { AuditService } from '@/lib/services/AuditService';
 
@@ -132,17 +131,18 @@ export async function POST(request: NextRequest) {
       formData.message = '[POTENTIAL SPAM] ' + formData.message;
     }
 
-    // Save to Firestore
+    // Save to Firestore using Admin SDK
+    const adminDb = getAdminFirestore();
     const contactData = filterUndefinedValues({
       ...formData,
-      createdAt: serverTimestamp(),
+      createdAt: new Date(),
       ipAddress: ip,
       userAgent: request.headers.get('user-agent') || '',
       isSpam: detectSpam(formData),
       status: 'new'
     });
 
-    const docRef = await addDoc(collection(db, 'contacts'), contactData);
+    const docRef = await adminDb.collection('contacts').add(contactData);
 
     // Log audit action
     const auditService = AuditService.getInstance();

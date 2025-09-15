@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from '@/lib/helpers/auth';
-import { db } from '@/lib/firebase/config';
-import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { getAdminFirestore } from '@/lib/firebase/admin';
 import { ServerAuditLogger } from '@/lib/helpers/auditLogger';
 
 export async function POST(request: NextRequest) {
@@ -35,15 +34,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current user data for audit logging
-    const userRef = doc(db, 'users', authResult.user.uid);
-    const currentUserDoc = await getDoc(userRef);
-    const currentUserData = currentUserDoc.exists() ? currentUserDoc.data() : {};
+    const adminDb = getAdminFirestore();
+    const userRef = adminDb.collection('users').doc(authResult.user.uid);
+    const currentUserDoc = await userRef.get();
+    const currentUserData = currentUserDoc.exists ? currentUserDoc.data() : {};
 
     const updateFields: any = {
       firstName: updateData.firstName.trim(),
       lastName: updateData.lastName.trim(),
       email: updateData.email.trim().toLowerCase(),
-      updatedAt: serverTimestamp(),
+      updatedAt: new Date(),
     };
 
     // Add optional fields if provided
@@ -85,12 +85,12 @@ export async function POST(request: NextRequest) {
     // Track changes for audit
     Object.keys(updateFields).forEach(key => {
       if (key !== 'updatedAt') {
-        beforeData[key] = currentUserData[key] || '';
+        beforeData[key] = currentUserData?.[key] || '';
         afterData[key] = updateFields[key];
       }
     });
 
-    await updateDoc(userRef, updateFields);
+    await userRef.update(updateFields);
 
     // Log audit action with before/after data using ServerAuditLogger
     const auditLogger = ServerAuditLogger.getInstance();

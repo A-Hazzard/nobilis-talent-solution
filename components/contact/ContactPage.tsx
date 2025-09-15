@@ -314,7 +314,7 @@ const ContactPage = () => {
                   </Alert>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 max-w-full">
+                <form onSubmit={handleSubmit} method="POST" className="space-y-4 sm:space-y-6 max-w-full">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="min-w-0">
                       <Label htmlFor="firstName" className="text-accent text-sm sm:text-base">

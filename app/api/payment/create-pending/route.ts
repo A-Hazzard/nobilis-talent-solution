@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreatePendingPaymentRequest, PendingPaymentResponse } from '@/shared/types/payment';
-import { db } from '@/lib/firebase/config';
-import { collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { getAdminFirestore } from '@/lib/firebase/admin';
 import { EmailService } from '@/lib/services/EmailService';
 import { PDFService } from '@/lib/services/PDFService';
 import type { InvoicePreview } from '@/shared/types/payment';
@@ -38,7 +37,8 @@ export async function POST(request: NextRequest) {
     };
 
     // Store the pending payment in Firebase
-    const docRef = await addDoc(collection(db, 'pendingPayments'), pendingPaymentData);
+    const adminDb = getAdminFirestore();
+    const docRef = await adminDb.collection('pendingPayments').add(pendingPaymentData);
     const paymentId = docRef.id;
 
     const pendingPayment = {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       };
 
       // Save invoice number to the payment
-      await updateDoc(docRef, { invoiceNumber, updatedAt: serverTimestamp() });
+      await docRef.update({ invoiceNumber, updatedAt: new Date() });
 
       const emailService = EmailService.getInstance();
       const pdfService = PDFService.getInstance();
@@ -119,13 +119,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Find pending payment for this email in Firebase
-    const q = query(
-      collection(db, 'pendingPayments'),
-      where('clientEmail', '==', email),
-      where('status', '==', 'pending')
-    );
-    
-    const querySnapshot = await getDocs(q);
+    const adminDb = getAdminFirestore();
+    const querySnapshot = await adminDb
+      .collection('pendingPayments')
+      .where('clientEmail', '==', email)
+      .where('status', '==', 'pending')
+      .get();
     
     if (querySnapshot.empty) {
       return NextResponse.json(

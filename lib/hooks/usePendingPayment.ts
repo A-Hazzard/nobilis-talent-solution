@@ -24,7 +24,8 @@ export function usePendingPayment(userEmail?: string) {
         const response = await fetch(`/api/payment/user-status?email=${encodeURIComponent(userEmail)}`);
         
         if (!response.ok) {
-          throw new Error('Failed to check payment status');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}: Failed to check payment status`);
         }
 
         const data = await response.json();
@@ -33,7 +34,8 @@ export function usePendingPayment(userEmail?: string) {
         setShouldShowPaymentButton(data.shouldShowPaymentButton || false);
       } catch (err) {
         console.error('Error checking payment status:', err);
-        setError(err instanceof Error ? err.message : 'Failed to check payment status');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to check payment status';
+        setError(errorMessage);
         setPendingPayment(null);
         setHasCompletedPayment(false);
         setShouldShowPaymentButton(false);

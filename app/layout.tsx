@@ -6,7 +6,7 @@ import ConditionalFooter from '@/components/ConditionalFooter';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { META_TAGS, SITE_CONFIG } from '@/lib/seo/config';
-import { generateOrganizationSchema, generateProfessionalServiceSchema } from '@/lib/seo/schema';
+import SchemaScripts from '@/components/seo/SchemaScripts';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -57,31 +57,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const organizationSchema = generateOrganizationSchema();
-  const professionalServiceSchema = generateProfessionalServiceSchema();
-
   return (
     <html lang="en">
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(professionalServiceSchema),
-          }}
-        />
-      </head>
       <body className={inter.className}>
         <Providers>
           {children}
           <ConditionalFooter />
           <Analytics />
           <SpeedInsights />
+          <SchemaScripts />
         </Providers>
       </body>
     </html>

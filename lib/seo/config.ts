@@ -244,7 +244,7 @@ export const META_TAGS = {
     siteName: BUSINESS_INFO.name,
     title: `${BUSINESS_INFO.name} - ${BUSINESS_INFO.tagline}`,
     description: BUSINESS_INFO.description,
-    image: `${SITE_CONFIG.url}/assets/hero.jpg`,
+    image: `${SITE_CONFIG.url}/assets/og-image.png`,
     imageWidth: 1200,
     imageHeight: 630,
     imageAlt: `${BUSINESS_INFO.name} - Leadership Development`,

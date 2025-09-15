@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   creator: 'Nobilis Talent Solutions',
   publisher: 'Nobilis Talent Solutions',
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: '/assets/logo-transparent.png',
+    shortcut: '/assets/logo-transparent.png',
+    apple: '/assets/logo-transparent.png',
   },
   formatDetection: {
     email: false,

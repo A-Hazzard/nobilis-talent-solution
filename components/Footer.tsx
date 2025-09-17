@@ -67,7 +67,7 @@ const Footer = () => {
           </div>
 
           {/* Quick Links - Second Column */}
-          <div className="md:ml-10">
+          <div className="md:ml-10 xl:ml-20">
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (

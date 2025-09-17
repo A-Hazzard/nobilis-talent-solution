@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
 
     // Send notification email to admin
     await emailService.sendContactNotification({
-      to: process.env.SMTP_FROM || process.env.ADMIN_EMAIL || 'kareempayne11@gmail.com',
+      to: process.env.ADMIN_EMAIL || process.env.SMTP_FROM || 'kareem@nobilistalent.com',
       contactData: {
         id: docRef.id,
         firstName: formData.name.split(' ')[0] || formData.name,

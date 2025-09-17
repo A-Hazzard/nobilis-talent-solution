@@ -10,7 +10,7 @@ export class EmailService {
   private constructor() {
     // Initialize transporter with environment variables
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      host: process.env.SMTP_HOST || "smtp-mail.outlook.com",
       port: parseInt(process.env.SMTP_PORT || "587"),
       secure: process.env.SMTP_SECURE === "true",
       auth: {
@@ -64,7 +64,7 @@ export class EmailService {
                   
                   <div class="footer">
                       <p>Nobilis Talent Solutions<br>
-                      +1 (678) 956-1146 | support@nobilistalent.com</p>
+                      +1 (678) 956-1146 | ${process.env.SUPPORT_EMAIL || 'support@nobilistalent.com'}</p>
                   </div>
               </div>
           </body>

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import BookNowButton from '@/components/BookNowButton';
 
 const ContactSection = () => {
   const [formData, setFormData] = useState({
@@ -354,12 +355,12 @@ const ContactSection = () => {
                   Prefer to book immediately? Use our online calendar to select 
                   a time that works for you.
                 </p>
-                <button 
-                  onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
+                <BookNowButton
                   className="bg-white text-primary px-6 py-4 rounded-xl font-semibold hover:bg-white/90 transition-smooth w-full h-14 sm:h-16 touch-manipulation active:scale-98"
+                  fallbackUrl={process.env.NEXT_PUBLIC_CALENDLY_URL}
                 >
                   Book Now
-                </button>
+                </BookNowButton>
                 <p className="text-xs opacity-75 mt-3 text-center">
                   All appointments are confirmed via email
                 </p>

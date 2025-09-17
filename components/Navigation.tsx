@@ -7,6 +7,7 @@ import { usePendingPayment } from '@/lib/hooks/usePendingPayment';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import BookNowButton from '@/components/BookNowButton';
 import logo  from "@/public/assets/logo-transparent.png"
 
 import Link from 'next/link';
@@ -262,12 +263,12 @@ const Navigation = () => {
                 </>
               )}
   
-              <button
-                onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
+              <BookNowButton
                 className="btn-primary font-bold text-xs px-3 py-1.5"
+                fallbackUrl={process.env.NEXT_PUBLIC_CALENDLY_URL}
               >
                 Book Now
-              </button>
+              </BookNowButton>
             </div>
   
             {/* Mobile menu button */}
@@ -370,15 +371,13 @@ const Navigation = () => {
                   </Link>
                 )}
                 
-                <button
-                  onClick={() => {
-                    window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank');
-                    setIsOpen(false);
-                  }}
+                <BookNowButton
+                  onClick={() => setIsOpen(false)}
                   className="w-full text-center btn-primary font-bold px-4 py-3 rounded-lg"
+                  fallbackUrl={process.env.NEXT_PUBLIC_CALENDLY_URL}
                 >
                   Book Now
-                </button>
+                </BookNowButton>
               </div>
             </div>
           </div>

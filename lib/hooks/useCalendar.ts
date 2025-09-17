@@ -418,6 +418,14 @@ export function useCalendar(): [CalendarState, CalendarActions] {
         const connectionStatus = await checkCalendlyConnection();
         console.log(`🔍 Connection status: ${connectionStatus}`);
         
+        // If not connected, automatically initiate connection
+        if (connectionStatus === 'disconnected') {
+          console.log('🔄 No Calendly connection found, auto-connecting...');
+          setCalendlyAuthStatus('connecting');
+          connectCalendly();
+          return; // Exit early, connection will be handled by OAuth callback
+        }
+        
         // Then load events with the connection status (this will include Calendly events if connected)
         console.log('📅 Loading events with connection status...');
         await loadEvents(connectionStatus);
@@ -439,7 +447,7 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     };
 
     initializeCalendar();
-  }, [isClient]); // Only depend on isClient to ensure it runs once when client is ready
+  }, [isClient, checkCalendlyConnection, loadEvents, connectCalendly, syncCalendlyEvents]); // Include all dependencies
 
   // Retry connection logic
   useEffect(() => {

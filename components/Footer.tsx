@@ -2,6 +2,7 @@
 
 import { Mail, Phone, Linkedin, Instagram } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import BookNowButton from '@/components/BookNowButton';
 
 const Footer = () => {
   const [isClient, setIsClient] = useState(false);
@@ -122,12 +123,12 @@ const Footer = () => {
                 </a>
               </div>
               <div className="mt-4">
-                <button
-                  onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
+                <BookNowButton
                   className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-light transition-smooth text-sm"
+                  fallbackUrl={process.env.NEXT_PUBLIC_CALENDLY_URL}
                 >
                   Book Consultation
-                </button>
+                </BookNowButton>
               </div>
             </div>
           </div>

@@ -158,4 +158,13 @@ export type Analytics = {
     source: string;
     count: number;
   }>;
+};
+
+export type CalendlyConfig = {
+  id: string;
+  bookingUrl: string; // The Calendly booking URL
+  isActive: boolean; // Whether this URL is currently active
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string; // user ID who created/updated this config
 }; 

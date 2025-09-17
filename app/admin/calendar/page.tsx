@@ -14,6 +14,7 @@ import CalendarHeader from '@/components/admin/calendar/CalendarHeader';
 import CalendarGrid from '@/components/admin/calendar/CalendarGrid';
 import UpcomingEvents from '@/components/admin/calendar/UpcomingEvents';
 import EventForm from '@/components/admin/calendar/EventForm';
+import CalendlyConfigForm from '@/components/admin/calendar/CalendlyConfigForm';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -134,13 +135,26 @@ export default function CalendarPage() {
         onToggleInstructions={toggleInstructions}
       />
 
-      {/* Temporary debug button for testing Calendly connection */}
-      {calendlyAuthStatus === 'disconnected' && (
+      {/* Auto-connection status */}
+      {calendlyAuthStatus === 'connecting' && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            <div className="flex items-center gap-2">
+              <span className="text-sm sm:text-base">Connecting to Calendly automatically...</span>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Fallback manual connection */}
+      {calendlyAuthStatus === 'disconnected' && connectionAttempts >= maxConnectionAttempts && (
         <Alert className="bg-yellow-50 border-yellow-200">
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <span className="text-sm sm:text-base">Calendly not connected. Click to connect manually:</span>
+              <span className="text-sm sm:text-base">Auto-connection failed. Click to connect manually:</span>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -249,6 +263,9 @@ export default function CalendarPage() {
           </AlertDescription>
         </Alert>
       )}
+
+      {/* Calendly Configuration Section */}
+      <CalendlyConfigForm />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3">

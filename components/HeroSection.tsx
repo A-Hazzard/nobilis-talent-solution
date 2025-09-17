@@ -3,6 +3,7 @@
 import { ArrowRight, Users, TrendingUp, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
+import BookNowButton from '@/components/BookNowButton';
 
 const HeroSection = () => {
   const scrollToNextSection = () => {
@@ -75,13 +76,13 @@ const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12 hero-stagger justify-center">
-              <button
-                onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
+              <BookNowButton
                 className="btn-primary group inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg"
+                fallbackUrl={process.env.NEXT_PUBLIC_CALENDLY_URL}
               >
                 Book Now
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </BookNowButton>
               
               <a
                 href="#services"

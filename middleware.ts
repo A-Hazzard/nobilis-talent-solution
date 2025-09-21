@@ -82,8 +82,9 @@ export async function middleware(request: NextRequest) {
       });
       if (resp.ok) {
         const data = await resp.json();
+        // For new users, if onboardingCompleted is false or undefined, redirect to onboarding
         // For Google users, if onboardingCompleted is undefined, assume they're existing users
-        if (data && data.role !== 'admin' && data.onboardingCompleted === false) {
+        if (data && data.role !== 'admin' && (data.onboardingCompleted === false || data.onboardingCompleted === undefined)) {
           return NextResponse.redirect(new URL('/onboarding', request.url));
         }
       }

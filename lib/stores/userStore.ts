@@ -180,7 +180,8 @@ export const useUserStore = create<UserState>()(
                   lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
                   isActive: true,
                   emailVerified: false,
-                  onboardingCompleted: false,
+                  onboardingCompleted: false, // New users must complete onboarding
+                  onboardingCompletedAt: undefined, // Will be set when onboarding is completed
                 };
                 
                 set({ 

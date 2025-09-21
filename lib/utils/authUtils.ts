@@ -15,9 +15,9 @@ export function getRedirectPath(user: User | null, isLogin: boolean = false): st
   // Reference isLogin to satisfy lint rule without changing logic
   void isLogin;
 
-  // Require onboarding for any authenticated non-admin user until completed
+  // For new signups, always redirect to onboarding first
   // For Google sign-in users, if onboardingCompleted is undefined, assume they're existing users
-  if (user.role !== 'admin' && user.onboardingCompleted === false) {
+  if (user.role !== 'admin' && (user.onboardingCompleted === false || user.onboardingCompleted === undefined)) {
     return '/onboarding';
   }
 

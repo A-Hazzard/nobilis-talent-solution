@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmailService } from '@/lib/services/EmailService';
+import { getAuth } from '@/lib/helpers/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, userId } = await request.json();
+    // Try to parse JSON, but handle empty body gracefully
+    let email, userId;
+    try {
+      const body = await request.json();
+      email = body.email;
+      userId = body.userId;
+    } catch (parseError) {
+      // If no JSON body, get user info from auth token
+      const authResult = await getAuth(request);
+      if (!authResult.user) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+      email = authResult.user.email;
+      userId = authResult.user.uid;
+    }
 
     if (!email || !userId) {
       return NextResponse.json(

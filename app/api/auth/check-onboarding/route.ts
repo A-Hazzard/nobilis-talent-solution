@@ -13,8 +13,12 @@ export async function GET(request: NextRequest) {
     const userRef = doc(db, 'users', authResult.user.uid);
     const userSnap = await getDoc(userRef);
     const data = userSnap.exists() ? userSnap.data() : null;
-    // For Google users, if onboardingCompleted is undefined, assume they're existing users
-    const onboardingCompleted = data ? (data.onboardingCompleted === undefined ? true : !!data.onboardingCompleted) : false;
+    
+    // Handle onboarding status:
+    // - If onboardingCompleted is explicitly false, user needs onboarding
+    // - If onboardingCompleted is undefined, treat as false (needs onboarding)
+    // - If onboardingCompleted is true, user has completed onboarding
+    const onboardingCompleted = data ? !!data.onboardingCompleted : false;
     const role = (data?.role as 'admin' | 'user') || 'user';
 
     return NextResponse.json({ onboardingCompleted, role });

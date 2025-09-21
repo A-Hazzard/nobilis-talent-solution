@@ -341,7 +341,11 @@ export default function OnboardingPage() {
             onChange={(e) => setData(prev => ({ ...prev, jobTitle: e.target.value }))}
             placeholder="e.g., CEO, Team Lead, Director"
             required
+            minLength={2}
           />
+          {data.jobTitle && data.jobTitle.length < 2 && (
+            <p className="text-sm text-red-600 mt-1">Job title must be at least 2 characters</p>
+          )}
         </div>
         
         <div>
@@ -362,7 +366,7 @@ export default function OnboardingPage() {
           </Button>
           <Button 
             onClick={nextStep}
-            disabled={!data.firstName || !data.lastName || !data.jobTitle}
+            disabled={!data.firstName || !data.lastName || !data.jobTitle || data.jobTitle.length < 2}
           >
             Continue
             <ArrowRight className="w-4 h-4 ml-2" />
@@ -419,7 +423,11 @@ export default function OnboardingPage() {
             onChange={(e) => setData(prev => ({ ...prev, industryFocus: e.target.value }))}
             placeholder="e.g., Technology, Healthcare, Finance"
             required
+            minLength={2}
           />
+          {data.industryFocus && data.industryFocus.length < 2 && (
+            <p className="text-sm text-red-600 mt-1">Industry focus must be at least 2 characters</p>
+          )}
         </div>
 
         <div>
@@ -445,7 +453,7 @@ export default function OnboardingPage() {
           </Button>
           <Button 
             onClick={nextStep}
-            disabled={!data.organizationName || !data.industryFocus || !data.teamSize}
+            disabled={!data.organizationName || !data.industryFocus || data.industryFocus.length < 2 || !data.teamSize}
           >
             Continue
             <ArrowRight className="w-4 h-4 ml-2" />
@@ -492,7 +500,14 @@ export default function OnboardingPage() {
             placeholder="Describe your current leadership challenges or areas you'd like to improve..."
             rows={3}
             required
+            minLength={10}
           />
+          {data.challengesDescription && data.challengesDescription.length < 10 && (
+            <p className="text-sm text-red-600 mt-1">Challenge description must be at least 10 characters</p>
+          )}
+          <p className="text-sm text-gray-500 mt-1">
+            {data.challengesDescription.length}/500 characters
+          </p>
         </div>
 
         <div>
@@ -534,7 +549,7 @@ export default function OnboardingPage() {
           </Button>
           <Button 
             onClick={nextStep}
-            disabled={data.primaryGoals.length === 0 || !data.challengesDescription || !data.timeline || !data.budget}
+            disabled={data.primaryGoals.length === 0 || !data.challengesDescription || data.challengesDescription.length < 10 || !data.timeline || !data.budget}
           >
             Complete Setup
             <ArrowRight className="w-4 h-4 ml-2" />

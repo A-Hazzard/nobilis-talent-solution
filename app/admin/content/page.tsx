@@ -39,7 +39,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -61,6 +60,8 @@ import { logAuditAction } from "@/lib/utils/auditUtils";
 import dynamic from "next/dynamic";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase/config";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import { CreateContentModal } from "@/components/admin/CreateContentModal";
 
 // Dynamically import RichTextEditor to avoid SSR issues
 const RichTextEditor = dynamic(
@@ -104,6 +105,10 @@ export default function ContentPage() {
   );
   const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
+  
+  // Confirmation modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteItem, setDeleteItem] = useState<{ type: 'blog' | 'resource'; id: string; title: string } | null>(null);
   const [resourceFormData, setResourceFormData] = useState({
     title: "",
     description: "",
@@ -380,14 +385,26 @@ export default function ContentPage() {
     }
   };
 
-  const handleDeletePost = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this blog post?")) return;
+  const handleDeletePost = (id: string) => {
+    const postToDelete = posts.find((post) => post.id === id);
+    if (postToDelete) {
+      setDeleteItem({
+        type: 'blog',
+        id,
+        title: postToDelete.title
+      });
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const confirmDeletePost = async () => {
+    if (!deleteItem) return;
     
     try {
       // Get post details before deletion for audit log
-      const postToDelete = posts.find((post) => post.id === id);
+      const postToDelete = posts.find((post) => post.id === deleteItem.id);
 
-      const response = await blogService.delete(id);
+      const response = await blogService.delete(deleteItem.id);
       if (response.error) {
         toast.error(response.error);
       } else {
@@ -396,7 +413,7 @@ export default function ContentPage() {
           await logAuditAction({
             action: "delete",
             entity: "blog",
-            entityId: id,
+            entityId: deleteItem.id,
             timestamp: Date.now(),
             details: {
               title: `Blog post deleted: ${postToDelete.title}`,
@@ -412,6 +429,9 @@ export default function ContentPage() {
       }
     } catch {
       toast.error("Failed to delete blog post");
+    } finally {
+      setIsDeleteModalOpen(false);
+      setDeleteItem(null);
     }
   };
 
@@ -610,11 +630,23 @@ export default function ContentPage() {
     }
   };
 
-  const handleDeleteResource = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resource?")) return;
+  const handleDeleteResource = (id: string) => {
+    const resourceToDelete = resources.find((resource) => resource.id === id);
+    if (resourceToDelete) {
+      setDeleteItem({
+        type: 'resource',
+        id,
+        title: resourceToDelete.title
+      });
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const confirmDeleteResource = async () => {
+    if (!deleteItem) return;
     
     try {
-      const response = await resourcesService.delete(id);
+      const response = await resourcesService.delete(deleteItem.id);
       if (response.error) {
         toast.error(response.error);
       } else {
@@ -624,6 +656,9 @@ export default function ContentPage() {
     } catch (error) {
       console.error("Exception in handleDeleteResource:", error);
       toast.error("Failed to delete resource");
+    } finally {
+      setIsDeleteModalOpen(false);
+      setDeleteItem(null);
     }
   };
 
@@ -778,955 +813,13 @@ export default function ContentPage() {
             Manage your blog posts and downloadable resources
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              onClick={() => setIsAddDialogOpen(true)}
-              className="w-full sm:w-auto"
-            >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Content
-          </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Content</DialogTitle>
-              <DialogDescription>
-                Choose the type of content you want to create.
-              </DialogDescription>
-            </DialogHeader>
-            
-            {/* Content Type Tabs */}
-            <Tabs
-              value={contentType}
-              onValueChange={(value) =>
-                setContentType(value as "blog" | "resource")
-              }
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="blog">Blog Post</TabsTrigger>
-                <TabsTrigger value="resource">Resource</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="blog" className="space-y-4">
-                <div className="text-sm text-gray-600 mb-4">
-                  Write and publish a new blog post with rich content editing.
-                </div>
-            <div className="grid gap-6 py-4">
-              {/* Cover Image */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-4">
-                    <Label className="text-right sm:pt-2">Cover Image</Label>
-                    <div className="col-span-1 sm:col-span-3 space-y-2">
-                      <div className="flex flex-col sm:flex-row gap-2">
-                    <div className="flex-1 relative">
-                      <ImageIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        value={formData.featuredImage}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                featuredImage: e.target.value,
-                              })
-                            }
-                        className="pl-10"
-                        placeholder="Enter image URL or upload a file"
-                      />
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          // Validate file type
-                              if (!file.type.startsWith("image/")) {
-                                toast.error("Please select a valid image file");
-                            return;
-                          }
-                          
-                          // Validate file size (5MB limit)
-                          if (file.size > 5 * 1024 * 1024) {
-                                toast.error("Image size must be less than 5MB");
-                            return;
-                          }
-
-                          setIsUploading(true);
-                          try {
-                            const timestamp = Date.now();
-                            const fileName = `blog-featured-images/${timestamp}-${file.name}`;
-                            const storageRef = ref(storage, fileName);
-                            
-                                const snapshot = await uploadBytes(
-                                  storageRef,
-                                  file
-                                );
-                                const downloadURL = await getDownloadURL(
-                                  snapshot.ref
-                                );
-
-                                setFormData({
-                                  ...formData,
-                                  featuredImage: downloadURL,
-                                });
-                                toast.success(
-                                  "Featured image uploaded successfully"
-                                );
-                          } catch (error) {
-                                console.error(
-                                  "Error uploading featured image:",
-                                  error
-                                );
-                                toast.error("Failed to upload featured image");
-                          } finally {
-                            setIsUploading(false);
-                          }
-                        }
-                        // Reset the input
-                        if (e.target) {
-                              e.target.value = "";
-                        }
-                      }}
-                      className="hidden"
-                      id="featured-image-upload"
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                          onClick={() =>
-                            document
-                              .getElementById("featured-image-upload")
-                              ?.click()
-                          }
-                      disabled={isUploading}
-                          className="flex-shrink-0"
-                    >
-                      {isUploading ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-                      ) : (
-                        <Upload className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  {formData.featuredImage && (
-                    <div className="mt-2">
-                      <img 
-                        src={formData.featuredImage} 
-                        alt="Featured image preview" 
-                        className="w-32 h-20 object-cover rounded border"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Category */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                    <Label htmlFor="category" className="text-right">
-                      Category *
-                    </Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, category: value })
-                      }
-                    >
-                      <SelectTrigger className="col-span-1 sm:col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                            {category.charAt(0).toUpperCase() +
-                              category.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Read Time */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                    <Label htmlFor="readTime" className="text-right">
-                      Read Time (minutes) *
-                    </Label>
-                <Input
-                  id="readTime"
-                  type="number"
-                  value={formData.readTime}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          readTime: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="col-span-1 sm:col-span-3"
-                  placeholder="0"
-                />
-              </div>
-
-              {/* Tags */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                    <Label htmlFor="tags" className="text-right">
-                      Tags
-                    </Label>
-                <Input
-                  id="tags"
-                      value={formData.tags.join(", ")}
-                      onChange={(e) =>
-                        setFormData({
-                    ...formData, 
-                          tags: e.target.value
-                            .split(",")
-                            .map((tag) => tag.trim())
-                            .filter((tag) => tag.length > 0),
-                        })
-                      }
-                      className="col-span-1 sm:col-span-3"
-                  placeholder="Add tags (comma separated)"
-                />
-              </div>
-
-              {/* Title */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                    <Label htmlFor="title" className="text-right">
-                      Title *
-                    </Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                      onChange={(e) =>
-                        setFormData({ ...formData, title: e.target.value })
-                      }
-                      className="col-span-1 sm:col-span-3"
-                  placeholder="Enter your blog title"
-                />
-              </div>
-              
-              {/* Excerpt */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                    <Label htmlFor="excerpt" className="text-right">
-                      Excerpt *
-                    </Label>
-                <Textarea
-                  id="excerpt"
-                  value={formData.excerpt}
-                      onChange={(e) =>
-                        setFormData({ ...formData, excerpt: e.target.value })
-                      }
-                      className="col-span-1 sm:col-span-3"
-                  rows={3}
-                  placeholder="Write a brief summary of your blog"
-                />
-              </div>
-
-              {/* Rich Text Content */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-4">
-                    <Label htmlFor="content" className="text-right pt-2">
-                      Content *
-                    </Label>
-                    <div className="col-span-1 sm:col-span-3">
-                  <RichTextEditor
-                    value={formData.content}
-                        onChange={(content: string) =>
-                          setFormData({ ...formData, content })
-                        }
-                    placeholder="Write your blog content here..."
-                    className="min-h-[300px]"
-                        onAutoSave={handleAutoSave}
-                      />
-                      {/* Auto-save Status */}
-                      {(isAutoSaving || lastAutoSaved) && (
-                        <div className="mt-2 text-xs text-gray-600 flex items-center gap-2">
-                          {isAutoSaving ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
-                              <span>Auto-saving...</span>
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="h-3 w-3 text-green-600" />
-                              <span>
-                                Last saved:{" "}
-                                {lastAutoSaved?.toLocaleTimeString()}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      )}
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="status" className="text-right">
-                      Status
-                    </Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value: BlogPost["status"]) =>
-                        setFormData({ ...formData, status: value })
-                      }
-                    >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* SEO Fields */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="seoTitle" className="text-right">
-                      SEO Title
-                    </Label>
-                <Input
-                  id="seoTitle"
-                  value={formData.seoTitle}
-                      onChange={(e) =>
-                        setFormData({ ...formData, seoTitle: e.target.value })
-                      }
-                  className="col-span-3"
-                  placeholder="SEO optimized title (optional)"
-                />
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="seoDescription" className="text-right">
-                      SEO Description
-                    </Label>
-                <Textarea
-                  id="seoDescription"
-                  value={formData.seoDescription}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          seoDescription: e.target.value,
-                        })
-                      }
-                  className="col-span-3"
-                  rows={2}
-                  placeholder="SEO meta description (optional)"
-                />
-              </div>
-
-                  {/* Featured Blog Post Toggle */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="blogFeatured" className="text-right">
-                      Featured
-                    </Label>
-                    <div className="col-span-3 flex flex-col space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="blogFeatured"
-                          checked={formData.featured}
-                          onCheckedChange={(checked) => {
-                            const currentFeaturedCount = posts.filter((post) => post.featured).length;
-                            const isAlreadyFeatured = posts.some((post) => post.featured && post.id === editingPost?.id);
-                            
-                            if (checked && currentFeaturedCount >= 3 && !isAlreadyFeatured) {
-                              toast.error("Maximum of 3 featured blog posts allowed. Please unfeature another blog post first.");
-                              return;
-                            }
-                            
-                            setFormData({
-                              ...formData,
-                              featured: checked as boolean,
-                            });
-                          }}
-                          disabled={posts.filter((post) => post.featured).length >= 3 && !formData.featured}
-                          className="h-4 w-4"
-                        />
-                        <Label htmlFor="blogFeatured" className="text-sm">
-                          Feature this blog post in the "Featured Blog Posts"
-                          section
-                        </Label>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span>
-                          ({3 - posts.filter((post) => post.featured).length}{" "}
-                          featured spots left)
-                        </span>
-                        {posts.filter((post) => post.featured).length >= 3 &&
-                          !formData.featured && (
-                            <span className="text-red-500 font-medium">
-                              • Maximum featured blog posts reached. Remove a featured blog post to add this one.
-                            </span>
-                          )}
-                      </div>
-                    </div>
-                  </div>
-
-              {/* Resources Selection */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">Resources</Label>
-                <div className="col-span-3 space-y-2">
-                  <div className="text-sm text-gray-600 mb-2">
-                        Select resources from your database to include with this
-                        blog post
-                  </div>
-                  <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
-                    {resources.length === 0 ? (
-                      <div className="text-sm text-gray-500 text-center py-4">
-                        No resources available. Create some resources first.
-                      </div>
-                    ) : (
-                      resources.map((resource) => (
-                            <label
-                              key={resource.id}
-                              className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
-                            >
-                              <Checkbox
-                                checked={formData.resources.includes(
-                                  resource.id
-                                )}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                setFormData({
-                                  ...formData,
-                                      resources: [
-                                        ...formData.resources,
-                                        resource.id,
-                                      ],
-                                });
-                              } else {
-                                setFormData({
-                                  ...formData,
-                                      resources: formData.resources.filter(
-                                        (id) => id !== resource.id
-                                      ),
-                                });
-                              }
-                            }}
-                                className="h-4 w-4"
-                          />
-                              <span className="text-sm flex-1">
-                                {resource.title}
-                              </span>
-                          <Badge variant="outline" className="text-xs">
-                            {resource.type}
-                          </Badge>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* References */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">References</Label>
-                <div className="col-span-3 space-y-2">
-                  <div className="text-sm text-gray-600 mb-2">
-                    Add external references and links
-                  </div>
-                  {formData.references.map((reference, index) => (
-                    <div key={index} className="flex gap-2 items-start">
-                      <div className="flex-1 space-y-2">
-                        <Input
-                          placeholder="Reference title"
-                          value={reference.title}
-                          onChange={(e) => {
-                            const newReferences = [...formData.references];
-                            newReferences[index].title = e.target.value;
-                                setFormData({
-                                  ...formData,
-                                  references: newReferences,
-                                });
-                          }}
-                        />
-                        <Input
-                          placeholder="URL"
-                          value={reference.url}
-                          onChange={(e) => {
-                            const newReferences = [...formData.references];
-                            newReferences[index].url = e.target.value;
-                                setFormData({
-                                  ...formData,
-                                  references: newReferences,
-                                });
-                          }}
-                        />
-                        <Input
-                          placeholder="Description (optional)"
-                              value={reference.description || ""}
-                          onChange={(e) => {
-                            const newReferences = [...formData.references];
-                                newReferences[index].description =
-                                  e.target.value;
-                                setFormData({
-                                  ...formData,
-                                  references: newReferences,
-                                });
-                          }}
-                        />
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                              const newReferences = formData.references.filter(
-                                (_, i) => i !== index
-                              );
-                              setFormData({
-                                ...formData,
-                                references: newReferences,
-                              });
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setFormData({
-                        ...formData,
-                            references: [
-                              ...formData.references,
-                              { title: "", url: "", description: "" },
-                            ],
-                      });
-                    }}
-                  >
-                    Add Reference
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddDialogOpen(false)}
-                  >
-                Cancel
-              </Button>
-              <Button 
-                    className="mb-2"
-                type="submit" 
-                onClick={handleAddPost}
-                disabled={isUploading}
-              >
-                    {isUploading ? "Creating..." : "Create Blog"}
-              </Button>
-            </DialogFooter>
-          </TabsContent>
-          
-          <TabsContent value="resource" className="space-y-4">
-            <div className="text-sm text-gray-600 mb-4">
-              Upload and manage downloadable resources for your audience.
-            </div>
-            <div className="grid gap-6 py-4">
-              {/* Resource Title */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resourceTitle" className="text-right">
-                      Title *
-                    </Label>
-                <Input
-                  id="resourceTitle"
-                  value={resourceFormData.title}
-                      onChange={(e) =>
-                        setResourceFormData({
-                          ...resourceFormData,
-                          title: e.target.value,
-                        })
-                      }
-                  className="col-span-3"
-                  placeholder="Enter resource title"
-                />
-              </div>
-
-              {/* Resource Description */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                    <Label
-                      htmlFor="resourceDescription"
-                      className="text-right pt-2"
-                    >
-                      Description *
-                    </Label>
-                <Textarea
-                  id="resourceDescription"
-                  value={resourceFormData.description}
-                      onChange={(e) =>
-                        setResourceFormData({
-                          ...resourceFormData,
-                          description: e.target.value,
-                        })
-                      }
-                  className="col-span-3"
-                  rows={3}
-                  placeholder="Describe the resource"
-                />
-              </div>
-
-              {/* Resource Type */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resourceType" className="text-right">
-                      Type *
-                    </Label>
-                    <Select
-                      value={resourceFormData.type}
-                      onValueChange={(value) =>
-                        setResourceFormData({
-                          ...resourceFormData,
-                          type: value as Resource["type"],
-                        })
-                      }
-                    >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {resourceTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Resource Category */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resourceCategory" className="text-right">
-                      Category *
-                    </Label>
-                    <Select
-                      value={resourceFormData.category}
-                      onValueChange={(value) =>
-                        setResourceFormData({
-                          ...resourceFormData,
-                          category: value as Resource["category"],
-                        })
-                      }
-                    >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {resourceCategories.map((category) => (
-                          <SelectItem
-                            key={category.value}
-                            value={category.value}
-                          >
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Resource File Upload */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resourceFile" className="text-right">
-                      File *
-                    </Label>
-                <div className="col-span-3">
-                  <Input
-                    id="resourceFile"
-                    type="file"
-                        onChange={(e) =>
-                          setSelectedResourceFile(e.target.files?.[0] || null)
-                        }
-                    className="col-span-3"
-                  />
-                  {selectedResourceFile && (
-                    <p className="text-sm text-gray-600 mt-1">
-                          Selected: {selectedResourceFile.name} (
-                          {formatFileSize(selectedResourceFile.size)})
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Resource Thumbnail URL */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                    <Label
-                      htmlFor="resourceThumbnailUrl"
-                      className="text-right"
-                    >
-                      Thumbnail URL (optional)
-                    </Label>
-                <div className="col-span-3">
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <div className="flex-1 relative">
-                          <ImageIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    id="resourceThumbnailUrl"
-                    value={resourceFormData.thumbnailUrl}
-                            onChange={(e) =>
-                              setResourceFormData({
-                                ...resourceFormData,
-                                thumbnailUrl: e.target.value,
-                              })
-                            }
-                            className="pl-10"
-                            placeholder="Enter image URL or upload a file"
-                          />
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              // Validate file type
-                              if (!file.type.startsWith("image/")) {
-                                toast.error("Please select a valid image file");
-                                return;
-                              }
-
-                              // Validate file size (5MB limit)
-                              if (file.size > 5 * 1024 * 1024) {
-                                toast.error("Image size must be less than 5MB");
-                                return;
-                              }
-
-                              setIsUploading(true);
-                              try {
-                                const timestamp = Date.now();
-                                const fileName = `resource-thumbnails/${timestamp}-${file.name}`;
-                                const storageRef = ref(storage, fileName);
-
-                                const snapshot = await uploadBytes(
-                                  storageRef,
-                                  file
-                                );
-                                const downloadURL = await getDownloadURL(
-                                  snapshot.ref
-                                );
-
-                                setResourceFormData({
-                                  ...resourceFormData,
-                                  thumbnailUrl: downloadURL,
-                                });
-                                toast.success(
-                                  "Thumbnail image uploaded successfully"
-                                );
-                              } catch (error) {
-                                console.error(
-                                  "Error uploading thumbnail image:",
-                                  error
-                                );
-                                toast.error("Failed to upload thumbnail image");
-                              } finally {
-                                setIsUploading(false);
-                              }
-                            }
-                            // Reset the input
-                            if (e.target) {
-                              e.target.value = "";
-                            }
-                          }}
-                          className="hidden"
-                          id="resource-thumbnail-upload"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            document
-                              .getElementById("resource-thumbnail-upload")
-                              ?.click()
-                          }
-                          disabled={isUploading}
-                          className="flex-shrink-0"
-                        >
-                          {isUploading ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-                          ) : (
-                            <Upload className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                  {resourceFormData.thumbnailUrl && (
-                    <div className="mt-2">
-                      <img 
-                        src={resourceFormData.thumbnailUrl} 
-                        alt="Resource thumbnail preview" 
-                        className="w-32 h-20 object-cover rounded border"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Featured Resource Toggle */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resourceFeatured" className="text-right">
-                      Featured
-                    </Label>
-                <div className="col-span-3 flex flex-col space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="resourceFeatured"
-                          checked={resourceFormData.featured}
-                          onCheckedChange={(checked) => {
-                            const currentFeaturedCount = resources.filter((resource) => resource.featured).length;
-                            const isAlreadyFeatured = resources.some((resource) => resource.featured && resource.id === editingResource?.id);
-                            
-                            if (checked && currentFeaturedCount >= 3 && !isAlreadyFeatured) {
-                              toast.error("Maximum of 3 featured resources allowed. Please unfeature another resource first.");
-                              return;
-                            }
-                            
-                            setResourceFormData({
-                              ...resourceFormData,
-                              featured: checked as boolean,
-                            });
-                          }}
-                          disabled={resources.filter((resource) => resource.featured).length >= 3 && !resourceFormData.featured}
-                          className="h-4 w-4"
-                        />
-                        <Label htmlFor="resourceFeatured" className="text-sm">
-                          Feature this resource in the "Featured Resources"
-                          section (max 3 featured resources)
-                        </Label>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span>
-                          (
-                          {3 -
-                            resources.filter((resource) => resource.featured)
-                              .length}{" "}
-                          featured spots left)
-                        </span>
-                        {resources.filter((resource) => resource.featured)
-                          .length >= 3 &&
-                          !resourceFormData.featured && (
-                            <span className="text-red-500 font-medium">
-                              • Maximum featured resources reached. Remove a featured resource to add this one.
-                            </span>
-                    )}
-                      </div>
-                </div>
-              </div>
-
-              {/* Related Resources Selection */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">Related Resources</Label>
-                <div className="col-span-3 space-y-2">
-                  <div className="text-sm text-gray-600 mb-2">
-                        Select other resources that are related to this one (max
-                        3 selections)
-                  </div>
-                  <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
-                    {resources.length === 0 ? (
-                      <div className="text-sm text-gray-500 text-center py-4">
-                            No other resources available. Create some resources
-                            first.
-                      </div>
-                    ) : (
-                      resources
-                            .filter(
-                              (r) =>
-                                !editingResource || r.id !== editingResource.id
-                            )
-                        .map((resource) => (
-                              <label
-                                key={resource.id}
-                                className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
-                              >
-                                <Checkbox
-                                  checked={resourceFormData.relatedResources.includes(
-                                    resource.id
-                                  )}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      if (
-                                        resourceFormData.relatedResources
-                                          .length >= 3
-                                      ) {
-                                        toast.error(
-                                          "You can only select up to 3 related resources"
-                                        );
-                                    return;
-                                  }
-                                  setResourceFormData({
-                                    ...resourceFormData,
-                                        relatedResources: [
-                                          ...resourceFormData.relatedResources,
-                                          resource.id,
-                                        ],
-                                  });
-                                } else {
-                                  setResourceFormData({
-                                    ...resourceFormData,
-                                        relatedResources:
-                                          resourceFormData.relatedResources.filter(
-                                            (id) => id !== resource.id
-                                          ),
-                                  });
-                                }
-                              }}
-                                  className="h-4 w-4"
-                            />
-                                <span className="text-sm flex-1">
-                                  {resource.title}
-                                </span>
-                            <Badge variant="outline" className="text-xs">
-                              {resource.type}
-                            </Badge>
-                          </label>
-                        ))
-                    )}
-                  </div>
-                </div>
-              </div>
-
-                  {/* Public/Private Toggle */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resourcePublic" className="text-right">
-                      Public Access
-                    </Label>
-                    <div className="col-span-3 flex items-center space-x-2">
-                      <Checkbox
-                        id="resourcePublic"
-                        checked={resourceFormData.isPublic}
-                        onCheckedChange={(checked) =>
-                          setResourceFormData({
-                            ...resourceFormData,
-                            isPublic: checked as boolean,
-                          })
-                        }
-                        className="h-4 w-4"
-                      />
-                      <Label htmlFor="resourcePublic" className="text-sm">
-                        Make this resource publicly accessible
-                      </Label>
-                    </div>
-                  </div>
-            </div>
-            <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsAddDialogOpen(false);
-                      setIsUploading(false);
-                      resetResourceForm();
-                    }}
-                  >
-                Cancel
-              </Button>
-              <Button 
-                    className="mb-2"
-                type="submit" 
-                onClick={handleAddResource}
-                disabled={isUploading}
-              >
-                    {isUploading ? "Creating..." : "Create Resource"}
-              </Button>
-            </DialogFooter>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+        <Button
+          onClick={() => setIsAddDialogOpen(true)}
+          className="w-full sm:w-auto"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Content
+        </Button>
       </div>
 
       {/* Error Alert */}
@@ -3143,6 +2236,36 @@ export default function ContentPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Content Modal */}
+      <CreateContentModal
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onSave={async (_data, _file) => {
+          if (contentType === "blog") {
+            await handleAddPost();
+          } else {
+            await handleAddResource();
+          }
+        }}
+        isUploading={isUploading}
+        setIsUploading={setIsUploading}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeleteItem(null);
+        }}
+        onConfirm={deleteItem?.type === 'blog' ? confirmDeletePost : confirmDeleteResource}
+        title={`Delete ${deleteItem?.type === 'blog' ? 'Blog Post' : 'Resource'}`}
+        description={`Are you sure you want to delete "${deleteItem?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+      />
     </div>
   );
 } 

@@ -36,13 +36,9 @@ export class AnalyticsService {
 
 
 
-      // Calculate period-specific leads (mock calculation - in real app would filter by date)
-      let leadsThisPeriod = Math.round(leadsStats.total * 0.3); // 30% of total for demo
-      if (period === 'week') {
-        leadsThisPeriod = Math.round(leadsStats.total * 0.075); // 7.5% of total for weekly
-      } else if (period === 'year') {
-        leadsThisPeriod = Math.round(leadsStats.total * 0.9); // 90% of total for yearly
-      }
+      // Use actual leads count for the period
+      // In a real implementation, you would filter leads by date range based on the period
+      const leadsThisPeriod = leadsStats.total;
 
       // Revenue is computed via API; default to 0 here
       const totalRevenue = 0;

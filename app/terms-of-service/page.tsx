@@ -389,7 +389,7 @@ export default function TermsOfServicePage() {
                           href="tel:+16789206605" 
                           className="text-blue-600 hover:text-blue-500 hover:underline"
                         >
-                          (678) 920-6605
+                          (678) 956-1146
                         </a>
                       </div>
                       <div className="flex items-start space-x-3">

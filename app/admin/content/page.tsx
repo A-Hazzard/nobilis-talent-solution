@@ -61,6 +61,7 @@ import { logAuditAction } from "@/lib/utils/auditUtils";
 import dynamic from "next/dynamic";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase/config";
+import { EditBlogPostModal } from "@/components/admin/EditBlogPostModal";
 
 // Dynamically import RichTextEditor to avoid SSR issues
 const RichTextEditor = dynamic(

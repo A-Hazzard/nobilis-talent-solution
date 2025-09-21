@@ -29,7 +29,7 @@ export const BUSINESS_INFO = {
     country: 'United States',
   },
   contact: {
-    phone: '(678) 920-6605',
+    phone: '(678) 956-1146',
     email: 'support@nobilistalent.com',
     website: 'https://nobilistalent.com',
   },

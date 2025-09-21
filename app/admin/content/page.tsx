@@ -296,9 +296,25 @@ export default function ContentPage() {
   };
 
   const handleAddPost = async () => {
-    if (!formData.title || !formData.content || !formData.excerpt) {
-      toast.error("Please fill in all required fields");
+    // Validate required fields
+    const missingFields = [];
+    if (!formData.title) missingFields.push("Title");
+    if (!formData.content) missingFields.push("Content");
+    if (!formData.excerpt) missingFields.push("Excerpt");
+    
+    if (missingFields.length > 0) {
+      toast.error(`Missing required fields: ${missingFields.join(", ")}`);
       return;
+    }
+
+    // Validate featured blog posts limit
+    if (formData.featured) {
+      const currentFeaturedCount = posts.filter((post) => post.featured).length;
+      
+      if (currentFeaturedCount >= 3) {
+        toast.error("Maximum of 3 featured blog posts allowed. Please unfeature another blog post first.");
+        return;
+      }
     }
 
     setIsUploading(true);
@@ -341,9 +357,26 @@ export default function ContentPage() {
   const handleEditPost = async () => {
     if (!editingPost) return;
     
-    if (!formData.title || !formData.content || !formData.excerpt) {
-      toast.error("Please fill in all required fields");
+    // Validate required fields
+    const missingFields = [];
+    if (!formData.title) missingFields.push("Title");
+    if (!formData.content) missingFields.push("Content");
+    if (!formData.excerpt) missingFields.push("Excerpt");
+    
+    if (missingFields.length > 0) {
+      toast.error(`Missing required fields: ${missingFields.join(", ")}`);
       return;
+    }
+
+    // Validate featured blog posts limit
+    if (formData.featured) {
+      const currentFeaturedCount = posts.filter((post) => post.featured).length;
+      const isAlreadyFeatured = posts.some((post) => post.featured && post.id === editingPost.id);
+      
+      if (currentFeaturedCount >= 3 && !isAlreadyFeatured) {
+        toast.error("Maximum of 3 featured blog posts allowed. Please unfeature another blog post first.");
+        return;
+      }
     }
 
     setIsUploading(true);
@@ -1587,7 +1620,7 @@ export default function ContentPage() {
                     className="h-4 w-4"
                   />
                   <Label htmlFor="edit-blog-featured" className="text-sm">
-                    Feature this blog post in the "Featured Blog Posts" section
+                    Feature this blog post in the "Featured Blog Posts" section (max 3 featured blog posts)
                   </Label>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">

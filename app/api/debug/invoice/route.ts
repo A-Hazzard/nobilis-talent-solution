@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
         hasAuthToken: !!request.cookies.get('auth-token')?.value,
         hasRefreshToken: !!request.cookies.get('refresh-token')?.value,
         authHeader: !!request.headers.get('authorization'),
+        user: null as any,
+        error: null as any,
       },
       
       // Services test
@@ -46,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     // Test PDF service
     try {
-      const pdfService = PDFService.getInstance();
+      const _pdfService = PDFService.getInstance();
       debugInfo.services.pdfService = 'initialized';
     } catch (error) {
       debugInfo.services.pdfService = `error: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     // Test email service
     try {
-      const emailService = EmailService.getInstance();
+      const _emailService = EmailService.getInstance();
       debugInfo.services.emailService = 'initialized';
     } catch (error) {
       debugInfo.services.emailService = `error: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -113,7 +115,7 @@ export async function POST(request: NextRequest) {
     if (testType === 'email') {
       // Test email service
       const emailService = EmailService.getInstance();
-      const result = await emailService.sendTestEmail({
+      const result = await emailService.sendEmail({
         to: 'test@example.com',
         subject: 'Test Email',
         html: '<p>This is a test email</p>'

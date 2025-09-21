@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       const body = await request.json();
       email = body.email;
       userId = body.userId;
-    } catch (parseError) {
+    } catch {
       // If no JSON body, get user info from auth token
       const authResult = await getAuth(request);
       if (!authResult.user) {

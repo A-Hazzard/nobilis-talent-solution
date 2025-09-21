@@ -334,12 +334,13 @@ export default function OnboardingPage() {
         </div>
         
         <div>
-          <Label htmlFor="jobTitle">Job Title</Label>
+          <Label htmlFor="jobTitle">Job Title *</Label>
           <Input
             id="jobTitle"
             value={data.jobTitle}
             onChange={(e) => setData(prev => ({ ...prev, jobTitle: e.target.value }))}
             placeholder="e.g., CEO, Team Lead, Director"
+            required
           />
         </div>
         
@@ -361,7 +362,7 @@ export default function OnboardingPage() {
           </Button>
           <Button 
             onClick={nextStep}
-            disabled={!data.firstName || !data.lastName}
+            disabled={!data.firstName || !data.lastName || !data.jobTitle}
           >
             Continue
             <ArrowRight className="w-4 h-4 ml-2" />
@@ -411,17 +412,18 @@ export default function OnboardingPage() {
         </div>
 
         <div>
-          <Label htmlFor="industryFocus">Industry Focus</Label>
+          <Label htmlFor="industryFocus">Industry Focus *</Label>
           <Input
             id="industryFocus"
             value={data.industryFocus}
             onChange={(e) => setData(prev => ({ ...prev, industryFocus: e.target.value }))}
             placeholder="e.g., Technology, Healthcare, Finance"
+            required
           />
         </div>
 
         <div>
-          <Label>Team Size</Label>
+          <Label>Team Size *</Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
             {TEAM_SIZES.map((size) => (
               <Button
@@ -443,7 +445,7 @@ export default function OnboardingPage() {
           </Button>
           <Button 
             onClick={nextStep}
-            disabled={!data.organizationName}
+            disabled={!data.organizationName || !data.industryFocus || !data.teamSize}
           >
             Continue
             <ArrowRight className="w-4 h-4 ml-2" />
@@ -482,18 +484,19 @@ export default function OnboardingPage() {
         </div>
 
         <div>
-          <Label htmlFor="challengesDescription">Current Challenges</Label>
+          <Label htmlFor="challengesDescription">Current Challenges *</Label>
           <Textarea
             id="challengesDescription"
             value={data.challengesDescription}
             onChange={(e) => setData(prev => ({ ...prev, challengesDescription: e.target.value }))}
             placeholder="Describe your current leadership challenges or areas you'd like to improve..."
             rows={3}
+            required
           />
         </div>
 
         <div>
-          <Label>Timeline</Label>
+          <Label>Timeline *</Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
             {TIMELINES.map((timeline) => (
               <Button
@@ -509,7 +512,7 @@ export default function OnboardingPage() {
         </div>
 
         <div>
-          <Label>Budget Range</Label>
+          <Label>Budget Range *</Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
             {BUDGET_RANGES.map((budget) => (
               <Button
@@ -531,7 +534,7 @@ export default function OnboardingPage() {
           </Button>
           <Button 
             onClick={nextStep}
-            disabled={data.primaryGoals.length === 0}
+            disabled={data.primaryGoals.length === 0 || !data.challengesDescription || !data.timeline || !data.budget}
           >
             Complete Setup
             <ArrowRight className="w-4 h-4 ml-2" />

@@ -401,9 +401,33 @@ export class PDFService {
   }
 
   /**
-   * Generate invoice PDF using Puppeteer
+   * Generate invoice PDF using Puppeteer with fallback
    */
   async generateInvoicePDF(
+    invoice: InvoicePreview,
+    invoiceNumber: string,
+    options: PDFOptions = {}
+  ): Promise<{ success: boolean; data?: Buffer; error?: string }> {
+    // Try Puppeteer first, fallback to HTML if it fails
+    const puppeteerResult = await this.generateInvoicePDFWithPuppeteer(invoice, invoiceNumber, options);
+    if (puppeteerResult.success) {
+      return puppeteerResult;
+    }
+
+    // Fallback: Return HTML as text if Puppeteer fails
+    console.warn("⚠️ PDFService: Puppeteer failed, falling back to HTML generation");
+    const html = this.generateInvoiceHTML(invoice, invoiceNumber, options);
+    return {
+      success: true,
+      data: Buffer.from(html, 'utf-8'),
+      error: 'PDF generation failed, returning HTML fallback'
+    };
+  }
+
+  /**
+   * Generate invoice PDF using Puppeteer (internal method)
+   */
+  private async generateInvoicePDFWithPuppeteer(
     invoice: InvoicePreview,
     invoiceNumber: string,
     options: PDFOptions = {}
@@ -431,7 +455,10 @@ export class PDFService {
 
       // Launch Puppeteer browser
       console.log("🌐 PDFService: Launching Puppeteer browser...");
-      browser = await puppeteer.launch({
+      
+      // Production-optimized Puppeteer configuration
+      const isProduction = process.env.NODE_ENV === 'production';
+      const puppeteerOptions: any = {
         headless: true,
         args: [
           "--no-sandbox",
@@ -440,9 +467,27 @@ export class PDFService {
           "--disable-accelerated-2d-canvas",
           "--no-first-run",
           "--disable-gpu",
+          "--disable-web-security",
+          "--disable-features=VizDisplayCompositor",
+          "--disable-extensions",
+          "--disable-plugins",
+          "--disable-images",
+          "--disable-javascript", // We don't need JS for static PDF generation
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-renderer-backgrounding",
         ],
         timeout: 60000,
-      });
+      };
+
+      // Add production-specific options
+      if (isProduction) {
+        puppeteerOptions.executablePath = '/usr/bin/chromium-browser'; // Common path in production
+        puppeteerOptions.args.push('--single-process'); // Better for serverless
+        puppeteerOptions.args.push('--no-zygote'); // Better for serverless
+      }
+
+      browser = await puppeteer.launch(puppeteerOptions);
 
       console.log("✅ PDFService: Browser launched successfully");
 

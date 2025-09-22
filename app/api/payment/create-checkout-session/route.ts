@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
           },
         ],
         mode: 'payment',
-        success_url: `${request.nextUrl.origin}/payment/success?client=${encodeURIComponent(clientName)}&amount=${amount}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${request.nextUrl.origin}/payment/pending?email=${encodeURIComponent(clientEmail)}`,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?client=${encodeURIComponent(clientName)}&amount=${amount}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/pending?email=${encodeURIComponent(clientEmail)}`,
         metadata: {
           clientName,
           clientEmail,
@@ -105,8 +105,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${request.nextUrl.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.nextUrl.origin}/payment`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment`,
       metadata: {
         optionId,
         optionName: option.name,

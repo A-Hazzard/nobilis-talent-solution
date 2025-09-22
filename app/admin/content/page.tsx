@@ -483,7 +483,7 @@ export default function ContentPage() {
       seoDescription: post.seoDescription || "",
       readTime: post.readTime || 0,
       featuredImage: post.featuredImage || "",
-      featured: post.featured || false,
+      featured: Boolean(post.featured),
       resources: post.resources || [],
       references: post.references || [],
       scheduledDate: post.scheduledDate || "",

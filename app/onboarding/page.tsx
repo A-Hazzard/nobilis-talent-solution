@@ -101,7 +101,7 @@ export default function OnboardingPage() {
       }
       
       // Check if user has already completed onboarding
-      if (user?.onboardingCompleted) {
+      if (user?.onboardingCompleted === true) {
         // Redirect based on user role
         if (user.role === 'admin') {
           router.push('/admin');
@@ -285,14 +285,19 @@ export default function OnboardingPage() {
             <p className="text-sm text-gray-600">Define your leadership goals</p>
           </div>
         </div>
-        <div className="flex justify-center gap-3">
-          <Button onClick={nextStep} size="lg">
-            Get Started
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-          {/* <Button variant="outline" size="lg" onClick={handleSkip}>
-            Skip for now
-          </Button> */}
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-3">
+            <Button onClick={nextStep} size="lg">
+              Get Started
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+            <Button variant="outline" size="lg" onClick={_handleSkip} disabled={isSubmitting}>
+              {isSubmitting ? 'Skipping...' : 'Skip for now'}
+            </Button>
+          </div>
+          <p className="text-sm text-gray-500 text-center max-w-md">
+            You can always complete your profile later from your account settings
+          </p>
         </div>
       </CardContent>
     </Card>
@@ -364,13 +369,18 @@ export default function OnboardingPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Button 
-            onClick={nextStep}
-            disabled={!data.firstName || !data.lastName || !data.jobTitle || data.jobTitle.length < 2}
-          >
-            Continue
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={_handleSkip} disabled={isSubmitting}>
+              {isSubmitting ? 'Skipping...' : 'Skip'}
+            </Button>
+            <Button 
+              onClick={nextStep}
+              disabled={!data.firstName || !data.lastName || !data.jobTitle || data.jobTitle.length < 2}
+            >
+              Continue
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -451,13 +461,18 @@ export default function OnboardingPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Button 
-            onClick={nextStep}
-            disabled={!data.organizationName || !data.industryFocus || data.industryFocus.length < 2 || !data.teamSize}
-          >
-            Continue
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={_handleSkip} disabled={isSubmitting}>
+              {isSubmitting ? 'Skipping...' : 'Skip'}
+            </Button>
+            <Button 
+              onClick={nextStep}
+              disabled={!data.organizationName || !data.industryFocus || data.industryFocus.length < 2 || !data.teamSize}
+            >
+              Continue
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -547,13 +562,18 @@ export default function OnboardingPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Button 
-            onClick={nextStep}
-            disabled={data.primaryGoals.length === 0 || !data.challengesDescription || data.challengesDescription.length < 10 || !data.timeline || !data.budget}
-          >
-            Complete Setup
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={_handleSkip} disabled={isSubmitting}>
+              {isSubmitting ? 'Skipping...' : 'Skip & Finish'}
+            </Button>
+            <Button 
+              onClick={nextStep}
+              disabled={data.primaryGoals.length === 0 || !data.challengesDescription || data.challengesDescription.length < 10 || !data.timeline || !data.budget}
+            >
+              Complete Setup
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -626,9 +646,20 @@ export default function OnboardingPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <h1 className="text-2xl font-bold">Getting Started</h1>
-            <span className="text-sm text-gray-600">
-              Step {getStepNumber(currentStep)} of 5
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                Step {getStepNumber(currentStep)} of 5
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={_handleSkip} 
+                disabled={isSubmitting}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                {isSubmitting ? 'Skipping...' : 'Skip Setup'}
+              </Button>
+            </div>
           </div>
           <Progress value={getProgress()} className="h-2" />
         </div>

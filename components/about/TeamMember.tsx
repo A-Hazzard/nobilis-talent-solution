@@ -136,7 +136,16 @@ const TeamMember = ({
           className={`relative ${reverseLayout ? "lg:col-start-2" : ""}`}
         >
           <div className="relative z-10">
-            <div className="relative w-full max-w-sm sm:max-w-md mx-auto">
+            <div 
+              className="relative w-full max-w-sm sm:max-w-md mx-auto overflow-hidden"
+              style={{
+                backgroundImage: 'url(/officeBackground.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                borderRadius: '1.5rem'
+              }}
+            >
               <Image
                 src={image}
                 alt={`${name} - ${title}`}
@@ -145,7 +154,12 @@ const TeamMember = ({
                 quality={90}
                 priority
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                className="w-full h-auto object-cover rounded-3xl hover-float team-member-image"
+                className="w-full h-auto object-cover rounded-3xl hover-float team-member-image mix-blend-multiply"
+                style={{
+                  transform: 'scale(0.9)',
+                  marginTop: '20px',
+                  marginBottom: '20px'
+                }}
               />
             </div>
           </div>

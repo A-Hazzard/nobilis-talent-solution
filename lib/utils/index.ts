@@ -23,14 +23,14 @@ export function getBaseUrl(): string {
     return window.location.origin;
   }
   
-  if (process.env.VERCEL_URL) {
-    // Vercel deployment
-    return `https://${process.env.VERCEL_URL}`;
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    // Custom environment variable (prioritize this for production)
+    return process.env.NEXT_PUBLIC_APP_URL;
   }
   
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    // Custom environment variable
-    return process.env.NEXT_PUBLIC_APP_URL;
+  if (process.env.VERCEL_URL) {
+    // Vercel deployment (fallback for preview deployments)
+    return `https://${process.env.VERCEL_URL}`;
   }
   
   // Fallback for development

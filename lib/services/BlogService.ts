@@ -257,6 +257,10 @@ export class BlogService {
       if (postData.seoDescription) docData.seoDescription = postData.seoDescription;
       if (postData.resources) docData.resources = postData.resources;
       if (postData.references) docData.references = postData.references;
+      if (postData.featured !== undefined) docData.featured = postData.featured;
+      if (postData.scheduledDate) docData.scheduledDate = postData.scheduledDate;
+      if (postData.scheduledTime) docData.scheduledTime = postData.scheduledTime;
+      if (postData.isScheduled !== undefined) docData.isScheduled = postData.isScheduled;
       
       // Set publishedAt if status is published
       if (postData.status === 'published') {
@@ -337,6 +341,10 @@ export class BlogService {
       if (updates.seoDescription !== undefined) updateData.seoDescription = updates.seoDescription;
       if (updates.resources !== undefined) updateData.resources = updates.resources;
       if (updates.references !== undefined) updateData.references = updates.references;
+      if (updates.featured !== undefined) updateData.featured = updates.featured;
+      if (updates.scheduledDate !== undefined) updateData.scheduledDate = updates.scheduledDate;
+      if (updates.scheduledTime !== undefined) updateData.scheduledTime = updates.scheduledTime;
+      if (updates.isScheduled !== undefined) updateData.isScheduled = updates.isScheduled;
 
       // Set publishedAt if status is being changed to published
       if (updates.status === 'published') {

@@ -15,6 +15,7 @@ import logoTransparent from '@/public/assets/logo-transparent.png';
 import performanceManagementDesign from '@/public/assets/performanceManagementDesign.jpg';
 import talentStrategyDevelopment from '@/public/assets/talentStategyDevelopment.jpg';
 import targetTalentAcquisition from '@/public/assets/targetTalentAcquisition.jpg';
+import successionWorkforcePlanning from '@/public/assets/successionWorkforcePlanning.jpg';
 
 // Service images mapping - organized by service type
 export const serviceImages = {
@@ -30,8 +31,8 @@ export const serviceImages = {
   // Talent Strategy Development
   'talent-strategy-development': talentStrategyDevelopment,
   
-  // Succession & Workforce Planning Design - using talent strategy as fallback
-  'succession-workforce-planning': 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=800&fit=crop&crop=center',
+  // Succession & Workforce Planning Design
+  'succession-workforce-planning': successionWorkforcePlanning,
   
   // Training & Facilitation - using coaching as it's training-related
   'training-facilitation': 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&h=800&fit=crop&crop=center',

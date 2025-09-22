@@ -74,7 +74,7 @@ export function LeadForm({
 
   const renderStep1 = () => (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="firstName">First Name *</Label>
           <Input
@@ -312,7 +312,7 @@ export function LeadForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="timeline">Timeline</Label>
           <select
@@ -354,12 +354,12 @@ export function LeadForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto mx-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">
             {isEdit ? 'Edit Lead' : 'Add New Lead'} - Step {currentStep} of 2
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             {currentStep === 1 
               ? (isEdit ? 'Update the basic lead information.' : 'Enter the basic lead information.')
               : 'Provide additional onboarding details.'
@@ -371,22 +371,22 @@ export function LeadForm({
           {currentStep === 1 ? renderStep1() : renderStep2()}
         </div>
 
-        <DialogFooter className="flex justify-between">
-          <div className="flex gap-2">
+        <DialogFooter className="flex flex-col sm:flex-row justify-between gap-2">
+          <div className="flex gap-2 order-2 sm:order-1">
             {currentStep === 2 && (
-              <Button variant="outline" onClick={prevStep} disabled={isSubmitting}>
+              <Button variant="outline" onClick={prevStep} disabled={isSubmitting} className="w-full sm:w-auto">
                 <ChevronLeft className="h-4 w-4 mr-2" />
                 Previous
               </Button>
             )}
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 order-1 sm:order-2">
             {currentStep === 1 ? (
               <Button 
                 onClick={nextStep} 
                 disabled={!canProceedToStep2() || isSubmitting}
-                className="flex items-center"
+                className="flex items-center w-full sm:w-auto"
               >
                 Next
                 <ChevronRight className="h-4 w-4 ml-2" />
@@ -396,6 +396,7 @@ export function LeadForm({
                 type="submit" 
                 onClick={onSubmit} 
                 disabled={isSubmitting}
+                className="w-full sm:w-auto"
               >
                 {isSubmitting ? (isEdit ? 'Updating...' : 'Adding...') : (isEdit ? 'Update Lead' : 'Add Lead')}
               </Button>

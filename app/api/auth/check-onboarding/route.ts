@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
     
     // Handle onboarding status:
     // - If onboardingCompleted is explicitly false, user needs onboarding
-    // - If onboardingCompleted is undefined, treat as false (needs onboarding)
+    // - If onboardingCompleted is undefined, treat as true (assume completed to prevent loops)
     // - If onboardingCompleted is true, user has completed onboarding
-    const onboardingCompleted = data ? !!data.onboardingCompleted : false;
+    const onboardingCompleted = data ? (data.onboardingCompleted !== false) : true;
     const role = (data?.role as 'admin' | 'user') || 'user';
 
     return NextResponse.json({ onboardingCompleted, role });

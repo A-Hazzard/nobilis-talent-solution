@@ -72,7 +72,11 @@ export async function middleware(request: NextRequest) {
   // Allow access to the onboarding page and API endpoints while checking
   const isOnboardingPath = pathname === '/onboarding' || pathname.startsWith('/onboarding/');
   const isApiPath = pathname.startsWith('/api/');
-  if (isAuthenticated && !isOnboardingPath && !isApiPath) {
+  const isPublicPath = publicRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  );
+  
+  if (isAuthenticated && !isOnboardingPath && !isApiPath && !isPublicPath) {
     // Call internal API to check onboarding status
     const url = new URL('/api/auth/check-onboarding', request.url);
     try {
@@ -82,9 +86,9 @@ export async function middleware(request: NextRequest) {
       });
       if (resp.ok) {
         const data = await resp.json();
-        // For new users, if onboardingCompleted is false or undefined, redirect to onboarding
-        // For Google users, if onboardingCompleted is undefined, assume they're existing users
-        if (data && data.role !== 'admin' && (data.onboardingCompleted === false || data.onboardingCompleted === undefined)) {
+        // Only redirect to onboarding if explicitly not completed
+        // This prevents loops when onboardingCompleted is undefined due to race conditions
+        if (data && data.role !== 'admin' && data.onboardingCompleted === false) {
           return NextResponse.redirect(new URL('/onboarding', request.url));
         }
       }

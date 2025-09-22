@@ -81,15 +81,25 @@ export async function POST(request: NextRequest) {
       const pdfService = PDFService.getInstance();
       const pdf = await pdfService.generateInvoicePDF(invoice, invoiceNumber);
 
+      // Determine content type and filename based on PDF generation success
+      const isPDF = pdf.success;
+      const filename = isPDF 
+        ? `invoice-${invoiceNumber}.pdf` 
+        : `invoice-${invoiceNumber}.html`;
+      const contentType = isPDF 
+        ? 'application/pdf' 
+        : 'text/html';
+
       await emailService.sendInvoiceEmail({
         invoice,
         clientEmail,
         clientName,
-        customMessage: 'Please find your invoice attached. You can also pay securely from your dashboard.',
-        pdfAttachment:
-          pdf.success && pdf.data
-            ? { filename: `invoice-${invoiceNumber}.pdf`, content: pdf.data, contentType: 'application/pdf' }
-            : undefined,
+        customMessage: isPDF 
+          ? 'Please find your invoice attached. You can also pay securely from your dashboard.'
+          : 'Please find your invoice attached (HTML format). You can also pay securely from your dashboard.',
+        pdfAttachment: pdf.data
+          ? { filename, content: pdf.data, contentType }
+          : undefined,
       });
     } catch (e) {
       console.error('Invoice email send failed (non-blocking):', e);

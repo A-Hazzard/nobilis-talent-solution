@@ -222,7 +222,7 @@ export default function PaymentSuccessPage() {
               <span className="gradient-text"> Successful!</span>
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
-              Thank you for investing in your leadership development. We're excited to work with you!
+              Thank you for choosing Nobilis Talent Solutions. We're excited to work with you!
             </p>
           </div>
 

@@ -203,7 +203,7 @@ export default function PendingPaymentPage() {
               <span className="gradient-text"> Payment</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Thank you for choosing Kareem Payne for your leadership development.
+              Thank you for choosing Nobilis Talent Solutions.
             </p>
           </div>
 
@@ -244,7 +244,7 @@ export default function PendingPaymentPage() {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-foreground">Want to be Generous?</h2>
               <p className="text-muted-foreground">
-                If you'd like to add a little extra to support Kareem's work, you can choose an additional amount below.
+                If you'd like to add a little extra to support our work, you can choose an additional amount below.
               </p>
 
               <div className="grid grid-cols-2 gap-3">
@@ -320,7 +320,7 @@ export default function PendingPaymentPage() {
               </div>
 
               <div className="text-sm text-muted-foreground">
-                <p>Your generosity helps Kareem continue providing exceptional leadership coaching to others.</p>
+                <p>Your generosity helps us to continue providing exceptional service.</p>
               </div>
             </div>
           </div>

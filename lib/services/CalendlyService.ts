@@ -49,16 +49,21 @@ export class CalendlyService {
       throw new Error('Calendly OAuth configuration missing');
     }
 
-    // Dynamically construct the redirect URI based on the current domain
-    const currentDomain = typeof window !== 'undefined' 
-      ? window.location.origin 
-      : getBaseUrl();
+    // Determine the correct redirect URI based on environment
+    let redirectUri: string;
     
-    const redirectUri = `${currentDomain}/api/auth/calendly/callback`;
+    if (typeof window !== 'undefined') {
+      // Client-side: use current origin
+      redirectUri = `${window.location.origin}/api/auth/calendly/callback`;
+    } else {
+      // Server-side: use environment variable or fallback to getBaseUrl
+      redirectUri = process.env.NEXT_PUBLIC_CALENDLY_REDIRECT_URI || `${getBaseUrl()}/api/auth/calendly/callback`;
+    }
     
-    console.log('🔗 Using dynamic redirect URI:', redirectUri);
-    console.log('🔍 Current domain:', currentDomain);
-    console.log('🔍 Window location:', typeof window !== 'undefined' ? window.location.href : 'server-side');
+    console.log('🔗 Using redirect URI:', redirectUri);
+    console.log('🔍 Environment:', process.env.NODE_ENV);
+    console.log('🔍 Base URL:', getBaseUrl());
+    console.log('🔍 Window origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
 
     // Don't specify scope - let Calendly use default scopes
     const params = new URLSearchParams({

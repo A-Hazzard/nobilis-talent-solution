@@ -149,16 +149,16 @@ const TeamMember = ({
               <Image
                 src={image}
                 alt={`${name} - ${title}`}
-                width={1200}
-                height={1500}
+                width={500}
+                height={400}
                 quality={90}
                 priority
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                className="w-full h-auto object-cover rounded-3xl hover-float team-member-image mix-blend-multiply"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 500px"
+                className="w-full h-auto object-cover rounded-3xl hover-float team-member-image"
                 style={{
-                  transform: 'scale(0.9)',
-                  marginTop: '20px',
-                  marginBottom: '20px'
+                  width: '500px',
+                  height: '400px',
+                  objectFit: 'cover'
                 }}
               />
             </div>

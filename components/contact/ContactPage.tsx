@@ -246,14 +246,12 @@ const ContactPage = () => {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center relative z-10">
           <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
+            Ready to start your transformation? <br />
             <span className="text-white">Get </span>
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary via-primary to-secondary bg-clip-text text-transparent">
               In Touch
             </span>
           </h1>
-          <p className="text-xl lg:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Ready to start your transformation? Let's discuss how we can help you and your organization unlock your full potential.
-          </p>
           
           {/* Contact Quick Stats */}
           <div ref={heroStatsRef} className="grid grid-cols-3 gap-8 pt-8 border-t border-white/20 max-w-2xl mx-auto">
@@ -277,15 +275,6 @@ const ContactPage = () => {
       <section className="py-16 lg:py-32 bg-background overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div ref={headerRef} className="text-center mb-12 lg:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-accent mb-4 lg:mb-6">
-              Let's Start Your Leadership Journey
-            </h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
-              Ready to unlock your leadership potential? Get in touch to schedule 
-              your free consultation and discover how we can help you achieve your goals.
-            </p>
-          </div>
 
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 max-w-full">
             {/* Contact Form */}

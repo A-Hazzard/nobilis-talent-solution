@@ -134,19 +134,19 @@ const ServicesPage = () => {
           gsap.fromTo(item,
             {
               opacity: 0,
-              y: 80,
+              y: 50,
               scale: 0.95,
             },
             {
               opacity: 1,
               y: 0,
               scale: 1,
-              duration: 0.8,
-              delay: index * 0.2,
+              duration: 0.4,
+              delay: index * 0.1,
               ease: "power2.out",
               scrollTrigger: {
                 trigger: item,
-                start: "top 80%",
+                start: "top 85%",
                 end: "bottom 20%",
                 toggleActions: "play none none reverse"
               }
@@ -181,12 +181,12 @@ const ServicesPage = () => {
             {
               scale: 1,
               opacity: 1,
-              duration: 0.5,
-              delay: index * 0.3,
-              ease: "back.out(1.7)",
+              duration: 0.3,
+              delay: index * 0.1,
+              ease: "back.out(1.2)",
               scrollTrigger: {
                 trigger: dot,
-                start: "top 80%",
+                start: "top 85%",
                 toggleActions: "play none none reverse"
               }
             }
@@ -199,19 +199,19 @@ const ServicesPage = () => {
           gsap.fromTo(image,
             {
               opacity: 0,
-              scale: 0.8,
-              rotationY: 15,
+              scale: 0.9,
+              rotationY: 10,
             },
             {
               opacity: 1,
               scale: 1,
               rotationY: 0,
-              duration: 0.8,
-              delay: index * 0.2 + 0.3,
+              duration: 0.5,
+              delay: index * 0.1 + 0.2,
               ease: "power2.out",
               scrollTrigger: {
                 trigger: image,
-                start: "top 80%",
+                start: "top 85%",
                 toggleActions: "play none none reverse"
               }
             }
@@ -225,19 +225,19 @@ const ServicesPage = () => {
         gsap.fromTo(whyChooseItems,
           {
             opacity: 0,
-            y: 60,
-            scale: 0.9,
+            y: 40,
+            scale: 0.95,
           },
           {
             opacity: 1,
             y: 0,
             scale: 1,
-            duration: 0.8,
-            stagger: 0.15,
+            duration: 0.4,
+            stagger: 0.1,
             ease: "power2.out",
             scrollTrigger: {
               trigger: whyChooseRef.current,
-              start: "top 70%",
+              start: "top 85%",
               toggleActions: "play none none reverse"
             }
           }
@@ -256,11 +256,11 @@ const ServicesPage = () => {
             opacity: 1,
             y: 0,
             scale: 1,
-            duration: 0.6,
+            duration: 0.4,
             ease: "power2.out",
             scrollTrigger: {
               trigger: ctaRef.current,
-              start: "top 80%",
+              start: "top 85%",
               toggleActions: "play none none reverse"
             }
           }
@@ -302,6 +302,7 @@ const ServicesPage = () => {
               {services.map((service, index) => {
                 const IconComponent = service.icon;
                 const isEven = index % 2 === 0;
+                const isCompetencyModelDevelopment = service.id === 'competency-model-development';
                 
                 return (
                   <div key={service.title} id={service.id} className="service-item relative">
@@ -333,27 +334,48 @@ const ServicesPage = () => {
                       
                       {/* Image Section */}
                       <div className={`${isEven ? 'lg:order-2' : 'lg:order-1'} relative`}>
-                        <div className="service-image relative h-80 lg:h-96 rounded-2xl overflow-hidden shadow-lg group cursor-pointer">
-                          <Image
-                            src={service.image}
-                            alt={service.title}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              if (target.parentElement) {
-                                target.parentElement.style.backgroundColor = '#f3f4f6';
-                              }
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent transition-opacity duration-300 group-hover:opacity-80" />
-                          <div className="absolute bottom-4 right-4">
-                            <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 transition-all duration-300 group-hover:bg-primary group-hover:text-white">
-                              <IconComponent className="h-6 w-6 text-primary transition-colors duration-300 group-hover:text-white" />
+                        {isCompetencyModelDevelopment ? (
+                          // Card styling with white background for Competency Model Development
+                          <div className="service-image relative bg-white p-6 rounded-2xl shadow-lg">
+                            <Image
+                              src={service.image}
+                              alt={service.title}
+                              width={600}
+                              height={600}
+                              className="w-full h-auto"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                if (target.parentElement) {
+                                  target.parentElement.style.backgroundColor = '#f3f4f6';
+                                }
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          // Card styling for other services
+                          <div className="service-image relative h-80 lg:h-96 rounded-2xl overflow-hidden shadow-lg group cursor-pointer">
+                            <Image
+                              src={service.image}
+                              alt={service.title}
+                              fill
+                              className="object-cover transition-transform duration-500 group-hover:scale-105"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                if (target.parentElement) {
+                                  target.parentElement.style.backgroundColor = '#f3f4f6';
+                                }
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent transition-opacity duration-300 group-hover:opacity-80" />
+                            <div className="absolute bottom-4 right-4">
+                              <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+                                <IconComponent className="h-6 w-6 text-primary transition-colors duration-300 group-hover:text-white" />
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -16,7 +16,8 @@ import performanceManagementDesign from '@/public/assets/performanceManagementDe
 import talentStrategyDevelopment from '@/public/assets/talentStategyDevelopment.jpg';
 import targetTalentAcquisition from '@/public/assets/targetTalentAcquisition.jpg';
 import successionWorkforcePlanning from '@/public/assets/successionWorkforcePlanning.jpg';
-
+import trainingFacilitation from '@/public/assets/trainingFacilitation.jpeg';
+import competencyModelDevelopment from '@/public/assets/competencyModelDevelopment.png';
 // Service images mapping - organized by service type
 export const serviceImages = {
   // Individual & Group Coaching
@@ -34,11 +35,10 @@ export const serviceImages = {
   // Succession & Workforce Planning Design
   'succession-workforce-planning': successionWorkforcePlanning,
   
-  // Training & Facilitation - using coaching as it's training-related
-  'training-facilitation': 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&h=800&fit=crop&crop=center',
+  'training-facilitation': trainingFacilitation,
   
   // Competency Model Development - using leadership development as it's skills-related
-  'competency-model-development': 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=1200&h=800&fit=crop&crop=center',
+  'competency-model-development': competencyModelDevelopment,
   
   // Targeted Talent Acquisition
   'targeted-talent-acquisition': targetTalentAcquisition,

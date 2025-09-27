@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Phone, Mail, Calendar, Send, Clock, CheckCircle, AlertCircle, Building } from 'lucide-react';
+import { Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -458,50 +458,6 @@ const ContactPage = () => {
             {/* Contact Information */}
             <div ref={contactInfoRef} className="order-1 lg:order-2 min-w-0">
               <div className="space-y-6 lg:space-y-8">
-                {/* Contact Details */}
-                <div className="card-elevated p-4 sm:p-6 lg:p-8 max-w-full">
-                  <h3 className="text-xl sm:text-2xl font-bold text-accent mb-6">Get In Touch</h3>
-                  
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                        <Phone className="w-6 h-6" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-accent text-sm sm:text-base">Phone</div>
-                        <a href="tel:678-920-6605" className="text-primary hover:underline text-sm sm:text-base break-all">
-                          (678) 956-1146
-                        </a>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                        <Mail className="w-6 h-6" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-accent text-sm sm:text-base">Email</div>
-                        <a href="mailto:support@nobilistalent.com" className="text-primary hover:underline text-sm sm:text-base break-all">
-                          support@nobilistalent.com
-                        </a>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0 mt-1">
-                        <Building className="w-6 h-6" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-accent text-sm sm:text-base">Address</div>
-                        <div className="text-primary text-sm sm:text-base">
-                          <div>3344 Cobb Parkway</div>
-                          <div>STE 200</div>
-                          <div>Acworth, GA, 30101</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Response Time */}
                 <div className="card-elevated bg-gradient-subtle p-4 sm:p-6 lg:p-8 max-w-full">

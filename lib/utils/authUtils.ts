@@ -137,4 +137,58 @@ export const refreshAuthToken = async (): Promise<boolean> => {
     console.error('Error refreshing auth token:', error);
     return false;
   }
-}; 
+};
+
+/**
+ * API wrapper that automatically refreshes tokens on expiration
+ */
+export const apiRequestWithAuth = async (
+  url: string, 
+  options: RequestInit = {}
+): Promise<Response> => {
+  const makeRequest = async (token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    };
+    
+    if (token) {
+      headers.authorization = `Bearer ${token}`;
+    }
+    
+    return fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+    });
+  };
+  
+  try {
+    // First attempt with current token
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const token = await currentUser.getIdToken(false); // Don't force refresh first
+      const response = await makeRequest(token);
+      
+      // If successful, return response
+      if (response.ok) {
+        return response;
+      }
+      
+      // If 401 or token expired, try refreshing
+      if (response.status === 401) {
+        const refreshedToken = await currentUser.getIdToken(true); // Force refresh
+        document.cookie = `auth-token=${refreshedToken}; path=/; max-age=3600; secure; samesite=strict`;
+        return makeRequest(refreshedToken);
+      }
+      
+      return response;
+    } else {
+      // No user, make request without auth
+      return makeRequest();
+    }
+  } catch (error) {
+    console.error('API request with auth failed:', error);
+    throw error;
+  }
+};

@@ -49,11 +49,13 @@ const ValuesSection = () => {
                 className="h-full transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 hover:border-primary/30 cursor-pointer group"
               >
                 <CardHeader className="transition-colors duration-300 group-hover:bg-primary/5">
-                  <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Icon className="h-5 w-5" />
+                  <div className="flex items-center mb-3">
+                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary mr-3">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-xl transition-colors duration-300 group-hover:text-primary">{v.title}</CardTitle>
                   </div>
-                  <CardTitle className="text-xl transition-colors duration-300 group-hover:text-primary">{v.title}</CardTitle>
-                  <CardDescription className="transition-colors duration-300 group-hover:text-foreground/80">{v.desc}</CardDescription>
+                  <CardDescription className="text-base transition-colors duration-300 group-hover:text-foreground/80">{v.desc}</CardDescription>
                 </CardHeader>
               </Card>
             );

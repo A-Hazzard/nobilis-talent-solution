@@ -314,7 +314,7 @@ export default function PaymentSuccessPage() {
                       Thank you for your generous bonus payment! 
                     </span>
                     <p className="text-green-700 text-xs sm:text-sm mt-1 break-words">
-                      Your additional contribution helps us continue providing exceptional leadership development services.
+                      Your additional contribution helps us continue providing exceptional talent management solutions.
                     </p>
                   </div>
                 </div>

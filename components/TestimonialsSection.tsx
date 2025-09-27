@@ -76,7 +76,7 @@ const TestimonialsSection = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16 animate-fade-up">
             <h2 className="text-section text-accent mb-6">
-              Clients' Success Stories
+              Client Success Stories
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Loading testimonials...
@@ -104,7 +104,7 @@ const TestimonialsSection = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16 animate-fade-up">
             <h2 className="text-section text-accent mb-6">
-              Clients' Success Stories
+              Client Success Stories
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Unable to load testimonials at this time.
@@ -122,7 +122,7 @@ const TestimonialsSection = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16 animate-fade-up">
             <h2 className="text-section text-accent mb-6">
-              Clients' Success Stories
+              Client Success Stories
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               No testimonials available at this time.
@@ -139,11 +139,10 @@ const TestimonialsSection = () => {
         {/* Header */}
         <div className="text-center mb-16 animate-fade-up">
           <h2 className="text-section text-accent mb-6">
-            Clients' Success Stories
+            Client Success Stories
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Hear from executives and managers who have transformed their leadership 
-            and achieved remarkable results with our coaching programs.
+            Here's what some of our clients and partners have to say about working with us.
           </p>
         </div>
 

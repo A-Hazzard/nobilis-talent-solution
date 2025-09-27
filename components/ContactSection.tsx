@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, Calendar, Send, Clock, CheckCircle, AlertCircle, Building } from 'lucide-react';
+import { Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -96,11 +96,11 @@ const ContactSection = () => {
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16 animate-fade-up">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-accent mb-4 lg:mb-6">
-            Let's Start Your Leadership Journey
+            Let's Start Your Transformation Journey
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
-            Ready to unlock your leadership potential? Get in touch to schedule 
-            your free consultation and discover how we can help you achieve your goals.
+            Ready to maximize your potential and crush your goals? Get in touch to schedule 
+            your free consultation and discover how we can help.
           </p>
         </div>
 
@@ -110,7 +110,7 @@ const ContactSection = () => {
             <div className="card-feature p-4 sm:p-6 lg:p-8 max-w-full">
               <div className="flex items-center mb-6 lg:mb-8">
                 <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3 flex-shrink-0" />
-                <h3 className="text-xl sm:text-2xl font-bold text-accent">Contact Us</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-accent">Have any questions for us? Send us a message, we'd love to hear from you!</h3>
               </div>
 
               {/* Success/Error Messages */}
@@ -214,7 +214,7 @@ const ContactSection = () => {
 
                 <div className="min-w-0">
                   <Label htmlFor="challenges" className="text-accent text-sm sm:text-base">
-                    Let us know how we can help *
+                    Let Us Know How We Can Help *
                   </Label>
                   <Textarea
                     id="challenges"
@@ -224,7 +224,7 @@ const ContactSection = () => {
                     value={formData.challenges}
                     onChange={handleInputChange}
                     className="mt-1 text-base resize-none w-full"
-                    placeholder="Tell us about your specific leadership challenges, team dynamics, or organizational goals..."
+                    placeholder="Send us your questions and/or tell us a little bit about your goals"
                   />
                 </div>
 
@@ -270,7 +270,7 @@ const ContactSection = () => {
                     </div>
                   ) : (
                     <>
-                      Send Message & Book Consultation
+                      Send Message
                       <Send className="ml-2 w-5 h-5" />
                     </>
                   )}
@@ -286,52 +286,6 @@ const ContactSection = () => {
           {/* Contact Information */}
           <div className="animate-fade-up order-1 lg:order-2 min-w-0" style={{ animationDelay: '0.2s' }}>
             <div className="space-y-6 lg:space-y-8">
-              {/* Contact Details */}
-              <div className="card-elevated p-4 sm:p-6 lg:p-8 max-w-full">
-                <h3 className="text-xl sm:text-2xl font-bold text-accent mb-6">Get In Touch</h3>
-                
-                <div className="space-y-4 sm:space-y-6">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                      <Phone className="w-6 h-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-accent text-sm sm:text-base">Phone</div>
-                      <a href="tel:678-920-6605" className="text-primary hover:underline text-sm sm:text-base break-all">
-                        (678) 956-1146
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                      <Mail className="w-6 h-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-accent text-sm sm:text-base">Email</div>
-                      <a href="mailto:support@nobilistalent.com" className="text-primary hover:underline text-sm sm:text-base break-all">
-                        support@nobilistalent.com
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0 mt-1">
-                      <Building className="w-6 h-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-accent text-sm sm:text-base">Address</div>
-                      <div className="text-primary text-sm sm:text-base">
-                        <div>3344 Cobb Parkway</div>
-                        <div>STE 200</div>
-                        <div>Acworth, GA, 30101</div>
-                      </div>
-                    </div>
-                  </div>
-
-
-                </div>
-              </div>
 
               {/* Response Time */}
               <div className="card-elevated bg-gradient-subtle p-4 sm:p-6 lg:p-8 max-w-full">
@@ -340,8 +294,7 @@ const ContactSection = () => {
                   <h4 className="text-lg sm:text-xl font-bold text-accent">Quick Response</h4>
                 </div>
                 <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                  We understand that leadership challenges require prompt attention. 
-                  You can expect a response within 24 hours.
+                  We're eager to connect with you to begin your transformation journey. You can expect a response from us within 24 hours.
                 </p>
                 <div className="text-sm text-primary font-semibold">
                   ✓ Free 30-minute strategy session included

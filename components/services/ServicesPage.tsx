@@ -20,9 +20,9 @@ const ServicesPage = () => {
   const services = [
     {
       id: 'individual-group-coaching',
-      title: 'Individual & Group Coaching',
+      title: 'Executive, Individual & Group Coaching',
       subtitle: 'Grow with purpose.',
-      description: 'Personalized coaching that sparks holistic growth, strengthens confidence, and helps individuals and teams achieve be better.',
+      description: 'Personalized coaching that sparks holistic growth, strengthens confidence, and helps individuals and teams achieve meaningful progress.',
       icon: Users,
       image: serviceImages['individual-group-coaching']
     },
@@ -62,7 +62,7 @@ const ServicesPage = () => {
       id: 'training-facilitation',
       title: 'Training & Facilitation',
       subtitle: 'Learning that sticks.',
-      description: 'Interactive, engaging and practical learning experiences that build skills and shift mindsets — in the room or online.',
+      description: 'Interactive, engaging and practical learning experiences that build skills and shift mindsets — in the room or online. We partner with you to provide customized e-learning solutions and/or live instructor-led training to build critical human competencies such as emotional intelligence, expert communication, service excellence etc.',
       icon: BookOpen,
       image: serviceImages['training-facilitation']
     },
@@ -87,7 +87,7 @@ const ServicesPage = () => {
   const whyChoosePoints = [
     {
       title: 'Evidence-Based Approach',
-      description: 'Our solutions are grounded in proven methodologies and real-world experience.',
+      description: 'Our solutions are grounded in proven methodologies and real-world experiences.',
       icon: Award
     },
     {
@@ -266,18 +266,7 @@ const ServicesPage = () => {
           }
         );
 
-        // Add floating animation to CTA button
-        const ctaButton = ctaRef.current.querySelector('a');
-        if (ctaButton) {
-          gsap.to(ctaButton, {
-            y: -5,
-            duration: 2,
-            repeat: -1,
-            yoyo: true,
-            ease: "power2.inOut",
-            delay: 1
-          });
-        }
+        // CTA button animation removed as requested
       }
 
     });
@@ -383,7 +372,7 @@ const ServicesPage = () => {
               Why Choose Nobilis Talent Solutions
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              We believe that people are the true engine of every successful organization—and that with the right guidance, tools, and support, their potential is limitless.
+              We believe that people are the true engine of every successful organization — and with the right guidance, tools, and support, their potential is limitless.
             </p>
           </div>
 
@@ -396,7 +385,7 @@ const ServicesPage = () => {
                     <IconComponent className="h-8 w-8 text-primary" />
                   </div>
                   <h3 className="text-lg font-semibold mb-3">{point.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  <p className="text-muted-foreground text-lg leading-relaxed">
                     {point.description}
                   </p>
                 </div>

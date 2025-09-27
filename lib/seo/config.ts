@@ -16,7 +16,7 @@ export const SITE_CONFIG = {
 export const BUSINESS_INFO = {
   name: 'Nobilis Talent Solutions',
   legalName: 'Nobilis Talent Solutions LLC',
-  description: 'We help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results. Strategic leadership development and organizational transformation.',
+  description: 'We help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results. Strategic talent management solutions and organizational transformation.',
   tagline: 'Where Strategy Meets Humanity',
   industry: 'Professional Services',
   category: 'Leadership Development & Organizational Consulting',
@@ -41,8 +41,8 @@ export const BUSINESS_INFO = {
     {
       name: 'Kareem Payne',
       title: 'Founder & Chief Talent Strategist',
-      role: 'Leadership Development Expert',
-      bio: 'Kareem specializes in strategic leadership development and organizational transformation.',
+      role: 'Talent Management Expert',
+      bio: 'Kareem specializes in strategic talent management solutions and organizational transformation.',
     },
     {
       name: 'Jennifer Payne',
@@ -78,7 +78,7 @@ export const SEO_KEYWORDS = {
     'talent strategy',
     'human resources consulting',
     'organizational development',
-    'leadership development',
+    'talent management solutions',
     'strategic planning',
     'culture alignment',
   ],
@@ -87,7 +87,7 @@ export const SEO_KEYWORDS = {
     'team development programs',
     'organizational transformation consulting',
     'human resources strategy development',
-    'leadership development training',
+    'talent management training',
     'executive coaching services',
     'organizational culture alignment',
     'talent management consulting',
@@ -108,7 +108,7 @@ export const SEO_KEYWORDS = {
     'how to align company culture',
     'what is executive coaching',
     'how to build effective teams',
-    'leadership development strategies',
+    'talent management strategies',
     'organizational transformation process',
   ],
 };
@@ -193,7 +193,7 @@ export const SCHEMA_TYPES = {
       '@type': 'Person',
       name: 'Kareem Payne',
       jobTitle: 'Founder & Chief Talent Strategist',
-      description: 'Leadership Development Expert specializing in strategic leadership development and organizational transformation.',
+      description: 'Talent Management Expert specializing in strategic talent management solutions and organizational transformation.',
       worksFor: {
         '@type': 'Organization',
         name: BUSINESS_INFO.name,

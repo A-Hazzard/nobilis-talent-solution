@@ -13,7 +13,7 @@ const TestimonialsPage = () => {
     {
       name: 'Sarah Johnson',
       role: 'HR Director, TechStart Inc.',
-      content: 'Working with Nobilis Talent Solutions transformed our approach to leadership development. The personalized coaching program helped our emerging leaders gain confidence and develop the skills they needed to drive our company forward.',
+      content: 'Working with Nobilis Talent Solutions transformed our approach to talent management. The personalized coaching program helped our emerging leaders gain confidence and develop the skills they needed to drive our company forward.',
       rating: 5,
       company: 'TechStart Inc.'
     },

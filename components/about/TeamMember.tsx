@@ -206,7 +206,9 @@ const TeamMember = ({
 
           <div className="space-y-4 text-base leading-7 text-foreground/80 my-8">
             {bio.split("\n").map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+              <p key={index} dangerouslySetInnerHTML={{
+                __html: paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              }} />
             ))}
           </div>
 

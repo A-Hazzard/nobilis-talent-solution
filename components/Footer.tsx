@@ -21,9 +21,10 @@ const Footer = () => {
 
   const services = [
     'Executive Leadership Coaching',
-    'Team Development Programs', 
-    'Leadership Workshops',
-    'Organizational Culture Change'
+    'Business, Individual & Group Coaching', 
+    'Leadership Development',
+    'Human Resources & Talent Management Consulting',
+    'E-learning Development & Live Training'
   ];
 
   // Don't render on server to prevent hydration issues
@@ -41,7 +42,7 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">Nobilis Talent Solutions</h3>
             <p className="text-white/80 mb-6 leading-relaxed text-sm">
               Transforming leaders and organizations through proven coaching methodologies 
-              and practical leadership development.
+              and practical talent management solutions.
             </p>
             <div className="flex space-x-3">
               <a

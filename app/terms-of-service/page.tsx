@@ -179,7 +179,7 @@ export default function TermsOfServicePage() {
                   <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
                     <p className="text-gray-700 leading-relaxed">
                       Nobilis Talent Solutions provides coaching and talent management services, including but not
-                      limited to leadership development, organizational development, and related solutions.
+                      limited to talent management solutions, organizational development, and related solutions.
                     </p>
                   </div>
                 </section>

@@ -16,9 +16,9 @@ const AboutSection = () => {
   const ctaRef = useRef<HTMLDivElement>(null);
 
   const kareemAchievements = [
-    "200+ entrepreneurs and team members trained",
+    "2000+ entrepreneurs and team members trained",
     "10+ keynotes delivered",
-    "100+ leaders and entrepreneurs coached",
+    "250+ leaders and entrepreneurs coached",
     "20+ businesses successfully launched",
   ];
 
@@ -136,8 +136,7 @@ const AboutSection = () => {
             Meet the Team
           </h1>
           <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
-            We're passionate about helping organizations unlock their strategic
-            potential by leveraging the growth of people. Meet the dedicated
+            We're passionate about helping leaders and organizations maximize potential and become better at what they do. Meet the dedicated
             professionals behind our mission.
           </p>
         </div>
@@ -145,13 +144,13 @@ const AboutSection = () => {
         {/* Kareem's Section */}
         <div ref={kareemRef} className="mb-24 md:mb-32 lg:mb-40">
           <TeamMember
-            name="Kareem T. Payne"
+            name="Kareem T. Payne, MSC, CPTD, CPC"
             title="Founder & Chief Talent Strategist"
-            bio={`Kareem T. Payne is a purposeful, passionate, and results-driven Founder & Chief Talent Strategist. With a career spanning diverse sectors—Retail, Hospitality, Financial Services, Energy, Manufacturing, Distribution, and Entrepreneurship—his work has impacted organizations and communities across the Caribbean and North America.
+            bio={`**Kareem T. Payne** is a purposeful, passionate, and results-driven Talent Strategist & Coach. With a career spanning diverse sectors, his work has impacted organizations and communities across the Caribbean and North America, allowing him to gain a rare breadth of experience that bridges business objectives with human potential.
 
-He specializes in helping organizations unlock their strategic potential by leveraging the growth of people. Through coaching, leadership development, and performance consulting, Kareem equips leaders and teams with the tools they need to thrive. As a qualified Emotional Intelligence (EI) practitioner, he champions EI as a catalyst for personal transformation.
+He specializes in helping organizations unlock their strategic potential by leveraging the growth of people. Through coaching, leadership development, and performance consulting, Kareem equips leaders and teams with the tools they need to thrive. As a qualified Emotional Intelligence (EI) practitioner, he champions EI as a catalyst for personal transformation, believing that self-awareness and emotional mastery are essential to lasting success.
 
-Whether in a boardroom, training room, or community hall, his message is consistent: growth is a choice, and learning never stops. A lifelong learner with a growth mindset, Kareem embraces the philosophy — "Stay Curious. Keep Learning."`}
+Whether in a boardroom, training room, or community hall, his message is consistent: growth is a choice, and learning never stops. Kareem holds a Master's degree in Project Management & Evaluation & a Bachelor's degree in Business Management with Psychology. He is also a Certified Professional Coach via Coach Training World and a Certified Professional in Talent Development (CPTD) holder via the Association for Talent Development.`}
             image={teamImages.kareem}
             achievements={kareemAchievements}
             achievementsBold={true}
@@ -161,13 +160,13 @@ Whether in a boardroom, training room, or community hall, his message is consist
         {/* Jennifer's Section */}
         <div ref={jeniferRef} className="mb-24 md:mb-32 lg:mb-40">
           <TeamMember
-            name="Jennifer Payne"
-            title="Co-Founder & Lead Organizational Development Partner"
-            bio={`Jennifer Payne brings over 15 years of expertise in organizational development and team transformation. With a background in Human Resources and business administration, she specializes in creating sustainable change within organizations through strategic people development initiatives.
+            name="Jennifer Payne, MBA"
+            title="Chief Human Resources Partner"
+            bio={`**Jennifer Payne** brings over 15 years of expertise in organizational development and team transformation. With a background in Human Resources and business administration, she specializes in creating sustainable change within organizations through strategic people development initiatives.
 
-Her approach combines evidence-based methodologies with practical business acumen, helping teams navigate complex organizational challenges while building stronger, more cohesive work environments. Jennifer worked with Manufacturing, Media & Entertainment, Consumer Packaging across various industries, consistently delivering measurable improvements in team performance and employee engagement.
+Her approach combines evidence-based methodologies with practical business acumen, helping teams navigate complex organizational challenges while building stronger, more cohesive work environments. Jennifer has worked for global corporations across multiple industries, consistently delivering measurable improvements in team performance and employee engagement.
 
-Jennifer believes that the foundation of any successful organization lies in its people. She champions inclusive leadership practices and helps leaders develop the emotional intelligence necessary to inspire and motivate their teams. Her collaborative style and deep understanding of human behavior make her an invaluable partner in organizational transformation efforts.`}
+Jennifer believes that the foundation of any successful organization lies in its people. She champions inclusive leadership practices and her collaborative style and deep understanding of human behavior make her an invaluable partner in organizational transformation efforts. Jennifer holds a Bachelor's degree in Management, Labor Relations and Human Resources and an MBA with a focus on Human Resource Management.`}
             image={teamImages.sarah}
             achievements={wifeAchievements}
             achievementsBold={true}

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Users, TrendingUp, ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import BookNowButton from '@/components/BookNowButton';
@@ -44,20 +44,6 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-accent/90 via-accent/70 to-primary/60"></div>
       </div>
 
-      {/* Floating elements */}
-      <div className="absolute top-28 right-10 animate-float hidden lg:block">
-        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white">
-          <Users className="w-8 h-8 mb-2" />
-          <p className="text-sm font-semibold">200+ Leaders Coached</p>
-        </div>
-      </div>
-      
-      <div className="absolute top-48 right-40 animate-float hidden lg:block" style={{ animationDelay: '2s' }}>
-        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white">
-          <TrendingUp className="w-8 h-8 mb-2" />
-          <p className="text-sm font-semibold">100% Success Rate</p>
-        </div>
-      </div>
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-20">

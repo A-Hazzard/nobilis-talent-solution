@@ -282,7 +282,7 @@ const ContactPage = () => {
               <div className="card-feature p-4 sm:p-6 lg:p-8 max-w-full">
                 <div className="flex items-center mb-6 lg:mb-8">
                   <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3 flex-shrink-0" />
-                  <h3 className="text-xl sm:text-2xl font-bold text-accent">Book Your Strategy Session</h3>
+                  <h3 className="text-xl sm:text-2xl font-bold text-accent">Have any questions for us? Send us a message, we'd love to hear from you!</h3>
                 </div>
 
                 {/* Success/Error Messages */}
@@ -386,7 +386,7 @@ const ContactPage = () => {
 
                   <div className="min-w-0">
                     <Label htmlFor="challenges" className="text-accent text-sm sm:text-base">
-                      What leadership challenges are you facing? *
+                      Let Us Know How We Can Help *
                     </Label>
                     <Textarea
                       id="challenges"
@@ -396,7 +396,7 @@ const ContactPage = () => {
                       value={formData.challenges}
                       onChange={handleInputChange}
                       className="mt-1 text-base resize-none w-full"
-                      placeholder="Tell us about your specific leadership challenges, team dynamics, or organizational goals..."
+                      placeholder="Send us your questions and/or tell us a little bit about your goals"
                     />
                   </div>
 
@@ -442,7 +442,7 @@ const ContactPage = () => {
                       </div>
                     ) : (
                       <>
-                        Send Message & Book Consultation
+                        Send Message
                         <Send className="ml-2 w-5 h-5" />
                       </>
                     )}
@@ -510,8 +510,7 @@ const ContactPage = () => {
                     <h4 className="text-lg sm:text-xl font-bold text-accent">Quick Response</h4>
                   </div>
                   <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                    We understand that leadership challenges require prompt attention. 
-                    You can expect a response within 24 hours.
+                    We're eager to connect with you to begin your transformation journey. You can expect a response from us within 24 hours.
                   </p>
                   <div className="text-sm text-primary font-semibold">
                     ✓ Free 30-minute strategy session included

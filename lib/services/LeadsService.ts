@@ -3,7 +3,6 @@ import {
   doc,
   getDocs,
   getDoc,
-  addDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -126,7 +125,8 @@ export class LeadsService {
   }
 
   /**
-   * Create a new lead (user) with authentication
+   * Create a new lead (user) via API route
+   * This method calls the admin API to create a user without auto-login
    */
   async create(leadData: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'> & { password: string; confirmPassword: string }): Promise<{ id: string; error?: string }> {
     try {
@@ -149,53 +149,23 @@ export class LeadsService {
         return { id: '', error: firstError || 'Invalid input data' };
       }
 
-      // Create user with authentication
-      const { user, error: authError } = await this.authService.signUpWithEmail(
-        leadData.email,
-        leadData.password,
-        leadData.firstName,
-        leadData.lastName,
-        leadData.organization || 'Not specified',
-        leadData.phone || ''
-      );
-
-      if (authError) {
-        return { id: '', error: authError.message };
-      }
-
-      if (!user) {
-        return { id: '', error: 'Failed to create user account' };
-      }
-
-      // Create user document in Firestore (users collection)
-      const userDocData = {
-        firstName: leadData.firstName,
-        lastName: leadData.lastName,
-        email: leadData.email,
-        phone: leadData.phone,
-        organization: leadData.organization,
-        role: 'user', // All leads are regular users
-        uid: user.uid,
-        displayName: `${leadData.firstName} ${leadData.lastName}`,
-        isActive: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      const docRef = await addDoc(collection(db, this.collectionName), userDocData);
-      
-      // Audit log
-      await logAdminAction({
-        userId: user.uid,
-        userEmail: leadData.email,
-        action: 'create',
-        entity: 'lead',
-        entityId: docRef.id,
-        details: { firstName: leadData.firstName, lastName: leadData.lastName },
-
+      // Call the admin API route to create the lead
+      const response = await fetch('/api/admin/leads/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(leadData),
       });
-      
-      return { id: docRef.id };
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return { id: '', error: result.error || 'Failed to create lead' };
+      }
+
+      return { id: result.id };
     } catch (error) {
       console.error('Error creating lead:', error);
       return { id: '', error: 'Failed to create lead' };

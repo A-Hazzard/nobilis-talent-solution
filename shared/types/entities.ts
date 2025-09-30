@@ -53,6 +53,9 @@ export type Lead = {
   // Authentication fields (stored in users collection)
   uid?: string; // Firebase Auth UID
   displayName?: string; // Computed from firstName + lastName
+  // Onboarding fields
+  onboardingCompleted?: boolean;
+  onboardingCompletedAt?: Date;
 };
 
 export type CalendarEvent = {

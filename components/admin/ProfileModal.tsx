@@ -12,6 +12,7 @@ import { User, Mail, Phone, Calendar, Shield } from 'lucide-react';
 import type { User as UserType } from '@/shared/types/entities';
 import { PasswordStrength } from '@/components/ui/password-strength';
 import { validatePassword } from '@/lib/utils/validation';
+import { toast } from 'sonner';
 
 
 
@@ -87,10 +88,10 @@ export default function ProfileModal({ isOpen, onClose, user }: ProfileModalProp
       onClose();
       
       // Show success message
-      alert('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
-      alert(errorMessage);
+      toast.error(errorMessage);
       console.error('Profile update error:', error);
     } finally {
       setIsLoading(false);

@@ -48,62 +48,104 @@ export async function POST(request: NextRequest) {
 
     // Create user using Firebase Admin SDK (no auto-login)
     const adminAuth = getAdminAuth();
-    const userRecord = await adminAuth.createUser({
-      email: leadData.email,
-      password: leadData.password,
-      displayName: `${leadData.firstName} ${leadData.lastName}`,
-      emailVerified: false,
-    });
+    let userRecord;
+    
+    try {
+      userRecord = await adminAuth.createUser({
+        email: leadData.email,
+        password: leadData.password,
+        displayName: `${leadData.firstName} ${leadData.lastName}`,
+        emailVerified: false,
+      });
+    } catch (authError: any) {
+      // Handle Firebase Auth errors with clean messages
+      if (authError.code === 'auth/email-already-exists') {
+        return NextResponse.json({ 
+          error: 'This email address is already registered. Please use a different email.' 
+        }, { status: 400 });
+      } else if (authError.code === 'auth/invalid-email') {
+        return NextResponse.json({ 
+          error: 'Invalid email address format.' 
+        }, { status: 400 });
+      } else if (authError.code === 'auth/weak-password') {
+        return NextResponse.json({ 
+          error: 'Password is too weak. Please use a stronger password.' 
+        }, { status: 400 });
+      }
+      
+      // Generic auth error
+      console.error('Firebase Auth error:', authError.code, authError.message);
+      return NextResponse.json({ 
+        error: 'Failed to create user account. Please try again.' 
+      }, { status: 500 });
+    }
 
     // Create user document in Firestore (users collection) with onboarding completed
-    const now = new Date();
-    const userDocData = {
+    const userDocData: any = {
       firstName: leadData.firstName,
       lastName: leadData.lastName,
       email: leadData.email,
-      phone: leadData.phone,
-      organization: leadData.organization,
+      phone: leadData.phone || '',
+      organization: leadData.organization || '',
       role: 'user', // All leads are regular users
       uid: userRecord.uid,
       displayName: `${leadData.firstName} ${leadData.lastName}`,
       isActive: true,
       // Set onboarding as completed for admin-created leads
       onboardingCompleted: true,
-      onboardingCompletedAt: now,
-      // Include other onboarding fields from form data
-      jobTitle: leadData.jobTitle,
-      organizationType: leadData.organizationType,
-      industryFocus: leadData.industryFocus,
-      teamSize: leadData.teamSize,
-      primaryGoals: leadData.primaryGoals,
-      challengesDescription: leadData.challengesDescription,
-      timeline: leadData.timeline,
-      budget: leadData.budget,
+      onboardingCompletedAt: serverTimestamp(),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
 
-    const docRef = await addDoc(collection(db, 'users'), userDocData);
-    
-    // Audit log
-    await logAdminAction({
-      userId: authResult.user.uid,
-      userEmail: authResult.user.email,
-      action: 'create',
-      entity: 'lead',
-      entityId: docRef.id,
-      details: { 
-        firstName: leadData.firstName, 
-        lastName: leadData.lastName,
-        leadEmail: leadData.email,
-        onboardingCompleted: true 
-      },
-    });
-    
-    return NextResponse.json({ id: docRef.id });
-  } catch (error) {
-    console.error('Error creating lead:', error);
-    return NextResponse.json({ error: 'Failed to create lead' }, { status: 500 });
+    // Only include onboarding fields if they have values (Firestore doesn't accept undefined)
+    if (leadData.jobTitle) userDocData.jobTitle = leadData.jobTitle;
+    if (leadData.organizationType) userDocData.organizationType = leadData.organizationType;
+    if (leadData.industryFocus) userDocData.industryFocus = leadData.industryFocus;
+    if (leadData.teamSize) userDocData.teamSize = leadData.teamSize;
+    if (leadData.primaryGoals && leadData.primaryGoals.length > 0) userDocData.primaryGoals = leadData.primaryGoals;
+    if (leadData.challengesDescription) userDocData.challengesDescription = leadData.challengesDescription;
+    if (leadData.timeline) userDocData.timeline = leadData.timeline;
+    if (leadData.budget) userDocData.budget = leadData.budget;
+
+    try {
+      const docRef = await addDoc(collection(db, 'users'), userDocData);
+      
+      // Audit log
+      await logAdminAction({
+        userId: authResult.user.uid,
+        userEmail: authResult.user.email,
+        action: 'create',
+        entity: 'lead',
+        entityId: docRef.id,
+        details: { 
+          firstName: leadData.firstName, 
+          lastName: leadData.lastName,
+          leadEmail: leadData.email,
+          onboardingCompleted: true 
+        },
+      });
+      
+      return NextResponse.json({ id: docRef.id });
+    } catch (firestoreError: any) {
+      console.error('Firestore error:', firestoreError.message);
+      
+      // Clean up Firebase Auth user if Firestore fails
+      try {
+        await adminAuth.deleteUser(userRecord.uid);
+      } catch (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+      }
+      
+      return NextResponse.json({ 
+        error: 'Failed to save user data. Please try again.' 
+      }, { status: 500 });
+    }
+  } catch (error: any) {
+    console.error('Unexpected error creating lead:', error.message || error);
+    return NextResponse.json({ 
+      error: 'An unexpected error occurred. Please try again.' 
+    }, { status: 500 });
   }
 }
 

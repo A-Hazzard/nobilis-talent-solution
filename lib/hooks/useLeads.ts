@@ -121,41 +121,43 @@ export function useLeads(): [LeadsState, LeadsActions] {
       const { error } = await leadsService.create(formData);
       
       if (error) {
-        setState(prev => ({ ...prev, error }));
+        setState(prev => ({ ...prev, error, isSubmitting: false }));
         toast.error(error);
-      } else {
-        // Log audit action
-        await logAdminAction({
-          userId: 'admin', // Since this is admin action
-          action: 'create',
-          entity: 'lead',
-          entityId: formData.email, // Use email as entityId for leads
-          details: {
-            title: `Lead account created`,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            organization: formData.organization,
-          },
-        });
-        
-        toast.success("Lead account created successfully!");
-        setState(prev => ({ 
-          ...prev, 
-          isAddDialogOpen: false,
-          isSubmitting: false 
-        }));
-        resetForm();
-        await loadLeads();
+        return;
       }
-    } catch (error) {
-      console.error('Error creating lead:', error);
+      
+      // Log audit action
+      await logAdminAction({
+        userId: 'admin', // Since this is admin action
+        action: 'create',
+        entity: 'lead',
+        entityId: formData.email, // Use email as entityId for leads
+        details: {
+          title: `Lead account created`,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          organization: formData.organization,
+        },
+      });
+      
+      toast.success("Lead account created successfully!");
       setState(prev => ({ 
         ...prev, 
-        error: 'Failed to create lead account',
+        isAddDialogOpen: false,
         isSubmitting: false 
       }));
-      toast.error('Failed to create lead account');
+      resetForm();
+      await loadLeads();
+    } catch (error: any) {
+      console.error('Error creating lead:', error);
+      const errorMessage = error?.message || 'An unexpected error occurred. Please try again.';
+      setState(prev => ({ 
+        ...prev, 
+        error: errorMessage,
+        isSubmitting: false 
+      }));
+      toast.error(errorMessage);
     }
   }, [state.formData, leadsService, loadLeads]);
 

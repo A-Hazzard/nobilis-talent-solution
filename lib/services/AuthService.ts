@@ -45,7 +45,7 @@ export class AuthService {
 
       // Check if user exists and validate authentication provider
       const userProfile = await this.getUserProfileByEmail(email);
-      if (userProfile && userProfile.authProvider !== 'email') {
+      if (userProfile && userProfile.authProvider && userProfile.authProvider !== 'email') {
         const providerName = userProfile.authProvider === 'google' ? 'Google' : 'social login';
         return {
           user: null,

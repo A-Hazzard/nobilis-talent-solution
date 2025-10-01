@@ -91,6 +91,8 @@ export async function POST(request: NextRequest) {
       uid: userRecord.uid,
       displayName: `${leadData.firstName} ${leadData.lastName}`,
       isActive: true,
+      authProvider: 'email', // Admin-created accounts use email/password
+      emailVerified: false,
       // Set onboarding as completed for admin-created leads
       onboardingCompleted: true,
       onboardingCompletedAt: serverTimestamp(),

@@ -112,14 +112,11 @@ export async function GET(request: NextRequest) {
     const pdfService = PDFService.getInstance();
 
     if (format === 'html') {
-      // Return HTML version
-      const html = await pdfService.generateInvoiceHTMLForEmail(sampleInvoice, invoiceNumber);
-      return new NextResponse(html, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/html',
-        },
-      });
+      // HTML format no longer supported - return PDF instead
+      return NextResponse.json({
+        error: 'HTML format is deprecated. Please use PDF format instead.',
+        message: 'Use format=pdf parameter'
+      }, { status: 400 });
     } else {
       // Return PDF version
       const result = await pdfService.generateInvoicePDF(sampleInvoice, invoiceNumber);

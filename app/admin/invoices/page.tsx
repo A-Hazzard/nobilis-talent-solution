@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { generateInvoicePdf } from '@/lib/helpers/generateInvoicePdf';
 
 type PaymentStatus = 'pending' | 'paid' | 'overdue' | 'cancelled';
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
@@ -270,18 +271,12 @@ export default function InvoicesPage() {
         }
       }
 
-      // Update local state with correct typing per union branch
-      setPayments(prev => prev.map(p => {
-        if (p.id !== payment.id) return p;
-        if (p.type === 'invoice') {
-          return { ...p, status: newStatus as InvoiceStatus, updatedAt: new Date().toISOString() } as Invoice;
-        }
-        return { ...p, status: newStatus as PaymentStatus, updatedAt: new Date().toISOString() } as PendingPayment;
-      }));
-
       // Audit logging is now handled server-side in the API endpoints
 
       toast.success(`Status updated to ${newStatus}`);
+      
+      // Refresh data to show updated status
+      await loadPayments();
     } catch (error) {
       console.error('Error updating payment status:', error);
       toast.error('Failed to update payment status');
@@ -290,23 +285,29 @@ export default function InvoicesPage() {
 
   const handleDownload = async (payment: Invoice) => {
     try {
-      const response = await fetch(`/api/invoice/download/${payment.id}`, {
-        credentials: 'include'
+      // Generate PDF on frontend
+      const pdfBlob = await generateInvoicePdf({
+        invoiceNumber: payment.invoiceNumber,
+        clientName: payment.clientName,
+        clientEmail: payment.clientEmail,
+        issueDate: payment.issueDate,
+        dueDate: payment.dueDate,
+        items: payment.items,
+        subtotal: payment.items.reduce((sum, item) => sum + item.total, 0),
+        total: payment.total,
       });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `invoice-${payment.invoiceNumber}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        toast.success('Invoice downloaded');
-      } else {
-        toast.error('Failed to download invoice');
-      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${payment.invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Invoice downloaded');
     } catch (error) {
       console.error('Error downloading invoice:', error);
       toast.error('Failed to download invoice');
@@ -325,12 +326,12 @@ export default function InvoicesPage() {
       });
 
       if (response.ok) {
-        // Remove from local state
-        setPayments(prev => prev.filter(p => p.id !== payment.id));
-        
         // Audit logging is now handled server-side in the API endpoint
         
         toast.success('Invoice deleted successfully');
+        
+        // Refresh data to show updated list
+        await loadPayments();
       } else {
         toast.error('Failed to delete invoice');
       }
@@ -341,36 +342,47 @@ export default function InvoicesPage() {
   };
 
   const handleSendEmail = async () => {
-    if (!selectedPayment) return;
+    if (!selectedPayment || selectedPayment.type !== 'invoice') return;
 
     try {
+      const invoice = selectedPayment as Invoice;
+      
+      // Generate PDF on frontend
+      const pdfBlob = await generateInvoicePdf({
+        invoiceNumber: invoice.invoiceNumber,
+        clientName: invoice.clientName,
+        clientEmail: invoice.clientEmail,
+        issueDate: invoice.issueDate,
+        dueDate: invoice.dueDate,
+        items: invoice.items,
+        subtotal: invoice.items.reduce((sum, item) => sum + item.total, 0),
+        total: invoice.total,
+        notes: emailMessage,
+      });
+
+      // Create FormData with PDF
+      const formData = new FormData();
+      formData.append('pdf', pdfBlob, `invoice-${invoice.invoiceNumber}.pdf`);
+      formData.append('invoiceId', invoice.id);
+      formData.append('message', emailMessage || '');
+
       const response = await fetch('/api/invoice/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          invoiceId: selectedPayment.id,
-          message: emailMessage
-        })
+        body: formData
       });
 
       if (response.ok) {
-        setPayments(prev => prev.map(p => {
-          if (p.id !== selectedPayment.id) return p;
-          if (p.type === 'invoice') {
-            return { ...p, status: 'sent' as InvoiceStatus, sentAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Invoice;
-          }
-          return p;
-        }));
-        
-        // Note: Email sending audit logging could be added to the API endpoint if needed
-        
         toast.success('Invoice sent successfully');
         setIsEmailModalOpen(false);
         setEmailMessage('');
         setSelectedPayment(null);
+        
+        // Refresh data to show updated status
+        await loadPayments();
       } else {
-        toast.error('Failed to send invoice');
+        const error = await response.json();
+        toast.error(error.error || 'Failed to send invoice');
       }
     } catch (error) {
       console.error('Error sending invoice:', error);

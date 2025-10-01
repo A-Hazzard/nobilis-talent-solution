@@ -88,11 +88,23 @@ export class EmailService {
         attachments: data.attachments,
       };
 
+      console.log('📧 EmailService: Sending email...', {
+        to: data.to,
+        subject: data.subject,
+        hasAttachments: !!data.attachments && data.attachments.length > 0,
+        attachmentCount: data.attachments?.length || 0,
+        attachmentDetails: data.attachments?.map(a => ({
+          filename: a.filename,
+          size: Buffer.isBuffer(a.content) ? a.content.length : 'unknown',
+          contentType: a.contentType
+        })) || []
+      });
+
       const info = await this.transporter.sendMail(mailOptions);
-      console.log("Email sent successfully:", info.messageId);
+      console.log("✅ Email sent successfully:", info.messageId);
       return { success: true };
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error("❌ Error sending email:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -168,13 +180,23 @@ export class EmailService {
 
       // Add PDF attachment if provided
       if (data.pdfAttachment) {
+        const pdfBuffer = Buffer.isBuffer(data.pdfAttachment.content) 
+          ? data.pdfAttachment.content 
+          : Buffer.from(data.pdfAttachment.content);
+          
         emailData.attachments = [
           {
             filename: data.pdfAttachment.filename,
-            content: data.pdfAttachment.content,
+            content: pdfBuffer,
             contentType: "application/pdf",
           },
         ];
+        
+        console.log('📎 EmailService: PDF attachment prepared:', {
+          filename: data.pdfAttachment.filename,
+          size: pdfBuffer.length,
+          isBuffer: Buffer.isBuffer(pdfBuffer)
+        });
       }
 
       return await this.sendEmail(emailData);
@@ -503,12 +525,21 @@ export class EmailService {
           });
           
           if (pdfResult.success && pdfResult.data) {
+            const pdfBuffer = Buffer.isBuffer(pdfResult.data) 
+              ? pdfResult.data 
+              : Buffer.from(pdfResult.data);
+              
             attachments.push({
               filename: `invoice-${data.invoiceNumber}.pdf`,
-              content: pdfResult.data,
+              content: pdfBuffer,
               contentType: "application/pdf",
             });
-            console.log('✅ EmailService: PDF attachment added to email');
+            
+            console.log('📎 EmailService: PDF attachment added to email:', {
+              filename: `invoice-${data.invoiceNumber}.pdf`,
+              size: pdfBuffer.length,
+              isBuffer: Buffer.isBuffer(pdfBuffer)
+            });
           } else {
             console.log('❌ EmailService: PDF generation failed or no data returned');
           }
@@ -591,14 +622,23 @@ export class EmailService {
 
       // Add PDF attachment if provided (same pattern as sendInvoiceEmail)
       if (data.pdfAttachment) {
+        const pdfBuffer = Buffer.isBuffer(data.pdfAttachment.content) 
+          ? data.pdfAttachment.content 
+          : Buffer.from(data.pdfAttachment.content);
+          
         emailData.attachments = [
           {
             filename: data.pdfAttachment.filename,
-            content: data.pdfAttachment.content,
+            content: pdfBuffer,
             contentType: "application/pdf",
           },
         ];
-        console.log('✅ EmailService: PDF attachment added to payment confirmation email');
+        
+        console.log('📎 EmailService: PDF attachment prepared for payment confirmation:', {
+          filename: data.pdfAttachment.filename,
+          size: pdfBuffer.length,
+          isBuffer: Buffer.isBuffer(pdfBuffer)
+        });
       } else {
         console.log('⚠️ EmailService: No PDF attachment provided for payment confirmation');
       }

@@ -1,7 +1,33 @@
-import type { InvoicePreview } from "@/shared/types/payment";
-import type { PDFOptions } from "@/lib/types/services";
-import puppeteer from "puppeteer";
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
+type ServiceResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+};
+
+type InvoiceItem = {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+};
+
+type InvoicePreview = {
+  invoiceNumber: string;
+  clientName: string;
+  clientEmail: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  taxAmount?: number;
+  total: number;
+  dueDate: Date;
+};
+
+/**
+ * Backend PDF Service using pdf-lib (serverless-compatible)
+ * Replaces Puppeteer/Chromium for backend PDF generation
+ */
 export class PDFService {
   private static instance: PDFService;
 
@@ -15,541 +41,388 @@ export class PDFService {
   }
 
   /**
-   * Generate invoice HTML
-   */
-  private generateInvoiceHTML(
-    invoice: InvoicePreview,
-    invoiceNumber: string,
-    options: PDFOptions = {}
-  ): string {
-    const invoiceDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-
-    const dueDate = invoice.dueDate.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-
-    // Convert logo to base64 for embedding
-    const fs = require("fs");
-    const path = require("path");
-    let logoBase64 = "";
-
-    try {
-      const logoPath = path.join(
-        process.cwd(),
-        "public",
-        "assets",
-        "logo-transparent.png"
-      );
-      const logoBuffer = fs.readFileSync(logoPath);
-      logoBase64 = `data:image/png;base64,${logoBuffer.toString("base64")}`;
-    } catch (error) {
-      console.warn("Could not load logo for PDF:", error);
-    }
-
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Invoice #${invoiceNumber}</title>
-    <style>
-        @page {
-            size: ${options.format || "A4"};
-            margin: ${options.margin?.top || "15mm"} ${
-      options.margin?.right || "15mm"
-    } ${options.margin?.bottom || "15mm"} ${options.margin?.left || "15mm"};
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #333;
-            background: #fff;
-        }
-        
-        .invoice-container {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-        }
-        
-        .logo-section {
-            flex: 1;
-        }
-        
-        .logo {
-            width: 120px;
-            height: auto;
-            margin-bottom: 15px;
-        }
-        
-        .company-info {
-            font-size: 11px;
-            line-height: 1.4;
-            color: #555;
-        }
-        
-        .invoice-header {
-            flex: 1;
-            text-align: right;
-        }
-        
-        .invoice-title {
-            font-size: 32px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-            letter-spacing: 2px;
-        }
-        
-        .invoice-number {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 20px;
-        }
-        
-        .invoice-dates {
-            text-align: right;
-            font-size: 11px;
-            line-height: 1.6;
-        }
-        
-        .date-row {
-            margin-bottom: 5px;
-        }
-        
-        .date-label {
-            display: inline-block;
-            width: 60px;
-            text-align: left;
-            color: #666;
-        }
-        
-        .balance-due {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-left: 4px solid #ff6b35;
-        }
-        
-        .balance-label {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 2px;
-        }
-        
-        .balance-amount {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .billing-section {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 40px;
-        }
-        
-        .bill-to {
-            flex: 1;
-        }
-        
-        .bill-to h3 {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        
-        .client-details {
-            font-size: 11px;
-            line-height: 1.5;
-            color: #555;
-        }
-        
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-            border: 1px solid #ddd;
-        }
-        
-        .items-table th {
-            background-color: #4a4a4a;
-            color: white;
-            padding: 12px 15px;
-            text-align: left;
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        
-        .items-table th.center {
-            text-align: center;
-        }
-        
-        .items-table th.right {
-            text-align: right;
-        }
-        
-        .items-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #eee;
-            font-size: 11px;
-        }
-        
-        .items-table td.center {
-            text-align: center;
-        }
-        
-        .items-table td.right {
-            text-align: right;
-        }
-        
-        .items-table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        
-        .totals-section {
-            margin-top: 30px;
-            text-align: right;
-        }
-        
-        .totals-table {
-            margin-left: auto;
-            width: 300px;
-        }
-        
-        .totals-table tr td {
-            padding: 8px 15px;
-            font-size: 11px;
-        }
-        
-        .totals-table tr td:first-child {
-            text-align: right;
-            color: #666;
-        }
-        
-        .totals-table tr td:last-child {
-            text-align: right;
-            font-weight: bold;
-            width: 100px;
-        }
-        
-        .total-row {
-            border-top: 2px solid #333;
-            font-size: 12px !important;
-        }
-        
-        .total-row td {
-            padding-top: 12px !important;
-            font-weight: bold !important;
-            color: #333 !important;
-        }
-    </style>
-</head>
-<body>
-    <div class="invoice-container">
-        <!-- Header Section -->
-        <div class="header">
-            <div class="logo-section">
-                ${
-                  logoBase64
-                    ? `<img src="${logoBase64}" alt="Company Logo" class="logo" />`
-                    : ""
-                }
-                <div class="company-info">
-                    <strong>Nobilis Talent Solutions</strong><br>
-                    Kareem Payne<br>
-                    3344 Cobb Parkway<br>
-                    STE 200<br>
-                    Acworth, GA, 30101<br>
-                    Phone: +1 (678) 956-1146<br>
-                    Email: support@nobilistalent.com
-                </div>
-            </div>
-            
-            <div class="invoice-header">
-                <div class="invoice-title">INVOICE</div>
-                <div class="invoice-number">#${invoiceNumber}</div>
-                
-                <div class="invoice-dates">
-                    <div class="date-row">
-                        <span class="date-label">Date:</span>
-                        <span>${invoiceDate}</span>
-                    </div>
-                    <div class="date-row">
-                        <span class="date-label">Due Date:</span>
-                        <span>${dueDate}</span>
-                    </div>
-                </div>
-                
-                <div class="balance-due">
-                    <div class="balance-label">Balance Due:</div>
-                    <div class="balance-amount">$${invoice.total.toLocaleString(
-                      "en-US",
-                      { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                    )}</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Billing Section -->
-        <div class="billing-section">
-            <div class="bill-to">
-                <h3>Bill To:</h3>
-                <div class="client-details">
-                    ${invoice.clientName}<br>
-                    ${invoice.clientEmail || ""}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Items Table -->
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th class="center">Quantity</th>
-                    <th class="right">Rate</th>
-                    <th class="right">Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${invoice.items
-                  .map(
-                    (item) => `
-                    <tr>
-                        <td>${item.description}</td>
-                        <td class="center">${item.quantity}</td>
-                        <td class="right">$${item.unitPrice.toLocaleString(
-                          "en-US",
-                          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                        )}</td>
-                        <td class="right">$${item.total.toLocaleString(
-                          "en-US",
-                          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                        )}</td>
-                    </tr>
-                `
-                  )
-                  .join("")}
-            </tbody>
-        </table>
-        
-        <!-- Totals Section -->
-        <div class="totals-section">
-            <table class="totals-table">
-                <tr>
-                    <td>Subtotal:</td>
-                    <td>$${invoice.subtotal.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}</td>
-                </tr>
-                ${invoice.bonusAmount && invoice.bonusAmount > 0 ? `
-                <tr>
-                    <td>Bonus Amount:</td>
-                    <td>$${invoice.bonusAmount.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}</td>
-                </tr>
-                ` : ''}
-                <tr class="total-row">
-                    <td>Total:</td>
-                    <td>$${invoice.total.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}</td>
-                </tr>
-            </table>
-        </div>
-        
-        ${invoice.notes ? `
-        <!-- Notes Section -->
-        <div class="notes-section">
-            <h3>Notes:</h3>
-            <p>${invoice.notes}</p>
-        </div>
-        ` : ''}
-    </div>
-</body>
-</html>`;
-  }
-
-  /**
-   * Generate invoice PDF using Puppeteer with fallback
+   * Generates an invoice PDF
+   * @param invoice - Invoice data
+   * @param invoiceNumber - Invoice number for filename
+   * @returns Service response with PDF buffer
    */
   async generateInvoicePDF(
     invoice: InvoicePreview,
-    invoiceNumber: string,
-    options: PDFOptions = {}
-  ): Promise<{ success: boolean; data?: Buffer; error?: string }> {
-    // Try Puppeteer first, fallback to HTML if it fails
-    const puppeteerResult = await this.generateInvoicePDFWithPuppeteer(invoice, invoiceNumber, options);
-    if (puppeteerResult.success) {
-      return puppeteerResult;
-    }
-
-    // Fallback: Return HTML as text if Puppeteer fails
-    console.warn("⚠️ PDFService: Puppeteer failed, falling back to HTML generation");
-    const html = this.generateInvoiceHTML(invoice, invoiceNumber, options);
-    return {
-      success: true,
-      data: Buffer.from(html, 'utf-8'),
-      error: 'PDF generation failed, returning HTML fallback'
-    };
-  }
-
-  /**
-   * Generate invoice PDF using Puppeteer (internal method)
-   */
-  private async generateInvoicePDFWithPuppeteer(
-    invoice: InvoicePreview,
-    invoiceNumber: string,
-    options: PDFOptions = {}
-  ): Promise<{ success: boolean; data?: Buffer; error?: string }> {
-    let browser;
+    invoiceNumber: string
+  ): Promise<ServiceResponse<Buffer>> {
     try {
-      console.log(
-        "🚀 PDFService: Starting PDF generation for invoice:",
-        invoiceNumber
-      );
-      console.log("🚀 PDFService: Invoice data:", {
-        clientName: invoice.clientName,
-        total: invoice.total,
-        itemsCount: invoice.items?.length,
-        dueDate: invoice.dueDate,
-      });
-
-      // Generate the HTML content
-      const html = this.generateInvoiceHTML(invoice, invoiceNumber, options);
-
-      console.log(
-        "✅ PDFService: Invoice HTML generated successfully, length:",
-        html.length
-      );
-
-      // Launch Puppeteer browser
-      console.log("🌐 PDFService: Launching Puppeteer browser...");
+      // Create new PDF document
+      const pdf = await PDFDocument.create();
       
-      // Production-optimized Puppeteer configuration
-      const isProduction = process.env.NODE_ENV === 'production';
-      const puppeteerOptions: any = {
-        headless: true,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-accelerated-2d-canvas",
-          "--no-first-run",
-          "--disable-gpu",
-          "--disable-web-security",
-          "--disable-features=VizDisplayCompositor",
-          "--disable-extensions",
-          "--disable-plugins",
-          "--disable-images",
-          "--disable-javascript", // We don't need JS for static PDF generation
-          "--disable-background-timer-throttling",
-          "--disable-backgrounding-occluded-windows",
-          "--disable-renderer-backgrounding",
-        ],
-        timeout: 60000,
-      };
-
-      // Add production-specific options
-      if (isProduction) {
-        puppeteerOptions.executablePath = '/usr/bin/chromium-browser'; // Common path in production
-        puppeteerOptions.args.push('--single-process'); // Better for serverless
-        puppeteerOptions.args.push('--no-zygote'); // Better for serverless
-      }
-
-      browser = await puppeteer.launch(puppeteerOptions);
-
-      console.log("✅ PDFService: Browser launched successfully");
-
-      const page = await browser.newPage();
-
-      // Set content and wait for it to load
-      console.log("📄 PDFService: Setting page content...");
-      await page.setContent(html, { waitUntil: "networkidle0" });
-
-      console.log("✅ PDFService: Page content set, generating PDF...");
-
-      // Generate PDF
-      const pdfBuffer = await page.pdf({
-        format: options.format || "A4",
-        printBackground: true,
-        margin: {
-          top: options.margin?.top || "15mm",
-          right: options.margin?.right || "15mm",
-          bottom: options.margin?.bottom || "15mm",
-          left: options.margin?.left || "15mm",
-        },
+      // Add page with Letter size
+      const page = pdf.addPage([612, 792]); // 8.5" x 11"
+      const { width, height } = page.getSize();
+      
+      // Embed fonts
+      const helvetica = await pdf.embedFont(StandardFonts.Helvetica);
+      const helveticaBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+      
+      // Define colors
+      const BLACK = rgb(0, 0, 0);
+      const GRAY = rgb(0.5, 0.5, 0.5);
+      const ACCENT = rgb(0.2, 0.4, 0.6);
+      const LIGHT_GRAY = rgb(0.95, 0.95, 0.95);
+      
+      // Margins
+      const MARGIN = 50;
+      let yPosition = height - MARGIN;
+      
+      // === HEADER SECTION ===
+      
+      // Company Name
+      page.drawText('Nobilis Talent Solutions', {
+        x: MARGIN,
+        y: yPosition,
+        size: 20,
+        font: helveticaBold,
+        color: ACCENT,
       });
-
-      console.log(
-        "✅ PDFService: PDF generated successfully, size:",
-        pdfBuffer.length,
-        "bytes"
-      );
-
+      yPosition -= 25;
+      
+      // Company Details
+      const fontSize = 9;
+      page.drawText('Email: info@nobilistalentsolutions.com', {
+        x: MARGIN,
+        y: yPosition,
+        size: fontSize,
+        font: helvetica,
+        color: GRAY,
+      });
+      yPosition -= 12;
+      
+      // Invoice Title
+      yPosition -= 20;
+      page.drawText('INVOICE', {
+        x: width - MARGIN - 80,
+        y: height - MARGIN,
+        size: 24,
+        font: helveticaBold,
+        color: BLACK,
+      });
+      
+      // Invoice Number
+      page.drawText(`#${invoiceNumber}`, {
+        x: width - MARGIN - 80,
+        y: height - MARGIN - 25,
+        size: 12,
+        font: helvetica,
+        color: GRAY,
+      });
+      
+      // === SEPARATOR LINE ===
+      yPosition -= 10;
+      page.drawLine({
+        start: { x: MARGIN, y: yPosition },
+        end: { x: width - MARGIN, y: yPosition },
+        color: ACCENT,
+        thickness: 2,
+      });
+      yPosition -= 30;
+      
+      // === BILL TO SECTION ===
+      page.drawText('BILL TO:', {
+        x: MARGIN,
+        y: yPosition,
+        size: 10,
+        font: helveticaBold,
+        color: GRAY,
+      });
+      yPosition -= 15;
+      
+      page.drawText(invoice.clientName, {
+        x: MARGIN,
+        y: yPosition,
+        size: 12,
+        font: helveticaBold,
+        color: BLACK,
+      });
+      yPosition -= 15;
+      
+      page.drawText(invoice.clientEmail, {
+        x: MARGIN,
+        y: yPosition,
+        size: 10,
+        font: helvetica,
+        color: GRAY,
+      });
+      
+      // === DATES SECTION ===
+      const dateX = width - MARGIN - 150;
+      let dateY = yPosition + 30;
+      
+      page.drawText('Due Date:', {
+        x: dateX,
+        y: dateY,
+        size: 10,
+        font: helveticaBold,
+        color: GRAY,
+      });
+      
+      page.drawText(this.formatDate(invoice.dueDate), {
+        x: dateX + 80,
+        y: dateY,
+        size: 10,
+        font: helvetica,
+        color: BLACK,
+      });
+      
+      yPosition -= 50;
+      
+      // === ITEMS TABLE ===
+      // Table Header Background
+      page.drawRectangle({
+        x: MARGIN,
+        y: yPosition - 15,
+        width: width - (MARGIN * 2),
+        height: 20,
+        color: LIGHT_GRAY,
+      });
+      
+      // Table Headers
+      const tableY = yPosition - 5;
+      page.drawText('Description', {
+        x: MARGIN + 5,
+        y: tableY,
+        size: 10,
+        font: helveticaBold,
+        color: BLACK,
+      });
+      
+      page.drawText('Qty', {
+        x: width - MARGIN - 200,
+        y: tableY,
+        size: 10,
+        font: helveticaBold,
+        color: BLACK,
+      });
+      
+      page.drawText('Unit Price', {
+        x: width - MARGIN - 140,
+        y: tableY,
+        size: 10,
+        font: helveticaBold,
+        color: BLACK,
+      });
+      
+      page.drawText('Total', {
+        x: width - MARGIN - 60,
+        y: tableY,
+        size: 10,
+        font: helveticaBold,
+        color: BLACK,
+      });
+      
+      yPosition -= 30;
+      
+      // Table Items
+      for (const item of invoice.items) {
+        if (yPosition < 150) {
+          // Create new page if needed
+          const newPage = pdf.addPage([612, 792]);
+          yPosition = height - MARGIN;
+          
+          newPage.drawText(item.description.substring(0, 60), {
+            x: MARGIN + 5,
+            y: yPosition,
+            size: 10,
+            font: helvetica,
+            color: BLACK,
+          });
+          
+          newPage.drawText(item.quantity.toString(), {
+            x: width - MARGIN - 200,
+            y: yPosition,
+            size: 10,
+            font: helvetica,
+            color: BLACK,
+          });
+          
+          newPage.drawText(this.formatCurrency(item.unitPrice), {
+            x: width - MARGIN - 140,
+            y: yPosition,
+            size: 10,
+            font: helvetica,
+            color: BLACK,
+          });
+          
+          newPage.drawText(this.formatCurrency(item.total), {
+            x: width - MARGIN - 60,
+            y: yPosition,
+            size: 10,
+            font: helvetica,
+            color: BLACK,
+          });
+        } else {
+          page.drawText(item.description.substring(0, 60), {
+            x: MARGIN + 5,
+            y: yPosition,
+            size: 10,
+            font: helvetica,
+            color: BLACK,
+          });
+          
+          page.drawText(item.quantity.toString(), {
+            x: width - MARGIN - 200,
+            y: yPosition,
+            size: 10,
+            font: helvetica,
+            color: BLACK,
+          });
+          
+          page.drawText(this.formatCurrency(item.unitPrice), {
+            x: width - MARGIN - 140,
+            y: yPosition,
+            size: 10,
+            font: helvetica,
+            color: BLACK,
+          });
+          
+          page.drawText(this.formatCurrency(item.total), {
+            x: width - MARGIN - 60,
+            y: yPosition,
+            size: 10,
+            font: helvetica,
+            color: BLACK,
+          });
+        }
+        yPosition -= 20;
+      }
+      
+      // Separator line after items
+      yPosition -= 10;
+      page.drawLine({
+        start: { x: MARGIN, y: yPosition },
+        end: { x: width - MARGIN, y: yPosition },
+        color: GRAY,
+        thickness: 1,
+      });
+      yPosition -= 20;
+      
+      // === TOTALS SECTION ===
+      const totalsX = width - MARGIN - 150;
+      
+      // Subtotal
+      page.drawText('Subtotal:', {
+        x: totalsX,
+        y: yPosition,
+        size: 10,
+        font: helvetica,
+        color: BLACK,
+      });
+      
+      page.drawText(this.formatCurrency(invoice.subtotal), {
+        x: totalsX + 80,
+        y: yPosition,
+        size: 10,
+        font: helvetica,
+        color: BLACK,
+      });
+      yPosition -= 15;
+      
+      // Tax (if applicable)
+      if (invoice.taxAmount && invoice.taxAmount > 0) {
+        page.drawText('Tax:', {
+          x: totalsX,
+          y: yPosition,
+          size: 10,
+          font: helvetica,
+          color: BLACK,
+        });
+        
+        page.drawText(this.formatCurrency(invoice.taxAmount), {
+          x: totalsX + 80,
+          y: yPosition,
+          size: 10,
+          font: helvetica,
+          color: BLACK,
+        });
+        yPosition -= 15;
+      }
+      
+      // Total (highlighted)
+      page.drawRectangle({
+        x: totalsX - 5,
+        y: yPosition - 5,
+        width: 155,
+        height: 20,
+        color: ACCENT,
+      });
+      
+      page.drawText('TOTAL:', {
+        x: totalsX,
+        y: yPosition,
+        size: 12,
+        font: helveticaBold,
+        color: rgb(1, 1, 1), // White
+      });
+      
+      page.drawText(this.formatCurrency(invoice.total), {
+        x: totalsX + 80,
+        y: yPosition,
+        size: 12,
+        font: helveticaBold,
+        color: rgb(1, 1, 1), // White
+      });
+      
+      // === FOOTER ===
+      page.drawText('Thank you for your business!', {
+        x: width / 2 - 70,
+        y: 30,
+        size: 10,
+        font: helveticaBold,
+        color: GRAY,
+      });
+      
+      // Save and return as Buffer
+      const pdfBytes = await pdf.save();
+      const buffer = Buffer.from(pdfBytes);
+      
       return {
         success: true,
-        data: Buffer.from(pdfBuffer),
+        data: buffer,
       };
     } catch (error) {
-      console.error("❌ PDFService: Error generating invoice PDF:", error);
+      console.error('PDF generation failed:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: `Failed to generate invoice PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
-    } finally {
-      if (browser) {
-        console.log("🔒 PDFService: Closing browser...");
-        await browser.close();
-      }
     }
   }
 
   /**
-   * Generate invoice HTML for email attachment
+   * Gets the filename for an invoice
    */
-  async generateInvoiceHTMLForEmail(
-    invoice: InvoicePreview,
-    invoiceNumber: string
-  ): Promise<string> {
-    return this.generateInvoiceHTML(invoice, invoiceNumber);
+  getInvoiceFilename(invoiceNumber: string): string {
+    return `invoice-${invoiceNumber}.pdf`;
   }
 
   /**
-   * Get invoice filename
+   * Formats currency values
    */
-  getInvoiceFilename(invoiceNumber: string): string {
-    const date = new Date().toISOString().split("T")[0];
-    return `invoice-${invoiceNumber}-${date}.pdf`;
+  private formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: 'USD' 
+    }).format(amount);
+  }
+
+  /**
+   * Formats date strings
+   */
+  private formatDate(date: Date | string): string {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   }
 }
+

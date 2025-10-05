@@ -263,6 +263,9 @@ export type UserProfile = {
   lastLoginAt?: Date;
   updatedAt: Date;
   
+  // Authentication provider
+  authProvider: 'email' | 'google';
+  
   // Email verification
   emailVerified?: boolean;
   emailVerifiedAt?: Date;

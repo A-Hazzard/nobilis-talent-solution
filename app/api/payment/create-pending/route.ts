@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreatePendingPaymentRequest, PendingPaymentResponse } from '@/shared/types/payment';
-import { db } from '@/lib/firebase/config';
-import { collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { getAdminFirestore } from '@/lib/firebase/admin';
 import { EmailService } from '@/lib/services/EmailService';
-import { PDFService } from '@/lib/services/PDFService';
 import type { InvoicePreview } from '@/shared/types/payment';
 
 export async function POST(request: NextRequest) {
   try {
     const body: CreatePendingPaymentRequest = await request.json();
-    const { clientEmail, clientName, baseAmount, description } = body;
+    const { clientEmail, clientName, baseAmount, description, dueDate } = body;
 
     // Validate input
     if (!clientEmail || !clientName || !baseAmount || !description) {
@@ -38,7 +36,8 @@ export async function POST(request: NextRequest) {
     };
 
     // Store the pending payment in Firebase
-    const docRef = await addDoc(collection(db, 'pendingPayments'), pendingPaymentData);
+    const adminDb = getAdminFirestore();
+    const docRef = await adminDb.collection('pendingPayments').add(pendingPaymentData);
     const paymentId = docRef.id;
 
     const pendingPayment = {
@@ -71,25 +70,21 @@ export async function POST(request: NextRequest) {
         subtotal: baseAmount,
         taxAmount: 0,
         total: baseAmount,
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       };
 
       // Save invoice number to the payment
-      await updateDoc(docRef, { invoiceNumber, updatedAt: serverTimestamp() });
+      await docRef.update({ invoiceNumber, updatedAt: new Date() });
 
       const emailService = EmailService.getInstance();
-      const pdfService = PDFService.getInstance();
-      const pdf = await pdfService.generateInvoicePDF(invoice, invoiceNumber);
 
+      // Send email notification without PDF (admin will send PDF manually from dashboard)
       await emailService.sendInvoiceEmail({
         invoice,
         clientEmail,
         clientName,
-        customMessage: 'Please find your invoice attached. You can also pay securely from your dashboard.',
-        pdfAttachment:
-          pdf.success && pdf.data
-            ? { filename: `invoice-${invoiceNumber}.pdf`, content: pdf.data, contentType: 'application/pdf' }
-            : undefined,
+        customMessage: 'You have a new invoice. Please check your dashboard to view and pay.',
+        // No PDF attachment - admin will send manually from dashboard
       });
     } catch (e) {
       console.error('Invoice email send failed (non-blocking):', e);
@@ -119,13 +114,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Find pending payment for this email in Firebase
-    const q = query(
-      collection(db, 'pendingPayments'),
-      where('clientEmail', '==', email),
-      where('status', '==', 'pending')
-    );
-    
-    const querySnapshot = await getDocs(q);
+    const adminDb = getAdminFirestore();
+    const querySnapshot = await adminDb
+      .collection('pendingPayments')
+      .where('clientEmail', '==', email)
+      .where('status', '==', 'pending')
+      .get();
     
     if (querySnapshot.empty) {
       return NextResponse.json(

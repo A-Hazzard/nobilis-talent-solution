@@ -11,7 +11,7 @@ import { Check, X, Eye, EyeOff } from 'lucide-react';
 import { Mail, Lock, Chrome } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
-import { validateLoginForm } from '@/lib/utils/validation';
+import { loginSchema, type LoginFormData } from '@/lib/schemas';
 import { getRedirectPath } from '@/lib/utils/authUtils';
 
 // Force dynamic rendering to prevent pre-rendering issues
@@ -29,7 +29,7 @@ export default function LoginPage() {
     password?: string;
   }>({});
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
     rememberMe: false
@@ -49,10 +49,12 @@ export default function LoginPage() {
   }, [authLoading, isAuthenticated, user, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    
     setFormData(prev => ({ 
       ...prev, 
-      [name]: value 
+      [name]: newValue 
     }));
     setError(null);
 
@@ -61,21 +63,18 @@ export default function LoginPage() {
       setFieldErrors(prev => ({ ...prev, [name]: undefined }));
     }
 
-    // Real-time validation
-    if (name === 'email') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (value && !emailRegex.test(value)) {
-        setFieldErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
-      } else {
-        setFieldErrors(prev => ({ ...prev, email: undefined }));
+    // Real-time Zod validation
+    try {
+      if (name === 'email' || name === 'password') {
+        const partialData = { ...formData, [name]: newValue };
+        loginSchema.partial().parse(partialData);
       }
-    }
-
-    if (name === 'password') {
-      if (value && value.length < 8) {
-        setFieldErrors(prev => ({ ...prev, password: 'Password must be at least 8 characters' }));
-      } else {
-        setFieldErrors(prev => ({ ...prev, password: undefined }));
+    } catch (validationError: any) {
+      if (validationError.errors && validationError.errors.length > 0) {
+        const fieldError = validationError.errors.find((err: any) => err.path.includes(name));
+        if (fieldError) {
+          setFieldErrors(prev => ({ ...prev, [name]: fieldError.message }));
+        }
       }
     }
   };
@@ -92,12 +91,20 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
 
-    // Validate form
-    const validation = validateLoginForm(formData.email, formData.password);
-    if (!validation.isValid) {
-      setFieldErrors(validation.errors);
-      setIsLoading(false);
-      return;
+    // Validate form with Zod
+    try {
+      loginSchema.parse(formData);
+    } catch (validationError: any) {
+      if (validationError.errors && validationError.errors.length > 0) {
+        const errors: { [key: string]: string } = {};
+        validationError.errors.forEach((err: any) => {
+          const fieldName = err.path[0] as string;
+          errors[fieldName] = err.message;
+        });
+        setFieldErrors(errors);
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
@@ -188,9 +195,23 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="mb-4">
                 <X className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <p className="font-semibold">{error}</p>
+                    <p className="text-sm opacity-90">
+                      {error.includes('Failed to sign in') && 'Please check your credentials and try again. If the problem persists, try signing in with Google or contact support.'}
+                      {error.includes('Google') && 'Please try again or use email/password sign-in instead.'}
+                      {error.includes('Network') && 'Please check your internet connection and try again.'}
+                      {error.includes('Too many') && 'Please wait a few minutes before trying again.'}
+                      {error.includes('disabled') && 'Please contact our support team for assistance.'}
+                      {error.includes('Wrong sign-in method') && 'This account was created using a different authentication method. Please use the correct method to sign in.'}
+                      {error.includes('This account was created using Google') && 'Please sign in with Google instead of email/password.'}
+                      {error.includes('This account was created using email/password') && 'Please sign in with your email and password instead of Google.'}
+                    </p>
+                  </div>
+                </AlertDescription>
               </Alert>
             )}
 

@@ -6,7 +6,7 @@ const urlsToCache = [
   '/content',
   '/favicon.ico',
   '/logo-transparent.png',
-  '/assets/hero-leadership.jpg',
+  '/assets/hero.jpg',
   '/assets/kareem-profile.jpg'
 ];
 

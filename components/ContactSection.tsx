@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, Globe, Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import BookNowButton from '@/components/BookNowButton';
 
 const ContactSection = () => {
   const [formData, setFormData] = useState({
@@ -35,13 +36,23 @@ const ContactSection = () => {
     setErrorMessage('');
 
     try {
+      // Prepare data in the format the API expects
+      const apiData = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone,
+        organization: formData.company,
+        message: formData.challenges,
+        contactMethod: formData.contactMethod
+      };
+
       // Submit to backend API
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(apiData),
       });
 
       const result = await response.json();
@@ -80,16 +91,16 @@ const ContactSection = () => {
   };
   
   return (
-    <section id="contact" className="py-16 lg:py-32 bg-background overflow-hidden">
+    <section id="contact" className="py-16 lg:py-24 bg-background overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16 animate-fade-up">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-accent mb-4 lg:mb-6">
-            Let's Start Your Leadership Journey
+            Let's Start Your Transformation Journey
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
-            Ready to unlock your leadership potential? Get in touch to schedule 
-            your free consultation and discover how we can help you achieve your goals.
+            Ready to maximize your potential and crush your goals? Get in touch to schedule 
+            your free consultation and discover how we can help.
           </p>
         </div>
 
@@ -99,7 +110,7 @@ const ContactSection = () => {
             <div className="card-feature p-4 sm:p-6 lg:p-8 max-w-full">
               <div className="flex items-center mb-6 lg:mb-8">
                 <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-3 flex-shrink-0" />
-                <h3 className="text-xl sm:text-2xl font-bold text-accent">Book Your Strategy Session</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-accent">Have any questions for us? Send us a message, we'd love to hear from you!</h3>
               </div>
 
               {/* Success/Error Messages */}
@@ -121,7 +132,7 @@ const ContactSection = () => {
                 </Alert>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 max-w-full">
+              <form onSubmit={handleSubmit} method="POST" className="space-y-4 sm:space-y-6 max-w-full">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="min-w-0">
                     <Label htmlFor="firstName" className="text-accent text-sm sm:text-base">
@@ -203,7 +214,7 @@ const ContactSection = () => {
 
                 <div className="min-w-0">
                   <Label htmlFor="challenges" className="text-accent text-sm sm:text-base">
-                    What leadership challenges are you facing? *
+                    Let Us Know How We Can Help *
                   </Label>
                   <Textarea
                     id="challenges"
@@ -213,7 +224,7 @@ const ContactSection = () => {
                     value={formData.challenges}
                     onChange={handleInputChange}
                     className="mt-1 text-base resize-none w-full"
-                    placeholder="Tell us about your specific leadership challenges, team dynamics, or organizational goals..."
+                    placeholder="Send us your questions and/or tell us a little bit about your goals"
                   />
                 </div>
 
@@ -259,7 +270,7 @@ const ContactSection = () => {
                     </div>
                   ) : (
                     <>
-                      Send Message & Book Consultation
+                      Send Message
                       <Send className="ml-2 w-5 h-5" />
                     </>
                   )}
@@ -275,46 +286,6 @@ const ContactSection = () => {
           {/* Contact Information */}
           <div className="animate-fade-up order-1 lg:order-2 min-w-0" style={{ animationDelay: '0.2s' }}>
             <div className="space-y-6 lg:space-y-8">
-              {/* Contact Details */}
-              <div className="card-elevated p-4 sm:p-6 lg:p-8 max-w-full">
-                <h3 className="text-xl sm:text-2xl font-bold text-accent mb-6">Get In Touch</h3>
-                
-                <div className="space-y-4 sm:space-y-6">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                      <Phone className="w-6 h-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-accent text-sm sm:text-base">Phone</div>
-                      <a href="tel:678-920-6605" className="text-primary hover:underline text-sm sm:text-base break-all">
-                        (678) 920-6605
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                      <Mail className="w-6 h-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-accent text-sm sm:text-base">Email</div>
-                      <a href="mailto:nobilis.talent@gmail.com" className="text-primary hover:underline text-sm sm:text-base break-all">
-                        nobilis.talent@gmail.com
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                      <Globe className="w-6 h-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-accent text-sm sm:text-base">Availability</div>
-                      <div className="text-primary text-sm sm:text-base">Available globally.</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               {/* Response Time */}
               <div className="card-elevated bg-gradient-subtle p-4 sm:p-6 lg:p-8 max-w-full">
@@ -323,8 +294,7 @@ const ContactSection = () => {
                   <h4 className="text-lg sm:text-xl font-bold text-accent">Quick Response</h4>
                 </div>
                 <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                  We understand that leadership challenges require prompt attention. 
-                  You can expect a response within 24 hours.
+                  We're eager to connect with you to begin your transformation journey. You can expect a response from us within 24 hours.
                 </p>
                 <div className="text-sm text-primary font-semibold">
                   ✓ Free 30-minute strategy session included
@@ -338,12 +308,12 @@ const ContactSection = () => {
                   Prefer to book immediately? Use our online calendar to select 
                   a time that works for you.
                 </p>
-                <button 
-                  onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
+                <BookNowButton
                   className="bg-white text-primary px-6 py-4 rounded-xl font-semibold hover:bg-white/90 transition-smooth w-full h-14 sm:h-16 touch-manipulation active:scale-98"
+                  fallbackUrl={process.env.NEXT_PUBLIC_CALENDLY_URL}
                 >
                   Book Now
-                </button>
+                </BookNowButton>
                 <p className="text-xs opacity-75 mt-3 text-center">
                   All appointments are confirmed via email
                 </p>

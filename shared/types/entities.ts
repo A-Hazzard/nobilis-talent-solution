@@ -53,6 +53,9 @@ export type Lead = {
   // Authentication fields (stored in users collection)
   uid?: string; // Firebase Auth UID
   displayName?: string; // Computed from firstName + lastName
+  // Onboarding fields
+  onboardingCompleted?: boolean;
+  onboardingCompletedAt?: Date;
 };
 
 export type CalendarEvent = {
@@ -92,6 +95,7 @@ export type Resource = {
   createdBy: string; // user ID
   tags?: string[]; // Additional tags for better categorization
   featured?: boolean; // Whether this resource should be featured
+  relatedResources?: string[]; // Array of related resource IDs
 };
 
 export type BlogPost = {
@@ -113,6 +117,7 @@ export type BlogPost = {
   readTime?: number; // Estimated reading time in minutes
   seoTitle?: string;
   seoDescription?: string;
+  featured?: boolean; // Whether this blog post should be featured
   // Resources and references
   resources?: string[]; // Array of resource IDs from the database
   references?: Array<{
@@ -156,4 +161,13 @@ export type Analytics = {
     source: string;
     count: number;
   }>;
+};
+
+export type CalendlyConfig = {
+  id: string;
+  bookingUrl: string; // The Calendly booking URL
+  isActive: boolean; // Whether this URL is currently active
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string; // user ID who created/updated this config
 }; 

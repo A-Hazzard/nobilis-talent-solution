@@ -125,9 +125,12 @@ export class ResourcesService {
     isPublic?: boolean;
     limit?: number;
     search?: string;
-  } = {}): Promise<{ resources: Resource[]; error?: string }> {
+    page?: number;
+    pageSize?: number;
+    offset?: number;
+  } = {}): Promise<{ resources: Resource[]; total?: number; hasMore?: boolean; error?: string }> {
     try {
-      const { category, type, isPublic, limit: pageLimit, search } = options;
+      const { category, type, isPublic, limit: pageLimit, search, page, pageSize, offset } = options;
 
       // Build query - avoid composite indexes by using minimal constraints
       const constraints = [];
@@ -175,7 +178,23 @@ export class ResourcesService {
       // Always sort by createdAt in memory
       resources.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-      return { resources };
+      // Handle pagination
+      const total = resources.length;
+      let paginatedResources = resources;
+      
+      if (page && pageSize) {
+        const startIndex = offset || (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        paginatedResources = resources.slice(startIndex, endIndex);
+      } else if (pageLimit) {
+        paginatedResources = resources.slice(0, pageLimit);
+      }
+      
+      return { 
+        resources: paginatedResources,
+        total: total,
+        hasMore: page && pageSize ? (offset || (page - 1) * pageSize) + pageSize < total : false
+      };
     } catch (error) {
       console.error('Error fetching resources:', error);
       return { resources: [], error: 'Failed to fetch resources' };
@@ -270,6 +289,7 @@ export class ResourcesService {
         isPublic: resourceData.isPublic,
         createdBy: resourceData.createdBy,
         tags: resourceData.tags || [],
+        relatedResources: resourceData.relatedResources || [],
         featured: resourceData.featured || false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -284,7 +304,7 @@ export class ResourcesService {
         entity: 'resource',
         entityId: docRef.id,
         details: { title: resourceData.title, category: resourceData.category },
-        timestamp: Date.now(),
+
       });
 
       return { id: docRef.id };
@@ -354,6 +374,7 @@ export class ResourcesService {
       if (updates.isPublic !== undefined) updateData.isPublic = updates.isPublic;
       if (updates.tags !== undefined) updateData.tags = updates.tags;
       if (updates.featured !== undefined) updateData.featured = updates.featured;
+      if (updates.relatedResources !== undefined) updateData.relatedResources = updates.relatedResources;
 
       const docRef = doc(db, this.collectionName, id);
       await updateDoc(docRef, updateData);
@@ -365,7 +386,7 @@ export class ResourcesService {
         entity: 'resource',
         entityId: id,
         details: { updates },
-        timestamp: Date.now(),
+
       });
 
       return {};
@@ -416,7 +437,7 @@ export class ResourcesService {
         action: 'delete',
         entity: 'resource',
         entityId: id,
-        timestamp: Date.now(),
+
       });
 
       return {};

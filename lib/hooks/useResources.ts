@@ -3,7 +3,7 @@ import type { Resource } from '@/shared/types/entities';
 import type { ResourceFormData, ResourcesState, ResourcesActions } from '@/lib/types/hooks';
 import { ResourcesService } from '@/lib/services/ResourcesService';
 import { toast } from 'sonner';
-import { logAuditAction } from '@/lib/utils/auditUtils';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 /**
  * Custom hook for resources state management
@@ -109,11 +109,12 @@ export function useResources(): [ResourcesState, ResourcesActions] {
         toast.error(response.error);
       } else {
         // Log audit action
-        await logAuditAction({
+        await logAdminAction({
+          userId: 'admin',
+          userEmail: 'admin@nobilistalent.com',
           action: 'create',
           entity: 'resource',
           entityId: response.id,
-          timestamp: Date.now(),
           details: {
             title: `Resource created: ${formData.title}`,
             resourceTitle: formData.title,
@@ -172,11 +173,12 @@ export function useResources(): [ResourcesState, ResourcesActions] {
         toast.error(response.error);
       } else {
         // Log audit action
-        await logAuditAction({
+        await logAdminAction({
+          userId: 'admin',
+          userEmail: 'admin@nobilistalent.com',
           action: 'update',
           entity: 'resource',
           entityId: editingResource.id,
-          timestamp: Date.now(),
           details: {
             title: `Resource updated: ${formData.title}`,
             resourceTitle: formData.title,
@@ -232,11 +234,12 @@ export function useResources(): [ResourcesState, ResourcesActions] {
       } else {
         // Log audit action
         if (resourceToDelete) {
-          await logAuditAction({
+          await logAdminAction({
+            userId: 'admin',
+            userEmail: 'admin@nobilistalent.com',
             action: 'delete',
             entity: 'resource',
             entityId: id,
-            timestamp: Date.now(),
             details: {
               title: `Resource deleted: ${resourceToDelete.title}`,
               resourceTitle: resourceToDelete.title,

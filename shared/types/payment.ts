@@ -1,20 +1,4 @@
-export type PaymentOption = {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  duration: string;
-  features: string[];
-};
-
-export type PaymentSession = {
-  sessionId: string;
-  amount: number;
-  currency: string;
-  status: 'pending' | 'completed' | 'failed';
-  customerEmail?: string;
-  metadata?: Record<string, string>;
-};
+// Payment-related types for the application
 
 export type PaymentConfirmation = {
   sessionId: string;
@@ -23,6 +7,10 @@ export type PaymentConfirmation = {
   email: string;
   date: string;
   transactionId: string;
+  invoiceNumber?: string;
+  baseAmount?: string;
+  bonusAmount?: string;
+  totalAmount?: string;
 };
 
 export type StripeWebhookEvent = {
@@ -32,14 +20,14 @@ export type StripeWebhookEvent = {
   };
 };
 
-// New types for dynamic payment links
+// Payment link types
 export type PaymentLink = {
   id: string;
   clientName: string;
   clientEmail: string;
   amount: number;
   description: string;
-  status: 'active' | 'expired' | 'completed';
+  status: 'active' | 'overdue' | 'completed';
   createdAt: Date;
   expiresAt?: Date;
   stripePaymentLinkId?: string;
@@ -60,15 +48,16 @@ export type PaymentLinkResponse = {
   stripePaymentLinkId: string;
 };
 
-// New types for pending payments shown to logged-in users
+// Pending payment types
 export type PendingPayment = {
   id: string;
   clientEmail: string;
   clientName: string;
   baseAmount: number;
-  bonusAmount?: number; // Optional tip/bonus amount
+  bonusAmount?: number;
+  totalAmount?: number;
   description: string;
-  status: 'pending' | 'completed' | 'cancelled' | 'expired';
+  status: 'pending' | 'completed' | 'cancelled' | 'overdue';
   createdAt: Date;
   expiresAt?: Date;
   stripeSessionId?: string;
@@ -83,6 +72,7 @@ export type CreatePendingPaymentRequest = {
   baseAmount: number;
   description: string;
   expiresInDays?: number;
+  dueDate?: string;
 };
 
 export type PendingPaymentResponse = {
@@ -156,4 +146,10 @@ export type InvoicePreview = {
   taxAmount: number;
   total: number;
   dueDate: Date;
-}; 
+  bonusAmount?: number;
+  notes?: string;
+};
+
+// Payment status types
+export type PaymentStatus = 'pending' | 'completed' | 'cancelled' | 'overdue';
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';

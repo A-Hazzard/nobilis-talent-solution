@@ -3,7 +3,6 @@ import { getAuth } from '@/lib/helpers/auth';
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, updateDoc, serverTimestamp, FieldValue } from 'firebase/firestore';
 import { EmailService } from '@/lib/services/EmailService';
-import { PDFService } from '@/lib/services/PDFService';
 import { logAuditAction } from '@/lib/utils/auditUtils';
 
 export async function POST(request: NextRequest) {
@@ -18,11 +17,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { invoiceId, message } = await request.json();
+    // Parse FormData to get PDF file and other data
+    const formData = await request.formData();
+    const invoiceId = formData.get('invoiceId') as string;
+    const message = formData.get('message') as string;
+    const pdfFile = formData.get('pdf') as File;
+
+    console.log('📥 Received FormData:', {
+      invoiceId,
+      message,
+      hasPdfFile: !!pdfFile,
+      pdfFileSize: pdfFile?.size,
+      pdfFileName: pdfFile?.name
+    });
 
     if (!invoiceId) {
       return NextResponse.json(
         { error: 'Invoice ID is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!pdfFile) {
+      return NextResponse.json(
+        { error: 'PDF file is required' },
         { status: 400 }
       );
     }
@@ -52,19 +70,18 @@ export async function POST(request: NextRequest) {
       dueDate: invoiceData.dueDate?.toDate?.() || new Date()
     };
 
-    // Generate PDF for attachment
-    const pdfService = PDFService.getInstance();
-    const pdfResult = await pdfService.generateInvoicePDF(invoice, invoice.invoiceNumber);
+    // Convert File to Buffer for email attachment
+    const pdfBuffer = Buffer.from(await pdfFile.arrayBuffer());
     
-    if (!pdfResult.success || !pdfResult.data) {
-      return NextResponse.json(
-        { error: pdfResult.error || 'Failed to generate PDF attachment' },
-        { status: 500 }
-      );
-    }
+    console.log('📄 PDF Buffer created:', {
+      size: pdfBuffer.length,
+      isBuffer: Buffer.isBuffer(pdfBuffer)
+    });
 
     // Send email with invoice
     const emailService = EmailService.getInstance();
+    console.log('📧 Sending email with PDF attachment...');
+    
     const emailResult = await emailService.sendInvoiceEmail({
       invoice,
       clientEmail: invoice.clientEmail,
@@ -72,10 +89,12 @@ export async function POST(request: NextRequest) {
       customMessage: message,
       pdfAttachment: {
         filename: `invoice-${invoice.invoiceNumber}.pdf`,
-        content: pdfResult.data,
+        content: pdfBuffer,
         contentType: 'application/pdf'
       }
     });
+    
+    console.log('📧 Email result:', emailResult);
 
     if (!emailResult.success) {
       return NextResponse.json(

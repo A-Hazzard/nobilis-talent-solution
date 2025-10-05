@@ -242,25 +242,5 @@ export class InvoiceService {
     return colors[status] || colors.draft;
   }
 
-  /**
-   * Create invoice from payment option
-   */
-  static createInvoiceFromPaymentOption(
-    paymentOption: any,
-    clientName: string,
-    clientEmail: string
-  ): CreateInvoiceRequest {
-    return {
-      clientName,
-      clientEmail,
-      items: [{
-        description: paymentOption.title,
-        quantity: 1,
-        unitPrice: paymentOption.price,
-        type: 'service' as const
-      }],
-      notes: `Payment for ${paymentOption.title} - ${paymentOption.duration}`,
-      terms: 'Payment is due immediately upon receipt of this invoice.'
-    };
-  }
+
 } 

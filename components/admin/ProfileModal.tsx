@@ -12,6 +12,7 @@ import { User, Mail, Phone, Calendar, Shield } from 'lucide-react';
 import type { User as UserType } from '@/shared/types/entities';
 import { PasswordStrength } from '@/components/ui/password-strength';
 import { validatePassword } from '@/lib/utils/validation';
+import { toast } from 'sonner';
 
 
 
@@ -51,20 +52,6 @@ export default function ProfileModal({ isOpen, onClose, user }: ProfileModalProp
     }
   }, [user]);
 
-  // Debug logging
-  console.log('ProfileModal render:', { 
-    isOpen, 
-    user: user ? {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      createdAt: user.createdAt,
-      lastLoginAt: user.lastLoginAt
-    } : 'null' 
-  });
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -101,10 +88,10 @@ export default function ProfileModal({ isOpen, onClose, user }: ProfileModalProp
       onClose();
       
       // Show success message
-      alert('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
-      alert(errorMessage);
+      toast.error(errorMessage);
       console.error('Profile update error:', error);
     } finally {
       setIsLoading(false);

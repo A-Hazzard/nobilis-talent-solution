@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { 
   Download, 
   TrendingUp, 
@@ -17,11 +18,11 @@ import {
   Clock,
   Eye,
   Share2,
-  Filter
+  Filter,
+  Search
 } from 'lucide-react';
 import { DownloadAnalyticsService } from '@/lib/services/DownloadAnalyticsService';
-import AnalyticsRecentDownloads from '@/components/admin/AnalyticsRecentDownloads';
-import AnalyticsRecentBlogViews from '@/components/admin/AnalyticsRecentBlogViews';
+
 import { BlogAnalyticsService } from '@/lib/services/BlogAnalyticsService';
 import { ResourcesService } from '@/lib/services/ResourcesService';
 import { BlogService } from '@/lib/services/BlogService';
@@ -38,6 +39,11 @@ export default function AnalyticsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [topBlogs, setTopBlogs] = useState<BlogPost[]>([]);
+  
+  // Recent activity filtering
+  const [activitySearchTerm, setActivitySearchTerm] = useState<string>('');
+  const [activityTypeFilter, setActivityTypeFilter] = useState<string>('all');
+  const [userFilter, setUserFilter] = useState<string>('all');
 
   useEffect(() => {
     loadAnalytics();
@@ -156,6 +162,47 @@ export default function AnalyticsPage() {
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(num);
+  };
+
+  // Filter recent activity
+  const getFilteredRecentActivity = () => {
+    let filteredDownloads = analytics?.recentDownloads || [];
+    let filteredViews = recentViews;
+
+    // Apply search filter
+    if (activitySearchTerm) {
+      const searchLower = activitySearchTerm.toLowerCase();
+      filteredDownloads = filteredDownloads.filter(d => 
+        d.resourceTitle.toLowerCase().includes(searchLower) ||
+        (d.userEmail && d.userEmail.toLowerCase().includes(searchLower))
+      );
+      filteredViews = filteredViews.filter(v => 
+        v.postTitle.toLowerCase().includes(searchLower) ||
+        (v.userEmail && v.userEmail.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Apply activity type filter
+    if (activityTypeFilter !== 'all') {
+      if (activityTypeFilter === 'download') {
+        filteredViews = [];
+      } else if (activityTypeFilter === 'view') {
+        filteredDownloads = [];
+      }
+    }
+
+    // Apply user filter
+    if (userFilter !== 'all') {
+      if (userFilter === 'authenticated') {
+        filteredDownloads = filteredDownloads.filter(d => d.userEmail);
+        filteredViews = filteredViews.filter(v => v.userEmail);
+      } else if (userFilter === 'anonymous') {
+        filteredDownloads = filteredDownloads.filter(d => !d.userEmail);
+        filteredViews = filteredViews.filter(v => !v.userEmail);
+      }
+    }
+
+    return { downloads: filteredDownloads, views: filteredViews };
   };
 
 
@@ -511,12 +558,141 @@ export default function AnalyticsPage() {
 
         {/* Recent Activity Tab */}
         <TabsContent value="recent" className="space-y-6">
-          {analytics && (
-            <AnalyticsRecentDownloads items={analytics.recentDownloads || []} />
-          )}
-          {recentViews.length > 0 && (
-            <AnalyticsRecentBlogViews items={recentViews} />
-          )}
+          {/* Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filters
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search activities..."
+                    value={activitySearchTerm}
+                    onChange={(e) => setActivitySearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={activityTypeFilter} onValueChange={setActivityTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by activity type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Activities</SelectItem>
+                    <SelectItem value="download">Downloads</SelectItem>
+                    <SelectItem value="view">Blog Views</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={userFilter} onValueChange={setUserFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by user" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="authenticated">Authenticated Users</SelectItem>
+                    <SelectItem value="anonymous">Anonymous Users</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Combined Activity Feed */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Recent Activity
+              </CardTitle>
+              <p className="text-sm text-gray-600">
+                Showing all recent downloads and blog views
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {(() => {
+                  const { downloads, views } = getFilteredRecentActivity();
+                  return (
+                    <>
+                      {/* Downloads */}
+                      {downloads.map((d) => (
+                        <div key={d.id} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex-shrink-0 p-2 rounded-lg bg-blue-100">
+                            <Download className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <Badge className="flex items-center gap-1 text-xs bg-blue-100 text-blue-800">
+                                <Download className="h-3 w-3" />
+                                <span className="hidden sm:inline">DOWNLOAD</span>
+                                <span className="sm:hidden">Download</span>
+                              </Badge>
+                              <span className="text-xs sm:text-sm text-gray-500">
+                                {d.timestamp.toDate().toLocaleDateString()} {d.timestamp.toDate().toLocaleTimeString()}
+                              </span>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="font-medium text-gray-900 text-sm sm:text-base">
+                                {d.resourceTitle}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
+                                <span className="break-all">By: {d.userEmail || 'Anonymous'}</span>
+                                {d.userAgent && (
+                                  <span className="break-all">Device: {d.userAgent}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Blog Views */}
+                      {views.map((v) => (
+                        <div key={v.id} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex-shrink-0 p-2 rounded-lg bg-green-100">
+                            <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <Badge className="flex items-center gap-1 text-xs bg-green-100 text-green-800">
+                                <Eye className="h-3 w-3" />
+                                <span className="hidden sm:inline">VIEW</span>
+                                <span className="sm:hidden">View</span>
+                              </Badge>
+                              <span className="text-xs sm:text-sm text-gray-500">
+                                {v.timestamp.toDate().toLocaleDateString()} {v.timestamp.toDate().toLocaleTimeString()}
+                              </span>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="font-medium text-gray-900 text-sm sm:text-base">
+                                {v.postTitle}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
+                                <span className="break-all">By: {v.userEmail || 'Anonymous'}</span>
+                                {v.userAgent && (
+                                  <span className="break-all">Device: {v.userAgent}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {downloads.length === 0 && views.length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No recent activity found</p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Growth metrics chart</title>
+  <desc id="desc">Abstract bar chart with ascending bars and an upward trend arrow to represent growth and success.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#eef2f7"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1200" fill="url(#bg)"/>
+  <!-- Grid -->
+  <g stroke="#cbd5e1" stroke-width="2" opacity="0.5">
+    <line x1="120" y1="1000" x2="1520" y2="1000"/>
+    <line x1="120" y1="820" x2="1520" y2="820"/>
+    <line x1="120" y1="640" x2="1520" y2="640"/>
+    <line x1="120" y1="460" x2="1520" y2="460"/>
+    <line x1="120" y1="280" x2="1520" y2="280"/>
+  </g>
+  <!-- Bars -->
+  <g>
+    <rect x="250" y="760" width="160" height="240" rx="16" fill="url(#bar)" opacity="0.85"/>
+    <rect x="520" y="640" width="160" height="360" rx="16" fill="url(#bar)" opacity="0.90"/>
+    <rect x="790" y="520" width="160" height="480" rx="16" fill="url(#bar)" opacity="0.95"/>
+    <rect x="1060" y="360" width="160" height="640" rx="16" fill="url(#bar)"/>
+  </g>
+  <!-- Trend arrow -->
+  <g fill="none" stroke="#10b981" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M200 900 C 420 760, 680 700, 900 620 S 1300 500, 1420 340"/>
+    <polyline points="1420,340 1380,380 1520,300 1450,460" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+  </g>
+  <!-- Accent dots -->
+  <g fill="#0ea5e9" opacity="0.5">
+    <circle cx="300" cy="280" r="6"/>
+    <circle cx="520" cy="220" r="6"/>
+    <circle cx="820" cy="200" r="6"/>
+    <circle cx="1200" cy="180" r="6"/>
+  </g>
+</svg>
+

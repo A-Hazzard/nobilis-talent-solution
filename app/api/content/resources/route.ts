@@ -8,16 +8,15 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') as Resource['category'] | null;
     const type = searchParams.get('type') as Resource['type'] | null;
     const search = searchParams.get('search');
-    const limit = searchParams.get('limit');
 
     const resourcesService = new ResourcesService();
     
+    // Get all resources for frontend pagination
     const response = await resourcesService.getAll({
       isPublic: true,
       category: category || undefined,
       type: type || undefined,
-      search: search || undefined,
-      limit: limit ? parseInt(limit) : undefined,
+      search: search || undefined
     });
 
     if (response.error) {
@@ -29,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       resources: response.resources,
-      count: response.resources.length
+      total: response.total || response.resources.length
     });
   } catch (error) {
     console.error('Error in resources API route:', error);

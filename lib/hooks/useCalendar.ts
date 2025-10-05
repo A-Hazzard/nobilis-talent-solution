@@ -4,7 +4,7 @@ import type { EventFormData, CalendarState, CalendarActions } from '@/lib/types/
 import { CalendarService } from '@/lib/services/CalendarService';
 import { CalendlyService } from '@/lib/services/CalendlyService';
 import { CalendarUtils } from '@/lib/utils/calendarUtils';
-import { logAuditAction } from '@/lib/utils/auditUtils';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 /**
  * Custom hook for calendar state management
@@ -31,8 +31,6 @@ export function useCalendar(): [CalendarState, CalendarActions] {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [syncStats, setSyncStats] = useState<{ synced: number; total: number }>({ synced: 0, total: 0 });
   const [showInstructions, setShowInstructions] = useState(false);
-  const [showCalendlyBooking, setShowCalendlyBooking] = useState(false);
-  const [selectedEventType, setSelectedEventType] = useState<any>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [maxConnectionAttempts] = useState(2);
   const [isClient, setIsClient] = useState(false);
@@ -266,11 +264,11 @@ export function useCalendar(): [CalendarState, CalendarActions] {
         });
         
         // Log audit action for update
-        await logAuditAction({
+        await logAdminAction({
           action: 'update',
           entity: 'calendar',
           entityId: editingEvent.id,
-          timestamp: Date.now(),
+
           details: {
             title: `Calendar event updated: ${eventData.title}`,
             eventTitle: eventData.title,
@@ -287,11 +285,11 @@ export function useCalendar(): [CalendarState, CalendarActions] {
         
         if (response.data) {
           // Log audit action for create
-          await logAuditAction({
+          await logAdminAction({
             action: 'create',
             entity: 'calendar',
             entityId: response.data.id,
-            timestamp: Date.now(),
+  
             details: {
               title: `Calendar event created: ${eventData.title}`,
               eventTitle: eventData.title,
@@ -319,11 +317,11 @@ export function useCalendar(): [CalendarState, CalendarActions] {
       
       // Log audit action
       if (eventToDelete) {
-        await logAuditAction({
+        await logAdminAction({
           action: 'delete',
           entity: 'calendar',
           entityId: eventId,
-          timestamp: Date.now(),
+
           details: {
             title: `Calendar event deleted: ${eventToDelete.title}`,
             eventTitle: eventToDelete.title,
@@ -371,6 +369,12 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     });
   }, []);
 
+  const handleDateChange = useCallback((date: Date | undefined) => {
+    const dateString = date ? date.toISOString().split('T')[0] : '';
+    setForm(prev => ({ ...prev, date: dateString }));
+    setFormError(null);
+  }, []);
+
   const changeMonth = useCallback((direction: 'prev' | 'next') => {
     setCurrentMonth(prev => {
       const newMonth = new Date(prev);
@@ -383,24 +387,17 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     });
   }, []);
 
-  const openCalendlyBooking = useCallback(async () => {
-    try {
-      const eventTypes = await calendlyService.getEventTypes();
-      if (eventTypes.data && eventTypes.data.length > 0) {
-        setSelectedEventType(eventTypes.data[0]);
-        setShowCalendlyBooking(true);
-      } else {
-        alert('No Calendly event types found. Please create an event type in Calendly first.');
-      }
-    } catch (error) {
-      console.error('Error opening Calendly booking:', error);
-      alert('Error connecting to Calendly. Please try again.');
-    }
-  }, [calendlyService]);
+  const setMonth = useCallback((date: Date) => {
+    setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+  }, []);
+
+  const openCalendlyBooking = useCallback(() => {
+    // Direct redirect to Calendly scheduling page
+    window.open('https://calendly.com/app/scheduling/meeting_types/user/me', '_blank');
+  }, []);
 
   const closeCalendlyBooking = useCallback(() => {
-    setShowCalendlyBooking(false);
-    setSelectedEventType(null);
+    // No longer needed since we removed the modal
   }, []);
 
   const toggleInstructions = useCallback(() => {
@@ -420,6 +417,14 @@ export function useCalendar(): [CalendarState, CalendarActions] {
         console.log('🔍 Checking Calendly connection during initialization...');
         const connectionStatus = await checkCalendlyConnection();
         console.log(`🔍 Connection status: ${connectionStatus}`);
+        
+        // If not connected, automatically initiate connection
+        if (connectionStatus === 'disconnected') {
+          console.log('🔄 No Calendly connection found, auto-connecting...');
+          setCalendlyAuthStatus('connecting');
+          connectCalendly();
+          return; // Exit early, connection will be handled by OAuth callback
+        }
         
         // Then load events with the connection status (this will include Calendly events if connected)
         console.log('📅 Loading events with connection status...');
@@ -442,7 +447,7 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     };
 
     initializeCalendar();
-  }, [isClient]); // Only depend on isClient to ensure it runs once when client is ready
+  }, [isClient, checkCalendlyConnection, loadEvents, connectCalendly, syncCalendlyEvents]); // Include all dependencies
 
   // Retry connection logic
   useEffect(() => {
@@ -496,8 +501,6 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     lastSyncTime,
     syncStats,
     showInstructions,
-    showCalendlyBooking,
-    selectedEventType,
     connectionAttempts,
     maxConnectionAttempts,
   };
@@ -513,7 +516,9 @@ export function useCalendar(): [CalendarState, CalendarActions] {
     handleFormChange,
     handleTypeChange,
     handleTimeChange,
+    handleDateChange,
     changeMonth,
+    setMonth,
     openCalendlyBooking,
     closeCalendlyBooking,
     toggleInstructions,

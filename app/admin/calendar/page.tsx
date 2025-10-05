@@ -14,7 +14,7 @@ import CalendarHeader from '@/components/admin/calendar/CalendarHeader';
 import CalendarGrid from '@/components/admin/calendar/CalendarGrid';
 import UpcomingEvents from '@/components/admin/calendar/UpcomingEvents';
 import EventForm from '@/components/admin/calendar/EventForm';
-import CalendlyModal from '@/components/admin/calendar/CalendlyModal';
+import CalendlyConfigForm from '@/components/admin/calendar/CalendlyConfigForm';
 
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
@@ -42,14 +42,11 @@ export default function CalendarPage() {
     lastSyncTime,
     syncStats,
     showInstructions,
-    showCalendlyBooking,
-    selectedEventType,
     connectionAttempts,
     maxConnectionAttempts,
   } = state;
 
   const {
-    loadEvents,
     syncCalendlyEvents,
     connectCalendly,
     handleOpenModal,
@@ -59,9 +56,10 @@ export default function CalendarPage() {
     handleFormChange,
     handleTypeChange,
     handleTimeChange,
+    handleDateChange,
     changeMonth,
+    setMonth,
     openCalendlyBooking,
-    closeCalendlyBooking,
     toggleInstructions,
     checkCalendlyConnection,
   } = actions;
@@ -137,13 +135,26 @@ export default function CalendarPage() {
         onToggleInstructions={toggleInstructions}
       />
 
-      {/* Temporary debug button for testing Calendly connection */}
-      {calendlyAuthStatus === 'disconnected' && (
+      {/* Auto-connection status */}
+      {calendlyAuthStatus === 'connecting' && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            <div className="flex items-center gap-2">
+              <span className="text-sm sm:text-base">Connecting to Calendly automatically...</span>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Fallback manual connection */}
+      {calendlyAuthStatus === 'disconnected' && connectionAttempts >= maxConnectionAttempts && (
         <Alert className="bg-yellow-50 border-yellow-200">
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <span className="text-sm sm:text-base">Calendly not connected. Click to connect manually:</span>
+              <span className="text-sm sm:text-base">Auto-connection failed. Click to connect manually:</span>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -180,7 +191,7 @@ export default function CalendarPage() {
                   <ul className="space-y-1 text-sm">
                     <li>• See all your appointments in one calendar</li>
                     <li>• Events you create here stay in your system</li>
-                    <li>• Events from your booking page appear automatically</li>
+                    <li>• Events from your Calendy appear automatically</li>
                     <li>• Click any event to see more details</li>
                   </ul>
                 </div>
@@ -190,7 +201,7 @@ export default function CalendarPage() {
                   <ul className="space-y-1 text-sm">
                     <li>• Click "Add Event" to create your own appointments</li>
                     <li>• You can edit events you create here</li>
-                    <li>• Events from your booking page can't be edited here</li>
+                    <li>• Events from your Calendy can't be edited here</li>
                     <li>• You can delete any event if needed</li>
                   </ul>
                 </div>
@@ -253,6 +264,9 @@ export default function CalendarPage() {
         </Alert>
       )}
 
+      {/* Calendly Configuration Section */}
+      <CalendlyConfigForm />
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3">
           <CalendarGrid
@@ -260,6 +274,7 @@ export default function CalendarPage() {
             currentMonth={currentMonth}
             onEventClick={handleOpenModal}
             onMonthChange={changeMonth}
+            onMonthSet={setMonth}
           />
         </div>
         <div className="lg:col-span-1">
@@ -281,18 +296,7 @@ export default function CalendarPage() {
         onFormChange={handleFormChange}
         onTypeChange={handleTypeChange}
         onTimeChange={handleTimeChange}
-      />
-
-      <CalendlyModal
-        isOpen={showCalendlyBooking}
-        onClose={closeCalendlyBooking}
-        eventType={selectedEventType}
-        onEventScheduled={(eventDetails) => {
-          console.log('Event scheduled:', eventDetails);
-          closeCalendlyBooking();
-          // Optionally refresh events after scheduling
-          loadEvents();
-        }}
+        onDateChange={handleDateChange}
       />
     </div>
   );

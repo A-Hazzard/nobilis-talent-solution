@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from '@/lib/helpers/auth';
-import { db } from '@/lib/firebase/config';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { logAuditAction } from '@/lib/utils/auditUtils';
+import { getAdminFirestore } from '@/lib/firebase/admin';
+import { ServerAuditLogger } from '@/lib/helpers/auditLogger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,13 +33,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update user document in Firestore
-    const userRef = doc(db, 'users', authResult.user.uid);
+    // Get current user data for audit logging
+    const adminDb = getAdminFirestore();
+    const userRef = adminDb.collection('users').doc(authResult.user.uid);
+    const currentUserDoc = await userRef.get();
+    const currentUserData = currentUserDoc.exists ? currentUserDoc.data() : {};
+
     const updateFields: any = {
       firstName: updateData.firstName.trim(),
       lastName: updateData.lastName.trim(),
       email: updateData.email.trim().toLowerCase(),
-      updatedAt: serverTimestamp(),
+      updatedAt: new Date(),
     };
 
     // Add optional fields if provided
@@ -75,20 +78,36 @@ export async function POST(request: NextRequest) {
       updateFields.budget = updateData.budget;
     }
 
-    await updateDoc(userRef, updateFields);
+    // Prepare before/after data for audit logging
+    const beforeData: Record<string, any> = {};
+    const afterData: Record<string, any> = {};
+    
+    // Track changes for audit
+    Object.keys(updateFields).forEach(key => {
+      if (key !== 'updatedAt') {
+        beforeData[key] = currentUserData?.[key] || '';
+        afterData[key] = updateFields[key];
+      }
+    });
 
-    // Log audit action
-    await logAuditAction({
+    await userRef.update(updateFields);
+
+    // Log audit action with before/after data using ServerAuditLogger
+    const auditLogger = ServerAuditLogger.getInstance();
+    await auditLogger.logAction(request, {
+      id: authResult.user.uid,
+      email: authResult.user.email
+    }, {
       action: 'update',
       entity: 'auth',
       entityId: authResult.user.uid,
-      timestamp: Date.now(),
       details: {
-        title: 'Profile updated',
-        email: updateData.email,
+        title: 'Profile information updated',
         action: 'profile_update',
-        updatedFields: Object.keys(updateFields).filter(key => key !== 'updatedAt')
-      }
+        email: updateData.email
+      },
+      beforeData,
+      afterData
     });
 
     // Return updated user data

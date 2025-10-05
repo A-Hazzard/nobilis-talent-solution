@@ -1,15 +1,25 @@
 'use client';
 
-import { ArrowRight, Calendar, Users, TrendingUp, ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
+import BookNowButton from '@/components/BookNowButton';
 
 const HeroSection = () => {
   const scrollToNextSection = () => {
-    document.getElementById('about')?.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    });
+    const servicesElement = document.getElementById('services');
+    if (servicesElement) {
+      servicesElement.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    } else {
+      // Fallback: scroll down by viewport height
+      window.scrollBy({
+        top: window.innerHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   useEffect(() => {
@@ -25,7 +35,7 @@ const HeroSection = () => {
       {/* Background with overlay */}
       <div className="absolute inset-0 z-0">
         <Image 
-          src="/assets/hero-leadership.jpg" 
+          src="/assets/hero.jpg" 
           alt="Leadership coaching" 
           fill
           className="object-cover"
@@ -34,31 +44,17 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-accent/90 via-accent/70 to-primary/60"></div>
       </div>
 
-      {/* Floating elements */}
-      <div className="absolute top-28 right-10 animate-float hidden lg:block">
-        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white">
-          <Users className="w-8 h-8 mb-2" />
-          <p className="text-sm font-semibold">200+ Leaders Coached</p>
-        </div>
-      </div>
-      
-      <div className="absolute top-48 right-40 animate-float hidden lg:block" style={{ animationDelay: '2s' }}>
-        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white">
-          <TrendingUp className="w-8 h-8 mb-2" />
-          <p className="text-sm font-semibold">98% Success Rate</p>
-        </div>
-      </div>
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <div className="hero-text">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 hero-stagger">
-              Where strategy meets humanity, transformation happens.
+              Where Strategy Meets Humanity
             </h1>
             
             <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed hero-stagger">
-              I help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results.
+              We help leaders, teams, and organizations unlock their potential, align culture with vision, and deliver sustainable results.
             </p>
 
             <p className="text-base sm:text-lg text-white/85 mb-8 max-w-3xl mx-auto leading-relaxed hero-stagger">
@@ -66,13 +62,14 @@ const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12 hero-stagger justify-center">
-              <button
-                onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
-                className="btn-primary group inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg"
+              <BookNowButton
+                variant="outline"
+                className=" bg-teal-500 backdrop-blur-sm border-teal-400/50 text-white hover:bg-teal-500/10 hover:text-white transition-all duration-300 group inline-flex items-center justify-center px-6 py-4 sm:px-8 sm:py-8 text-base sm:text-lg rounded-full"
+                showIcon={false}
               >
                 Book Now
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </BookNowButton>
               
               <a
                 href="#services"
@@ -81,50 +78,22 @@ const HeroSection = () => {
                 Explore Services
               </a>
             </div>
-
-            {/* Value Proposition */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-12 hero-stagger">
-              <h3 className="text-xl font-semibold text-white mb-4">Why Choose Kareem Payne Leadership?</h3>
-              <div className="grid md:grid-cols-3 gap-6 text-center">
-                <div>
-                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="font-semibold text-white mb-2">Proven Results</h4>
-                  <p className="text-white/80 text-sm">98% success rate with measurable improvements</p>
-                </div>
-                <div>
-                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <TrendingUp className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="font-semibold text-white mb-2">Strategic Approach</h4>
-                  <p className="text-white/80 text-sm">Customized solutions for your unique challenges</p>
-                </div>
-                <div>
-                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Calendar className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="font-semibold text-white mb-2">Free Consultation</h4>
-                  <p className="text-white/80 text-sm">30-minute strategy session at no cost</p>
-                </div>
-              </div>
-            </div>
-
-           
           </div>
         </div>
       </div>
 
       {/* Scroll indicator - clickable */}
-      <button 
-        onClick={scrollToNextSection}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hover:scale-110 transition-all duration-300 ease-in-out group cursor-pointer"
-        aria-label="Scroll to next section"
-      >
-        <div className="w-8 h-12 border-2 border-white/70 rounded-full flex flex-col items-center justify-center group-hover:border-white transition-all duration-300 ease-in-out group-hover:shadow-lg">
-          <ChevronDown className="w-4 h-4 text-white/70 group-hover:text-white animate-pulse transition-all duration-300 ease-in-out group-hover:translate-y-1" />
-        </div>
-      </button>
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex justify-center z-20">
+        <button 
+          onClick={scrollToNextSection}
+          className="animate-bounce hover:scale-110 transition-all duration-300 ease-in-out group cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent rounded-full"
+          aria-label="Scroll to services section"
+        >
+          <div className="w-8 h-12 border-2 border-white/70 rounded-full flex flex-col items-center justify-center group-hover:border-white transition-all duration-300 ease-in-out group-hover:shadow-lg bg-white/10 backdrop-blur-sm">
+            <ChevronDown className="w-4 h-4 text-white/70 group-hover:text-white animate-pulse transition-all duration-300 ease-in-out group-hover:translate-y-1" />
+          </div>
+        </button>
+      </div>
     </section>
   );
 };

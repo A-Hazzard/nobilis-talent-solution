@@ -24,28 +24,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { onboardingSchema, type OnboardingFormData } from '@/lib/schemas';
 
 type OnboardingStep = 'welcome' | 'profile' | 'organization' | 'goals' | 'complete';
 
-type OnboardingData = {
-  // Profile step
-  firstName: string;
-  lastName: string;
-  jobTitle: string;
-  phone: string;
-  
-  // Organization step
-  organizationName: string;
-  organizationType: 'startup' | 'small-business' | 'enterprise' | 'nonprofit' | 'other';
-  industryFocus: string;
-  teamSize: string;
-  
-  // Goals step
-  primaryGoals: string[];
-  challengesDescription: string;
-  timeline: string;
-  budget: string;
-};
+// Using the Zod schema type instead of manual type definition
 
 const ORGANIZATION_TYPES = [
   { value: 'startup', label: 'Startup' },
@@ -94,7 +77,7 @@ export default function OnboardingPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [data, setData] = useState<OnboardingData>({
+  const [data, setData] = useState<OnboardingFormData>({
     firstName: '',
     lastName: '',
     jobTitle: '',
@@ -118,8 +101,13 @@ export default function OnboardingPage() {
       }
       
       // Check if user has already completed onboarding
-      if (user?.onboardingCompleted) {
-        router.push('/');
+      if (user?.onboardingCompleted === true) {
+        // Redirect based on user role
+        if (user.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/content');
+        }
         return;
       }
       
@@ -129,6 +117,16 @@ export default function OnboardingPage() {
           ...prev,
           firstName: user.firstName || '',
           lastName: user.lastName || '',
+          jobTitle: user.jobTitle || '',
+          phone: user.phone || '',
+          organizationName: user.organization || '',
+          organizationType: user.organizationType || 'small-business',
+          industryFocus: user.industryFocus || '',
+          teamSize: user.teamSize || '',
+          primaryGoals: user.primaryGoals || [],
+          challengesDescription: user.challengesDescription || '',
+          timeline: user.timeline || '',
+          budget: user.budget || '',
         }));
       }
     }
@@ -173,6 +171,9 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
+      // Validate form data with Zod
+      const validatedData = onboardingSchema.parse(data);
+      
       // Include Firebase ID token so the API can authenticate you
       const idToken = await (await import('firebase/auth')).getIdToken?.(await (await import('firebase/auth')).getAuth().currentUser!);
       const response = await fetch('/api/auth/complete-onboarding', {
@@ -181,12 +182,18 @@ export default function OnboardingPage() {
           'Content-Type': 'application/json',
           ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(validatedData),
       });
 
       if (response.ok) {
         toast.success('Welcome! Your onboarding is complete.');
-        router.push('/');
+        
+        // Redirect based on user role
+        if (user?.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/content');
+        }
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || 'Failed to complete onboarding');
@@ -199,7 +206,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSkip = async () => {
+  const _handleSkip = async () => {
     // Mark onboarding completed without extra fields
     setIsSubmitting(true);
     try {
@@ -223,7 +230,13 @@ export default function OnboardingPage() {
         }),
       });
       if (response.ok) {
-        router.push('/');
+        toast.success('Onboarding completed successfully!');
+        // Redirect based on user role
+        if (user?.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/content');
+        }
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || 'Failed to skip onboarding');
@@ -272,14 +285,19 @@ export default function OnboardingPage() {
             <p className="text-sm text-gray-600">Define your leadership goals</p>
           </div>
         </div>
-        <div className="flex justify-center gap-3">
-          <Button onClick={nextStep} size="lg">
-            Get Started
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-          <Button variant="outline" size="lg" onClick={handleSkip}>
-            Skip for now
-          </Button>
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-3">
+            <Button onClick={nextStep} size="lg">
+              Get Started
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+            <Button variant="outline" size="lg" onClick={_handleSkip} disabled={isSubmitting}>
+              {isSubmitting ? 'Skipping...' : 'Skip for now'}
+            </Button>
+          </div>
+          <p className="text-sm text-gray-500 text-center max-w-md">
+            You can always complete your profile later from your account settings
+          </p>
         </div>
       </CardContent>
     </Card>
@@ -321,13 +339,18 @@ export default function OnboardingPage() {
         </div>
         
         <div>
-          <Label htmlFor="jobTitle">Job Title</Label>
+          <Label htmlFor="jobTitle">Job Title *</Label>
           <Input
             id="jobTitle"
             value={data.jobTitle}
             onChange={(e) => setData(prev => ({ ...prev, jobTitle: e.target.value }))}
             placeholder="e.g., CEO, Team Lead, Director"
+            required
+            minLength={2}
           />
+          {data.jobTitle && data.jobTitle.length < 2 && (
+            <p className="text-sm text-red-600 mt-1">Job title must be at least 2 characters</p>
+          )}
         </div>
         
         <div>
@@ -337,7 +360,7 @@ export default function OnboardingPage() {
             type="tel"
             value={data.phone}
             onChange={(e) => setData(prev => ({ ...prev, phone: e.target.value }))}
-            placeholder="+1 (555) 123-4567"
+            placeholder="(678) 956-1146"
           />
         </div>
 
@@ -346,13 +369,18 @@ export default function OnboardingPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Button 
-            onClick={nextStep}
-            disabled={!data.firstName || !data.lastName}
-          >
-            Continue
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={_handleSkip} disabled={isSubmitting}>
+              {isSubmitting ? 'Skipping...' : 'Skip'}
+            </Button>
+            <Button 
+              onClick={nextStep}
+              disabled={!data.firstName || !data.lastName || !data.jobTitle || data.jobTitle.length < 2}
+            >
+              Continue
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -398,17 +426,22 @@ export default function OnboardingPage() {
         </div>
 
         <div>
-          <Label htmlFor="industryFocus">Industry Focus</Label>
+          <Label htmlFor="industryFocus">Industry Focus *</Label>
           <Input
             id="industryFocus"
             value={data.industryFocus}
             onChange={(e) => setData(prev => ({ ...prev, industryFocus: e.target.value }))}
             placeholder="e.g., Technology, Healthcare, Finance"
+            required
+            minLength={2}
           />
+          {data.industryFocus && data.industryFocus.length < 2 && (
+            <p className="text-sm text-red-600 mt-1">Industry focus must be at least 2 characters</p>
+          )}
         </div>
 
         <div>
-          <Label>Team Size</Label>
+          <Label>Team Size *</Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
             {TEAM_SIZES.map((size) => (
               <Button
@@ -428,13 +461,18 @@ export default function OnboardingPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Button 
-            onClick={nextStep}
-            disabled={!data.organizationName}
-          >
-            Continue
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={_handleSkip} disabled={isSubmitting}>
+              {isSubmitting ? 'Skipping...' : 'Skip'}
+            </Button>
+            <Button 
+              onClick={nextStep}
+              disabled={!data.organizationName || !data.industryFocus || data.industryFocus.length < 2 || !data.teamSize}
+            >
+              Continue
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -469,18 +507,26 @@ export default function OnboardingPage() {
         </div>
 
         <div>
-          <Label htmlFor="challengesDescription">Current Challenges</Label>
+          <Label htmlFor="challengesDescription">Current Challenges *</Label>
           <Textarea
             id="challengesDescription"
             value={data.challengesDescription}
             onChange={(e) => setData(prev => ({ ...prev, challengesDescription: e.target.value }))}
             placeholder="Describe your current leadership challenges or areas you'd like to improve..."
             rows={3}
+            required
+            minLength={10}
           />
+          {data.challengesDescription && data.challengesDescription.length < 10 && (
+            <p className="text-sm text-red-600 mt-1">Challenge description must be at least 10 characters</p>
+          )}
+          <p className="text-sm text-gray-500 mt-1">
+            {data.challengesDescription.length}/500 characters
+          </p>
         </div>
 
         <div>
-          <Label>Timeline</Label>
+          <Label>Timeline *</Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
             {TIMELINES.map((timeline) => (
               <Button
@@ -496,7 +542,7 @@ export default function OnboardingPage() {
         </div>
 
         <div>
-          <Label>Budget Range</Label>
+          <Label>Budget Range *</Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
             {BUDGET_RANGES.map((budget) => (
               <Button
@@ -516,13 +562,18 @@ export default function OnboardingPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Button 
-            onClick={nextStep}
-            disabled={data.primaryGoals.length === 0}
-          >
-            Complete Setup
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={_handleSkip} disabled={isSubmitting}>
+              {isSubmitting ? 'Skipping...' : 'Skip & Finish'}
+            </Button>
+            <Button 
+              onClick={nextStep}
+              disabled={data.primaryGoals.length === 0 || !data.challengesDescription || data.challengesDescription.length < 10 || !data.timeline || !data.budget}
+            >
+              Complete Setup
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -595,9 +646,20 @@ export default function OnboardingPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <h1 className="text-2xl font-bold">Getting Started</h1>
-            <span className="text-sm text-gray-600">
-              Step {getStepNumber(currentStep)} of 5
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                Step {getStepNumber(currentStep)} of 5
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={_handleSkip} 
+                disabled={isSubmitting}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                {isSubmitting ? 'Skipping...' : 'Skip Setup'}
+              </Button>
+            </div>
           </div>
           <Progress value={getProgress()} className="h-2" />
         </div>

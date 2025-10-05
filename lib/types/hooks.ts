@@ -50,6 +50,15 @@ export type LeadFormData = {
   confirmPassword: string;
   organization: string;
   phone: string;
+  // Onboarding fields
+  jobTitle?: string;
+  organizationType?: 'startup' | 'small-business' | 'enterprise' | 'nonprofit' | 'other';
+  industryFocus?: string;
+  teamSize?: string;
+  primaryGoals?: string[];
+  challengesDescription?: string;
+  timeline?: string;
+  budget?: string;
 };
 
 export type FieldErrors = {
@@ -98,17 +107,14 @@ export type LeadsActions = {
   handleDeleteLead: (id: string) => Promise<void>;
   openEditDialog: (lead: Lead) => void;
   resetForm: () => void;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   setSearchTerm: (term: string) => void;
   setFilters: (filters: { organizationType?: string; teamSize?: string }) => void;
-  setCurrentPage: (page: number) => void;
   setIsAddDialogOpen: (open: boolean) => void;
   setIsEditDialogOpen: (open: boolean) => void;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   setShowPassword: (show: boolean) => void;
   setShowConfirmPassword: (show: boolean) => void;
   formatDate: (date: Date) => string;
-  getFieldError: (fieldName: string) => string | undefined;
-  isFieldValid: (fieldName: string) => boolean;
   getFilteredLeads: () => Lead[];
 };
 
@@ -187,8 +193,6 @@ export type CalendarState = {
   lastSyncTime: Date | null;
   syncStats: { synced: number; total: number };
   showInstructions: boolean;
-  showCalendlyBooking: boolean;
-  selectedEventType: any;
   connectionAttempts: number;
   maxConnectionAttempts: number;
 };
@@ -203,9 +207,11 @@ export type CalendarActions = {
   handleDeleteEvent: (eventId: string) => Promise<void>;
   handleFormChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleTypeChange: (value: string) => void;
+  handleDateChange: (date: Date | undefined) => void;
   handleTimeChange: (field: 'startTime' | 'endTime', value: string) => void;
   changeMonth: (direction: 'prev' | 'next') => void;
-  openCalendlyBooking: () => Promise<void>;
+  setMonth: (date: Date) => void;
+  openCalendlyBooking: () => void;
   closeCalendlyBooking: () => void;
   toggleInstructions: () => void;
   checkCalendlyConnection: () => Promise<'connected' | 'disconnected' | 'error'>;

@@ -44,7 +44,40 @@ export async function POST(request: NextRequest) {
 
     // Handle custom payments (from pending payments)
     if (optionId === 'custom' && customData) {
-      const { clientName, clientEmail, amount, description, pendingPaymentId, invoiceNumber } = customData;
+      const { clientName, clientEmail, amount, baseAmount, description, pendingPaymentId, invoiceNumber } = customData;
+
+      // Validate required fields
+      if (!clientName || !clientEmail || !amount || !baseAmount || !description) {
+        return NextResponse.json(
+          { error: 'Missing required fields: clientName, clientEmail, amount, baseAmount, description' },
+          { status: 400 }
+        );
+      }
+
+      // Validate numeric fields
+      const numericAmount = Number(amount);
+      const numericBaseAmount = Number(baseAmount);
+      
+      if (isNaN(numericAmount) || numericAmount <= 0) {
+        return NextResponse.json(
+          { error: 'Invalid amount: must be a positive number' },
+          { status: 400 }
+        );
+      }
+      
+      if (isNaN(numericBaseAmount) || numericBaseAmount <= 0) {
+        return NextResponse.json(
+          { error: 'Invalid baseAmount: must be a positive number' },
+          { status: 400 }
+        );
+      }
+      
+      if (numericAmount < numericBaseAmount) {
+        return NextResponse.json(
+          { error: 'Amount cannot be less than base amount' },
+          { status: 400 }
+        );
+      }
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -62,13 +95,14 @@ export async function POST(request: NextRequest) {
           },
         ],
         mode: 'payment',
-        success_url: `${request.nextUrl.origin}/payment/success?client=${encodeURIComponent(clientName)}&amount=${amount}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${request.nextUrl.origin}/payment/pending?email=${encodeURIComponent(clientEmail)}`,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?client=${encodeURIComponent(clientName)}&amount=${numericAmount}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/pending?email=${encodeURIComponent(clientEmail)}`,
         metadata: {
           clientName,
           clientEmail,
           description,
-          amount: amount.toString(),
+          amount: numericAmount.toString(),
+          baseAmount: numericBaseAmount.toString(),
           pendingPaymentId,
           invoiceNumber,
         },
@@ -104,8 +138,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${request.nextUrl.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.nextUrl.origin}/payment`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment`,
       metadata: {
         optionId,
         optionName: option.name,

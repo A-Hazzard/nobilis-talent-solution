@@ -47,7 +47,7 @@ export default function LeadsPage() {
     handleEditLead,
     handleDeleteLead,
     openEditDialog,
-    handleInputChange,
+    onInputChange,
     setSearchTerm,
     setFilters,
     setIsAddDialogOpen,
@@ -156,7 +156,7 @@ export default function LeadsPage() {
         passwordValidation={passwordValidation}
         showPassword={showPassword}
         showConfirmPassword={showConfirmPassword}
-        onInputChange={handleInputChange}
+        onInputChange={onInputChange}
         setShowPassword={setShowPassword}
         setShowConfirmPassword={setShowConfirmPassword}
         onSubmit={handleAddLead}
@@ -173,7 +173,7 @@ export default function LeadsPage() {
         passwordValidation={passwordValidation}
         showPassword={showPassword}
         showConfirmPassword={showConfirmPassword}
-        onInputChange={handleInputChange}
+        onInputChange={onInputChange}
         setShowPassword={setShowPassword}
         setShowConfirmPassword={setShowConfirmPassword}
         onSubmit={handleEditLead}

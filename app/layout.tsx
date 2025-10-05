@@ -3,47 +3,36 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import ConditionalFooter from '@/components/ConditionalFooter';
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { META_TAGS, SITE_CONFIG } from '@/lib/seo/config';
+import SchemaScripts from '@/components/seo/SchemaScripts';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Kareem Payne - Leadership Coaching & Consulting',
-  description: 'Transform your leadership potential with Kareem Payne. Expert coaching for executives, teams, and organizations seeking breakthrough performance.',
-  keywords: 'leadership coaching, executive coaching, team development, organizational consulting, Kareem Payne',
-  authors: [{ name: 'Kareem Payne' }],
-  creator: 'Kareem Payne',
-  publisher: 'Kareem Payne Leadership Coaching',
+  title: META_TAGS.default.title,
+  description: META_TAGS.default.description,
+  keywords: META_TAGS.default.keywords,
+  authors: [{ name: 'Kareem Payne' }, { name: 'Jennifer Payne' }],
+  creator: 'Nobilis Talent Solutions',
+  publisher: 'Nobilis Talent Solutions',
+  icons: {
+    icon: '/assets/logo-transparent.png',
+    shortcut: '/assets/logo-transparent.png',
+    apple: '/assets/logo-transparent.png',
+  },
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://kareempayne.com'),
+  metadataBase: new URL(SITE_CONFIG.url),
   alternates: {
     canonical: '/',
   },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://kareempayne.com',
-    title: 'Kareem Payne - Leadership Coaching & Consulting',
-    description: 'Transform your leadership potential with Kareem Payne. Expert coaching for executives, teams, and organizations seeking breakthrough performance.',
-    siteName: 'Kareem Payne Leadership Coaching',
-    images: [
-      {
-        url: '/assets/hero-leadership.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Kareem Payne Leadership Coaching',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Kareem Payne - Leadership Coaching & Consulting',
-    description: 'Transform your leadership potential with Kareem Payne. Expert coaching for executives, teams, and organizations seeking breakthrough performance.',
-    images: ['/assets/hero-leadership.jpg'],
-  },
+  openGraph: META_TAGS.openGraph,
+  twitter: META_TAGS.twitter,
   robots: {
     index: true,
     follow: true,
@@ -56,7 +45,10 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: 'your-google-verification-code',
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
+  other: {
+    ...META_TAGS.local,
   },
 };
 
@@ -71,6 +63,9 @@ export default function RootLayout({
         <Providers>
           {children}
           <ConditionalFooter />
+          <Analytics />
+          <SpeedInsights />
+          <SchemaScripts />
         </Providers>
       </body>
     </html>

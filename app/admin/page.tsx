@@ -77,7 +77,7 @@ export default function AdminDashboardPage() {
 
 
       {/* Stats Cards */}
-      <DashboardStats period={period} />
+      <DashboardStats />
 
       {/* Charts */}
       <DashboardCharts period={period} />

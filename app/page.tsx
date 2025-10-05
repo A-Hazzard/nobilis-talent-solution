@@ -2,12 +2,13 @@
 
 import Navigation from '@/components/Navigation';
 import HeroSection from '@/components/HeroSection';
-import AboutSection from '@/components/AboutSection';
 import CompanySection from '@/components/CompanySection';
 import ValuesSection from '@/components/ValuesSection';
 import ServicesSection from '@/components/ServicesSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
 import ContactSection from '@/components/ContactSection';
+
+
 import StickyCallButton from '@/components/StickyCallButton';
 import ScrollToTop from '@/components/ScrollToTop';
 import { useScrollAnimations, useParallax } from '@/lib/hooks/useScrollAnimations';
@@ -49,7 +50,7 @@ export default function Home() {
     <div className="min-h-screen relative">
       <Navigation />
       <HeroSection />
-      <AboutSection />
+
       <ServicesSection />
       <CompanySection />
       <ValuesSection />

@@ -23,13 +23,14 @@ import {
   XCircle,
   RefreshCw,
   CreditCard,
-  Clock
+  Clock,
+  Trash2
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { logAuditAction } from '@/lib/utils/auditUtils';
+import { generateInvoicePdf } from '@/lib/helpers/generateInvoicePdf';
 
-type PaymentStatus = 'pending' | 'paid' | 'expired' | 'cancelled';
+type PaymentStatus = 'pending' | 'paid' | 'overdue' | 'cancelled';
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 
 type PendingPayment = {
@@ -101,7 +102,9 @@ export default function InvoicesPage() {
   const loadPayments = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/payment/admin/payments');
+      const response = await fetch('/api/payment/admin/payments', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setPayments(data.payments || []);
@@ -176,18 +179,66 @@ export default function InvoicesPage() {
     setFilteredPayments(filtered);
   };
 
+  // Status transition validation
+  const isValidStatusTransition = (currentStatus: string, newStatus: string, paymentType: 'pending-payment' | 'invoice'): boolean => {
+    const normalizedCurrent = normalizeStatus(currentStatus, paymentType);
+    
+    if (paymentType === 'pending-payment') {
+      switch (normalizedCurrent) {
+        case 'paid':
+          return false; // Paid payments cannot be changed
+        case 'cancelled':
+          return false; // Cancelled payments cannot be changed
+        case 'overdue':
+          return newStatus === 'paid' || newStatus === 'cancelled'; // Overdue can only go to paid or cancelled
+        case 'pending':
+          return ['paid', 'overdue', 'cancelled'].includes(newStatus); // Pending can go to any status
+        default:
+          return true;
+      }
+    } else {
+      switch (normalizedCurrent) {
+        case 'paid':
+          return false; // Paid invoices cannot be changed
+        case 'cancelled':
+          return false; // Cancelled invoices cannot be changed
+        case 'overdue':
+          return newStatus === 'paid' || newStatus === 'cancelled'; // Overdue can only go to paid or cancelled
+        case 'draft':
+        case 'sent':
+          return ['sent', 'paid', 'overdue', 'cancelled'].includes(newStatus); // Draft/sent can go to other statuses
+        default:
+          return true;
+      }
+    }
+  };
+
   const handleStatusUpdate = async (payment: Payment, newStatus: PaymentStatus | InvoiceStatus) => {
     try {
+      // Validate status transition
+      if (!isValidStatusTransition(payment.status, newStatus, payment.type)) {
+        const currentNormalized = normalizeStatus(payment.status, payment.type);
+        if (currentNormalized === 'paid') {
+          toast.error('Cannot change status of paid items');
+        } else if (currentNormalized === 'cancelled') {
+          toast.error('Cannot change status of cancelled items');
+        } else if (currentNormalized === 'overdue') {
+          toast.error('Overdue items can only be marked as paid or cancelled');
+        } else {
+          toast.error('Invalid status transition');
+        }
+        return;
+      }
       if (payment.type === 'pending-payment') {
-        // Map UI statuses to backend statuses
-        const backendStatus = ((): 'pending' | 'completed' | 'cancelled' | 'expired' => {
+        // Map UI statuses to backend statuses for pending payments
+        const backendStatus = ((): 'pending' | 'completed' | 'cancelled' | 'overdue' => {
           switch (newStatus) {
             case 'paid':
               return 'completed';
             case 'cancelled':
               return 'cancelled';
-            case 'expired':
-              return 'expired';
+            case 'overdue':
+              return 'overdue';
             case 'pending':
             default:
               return 'pending';
@@ -197,6 +248,7 @@ export default function InvoicesPage() {
         const response = await fetch('/api/payment/admin/update-status', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ paymentId: payment.id, status: backendStatus })
         });
 
@@ -204,36 +256,27 @@ export default function InvoicesPage() {
           toast.error('Failed to update payment status');
           return;
         }
+      } else if (payment.type === 'invoice') {
+        // Handle invoice status updates
+        const response = await fetch('/api/invoice/update-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ invoiceId: payment.id, status: newStatus })
+        });
+
+        if (!response.ok) {
+          toast.error('Failed to update invoice status');
+          return;
+        }
       }
 
-      // Update local state with correct typing per union branch
-      setPayments(prev => prev.map(p => {
-        if (p.id !== payment.id) return p;
-        if (p.type === 'invoice') {
-          return { ...p, status: newStatus as InvoiceStatus, updatedAt: new Date().toISOString() } as Invoice;
-        }
-        return { ...p, status: newStatus as PaymentStatus, updatedAt: new Date().toISOString() } as PendingPayment;
-      }));
-
-      // Log audit action
-      await logAuditAction({
-        action: 'update',
-        entity: 'resource', // Using 'resource' for invoices/payments
-        entityId: payment.id,
-        timestamp: Date.now(),
-        details: {
-          title: `${payment.type === 'invoice' ? 'Invoice' : 'Payment'} status updated`,
-          paymentId: payment.id,
-          paymentType: payment.type,
-          clientName: payment.clientName,
-          clientEmail: payment.clientEmail,
-          previousStatus: payment.status,
-          newStatus: newStatus,
-          amount: payment.type === 'invoice' ? (payment as Invoice).total : (payment as PendingPayment).baseAmount + ((payment as PendingPayment).bonusAmount || 0),
-        },
-      });
+      // Audit logging is now handled server-side in the API endpoints
 
       toast.success(`Status updated to ${newStatus}`);
+      
+      // Refresh data to show updated status
+      await loadPayments();
     } catch (error) {
       console.error('Error updating payment status:', error);
       toast.error('Failed to update payment status');
@@ -242,75 +285,115 @@ export default function InvoicesPage() {
 
   const handleDownload = async (payment: Invoice) => {
     try {
-      const response = await fetch(`/api/invoice/download/${payment.id}`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `invoice-${payment.invoiceNumber}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        toast.success('Invoice downloaded');
-      } else {
-        toast.error('Failed to download invoice');
-      }
+      // Generate PDF on frontend
+      const pdfBlob = await generateInvoicePdf({
+        invoiceNumber: payment.invoiceNumber,
+        clientName: payment.clientName,
+        clientEmail: payment.clientEmail,
+        issueDate: payment.issueDate,
+        dueDate: payment.dueDate,
+        items: payment.items,
+        subtotal: payment.items.reduce((sum, item) => sum + item.total, 0),
+        total: payment.total,
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${payment.invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Invoice downloaded');
     } catch (error) {
       console.error('Error downloading invoice:', error);
       toast.error('Failed to download invoice');
     }
   };
 
-  const handleSendEmail = async () => {
-    if (!selectedPayment) return;
+  const handleDeleteInvoice = async (payment: Invoice) => {
+    if (!confirm(`Are you sure you want to delete invoice ${payment.invoiceNumber}? This action cannot be undone.`)) {
+      return;
+    }
 
     try {
-      const response = await fetch('/api/invoice/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          invoiceId: selectedPayment.id,
-          message: emailMessage
-        })
+      const response = await fetch(`/api/invoice/delete/${payment.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
       });
 
       if (response.ok) {
-        setPayments(prev => prev.map(p => {
-          if (p.id !== selectedPayment.id) return p;
-          if (p.type === 'invoice') {
-            return { ...p, status: 'sent' as InvoiceStatus, sentAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Invoice;
-          }
-          return p;
-        }));
+        // Audit logging is now handled server-side in the API endpoint
         
-        // Log audit action
-        await logAuditAction({
-          action: 'update',
-          entity: 'resource', // Using 'resource' for invoices/payments
-          entityId: selectedPayment.id,
-          timestamp: Date.now(),
-          details: {
-            title: `Invoice sent: ${selectedPayment.type === 'invoice' ? (selectedPayment as Invoice).invoiceNumber : selectedPayment.id}`,
-            paymentId: selectedPayment.id,
-            paymentType: selectedPayment.type,
-            clientName: selectedPayment.clientName,
-            clientEmail: selectedPayment.clientEmail,
-            action: 'email_sent',
-            emailMessage: emailMessage,
-          },
-        });
+        toast.success('Invoice deleted successfully');
         
+        // Refresh data to show updated list
+        await loadPayments();
+      } else {
+        toast.error('Failed to delete invoice');
+      }
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast.error('Failed to delete invoice');
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!selectedPayment || selectedPayment.type !== 'invoice') return;
+
+    try {
+      const invoice = selectedPayment as Invoice;
+      
+      console.log('🔄 Generating PDF for invoice:', invoice.invoiceNumber);
+      
+      // Generate PDF on frontend
+      const pdfBlob = await generateInvoicePdf({
+        invoiceNumber: invoice.invoiceNumber,
+        clientName: invoice.clientName,
+        clientEmail: invoice.clientEmail,
+        issueDate: invoice.issueDate,
+        dueDate: invoice.dueDate,
+        items: invoice.items,
+        subtotal: invoice.items.reduce((sum, item) => sum + item.total, 0),
+        total: invoice.total,
+        notes: emailMessage,
+      });
+
+      console.log('✅ PDF generated successfully, size:', pdfBlob.size, 'bytes');
+
+      // Create FormData with PDF
+      const formData = new FormData();
+      formData.append('pdf', pdfBlob, `invoice-${invoice.invoiceNumber}.pdf`);
+      formData.append('invoiceId', invoice.id);
+      formData.append('message', emailMessage || '');
+
+      console.log('📤 Sending PDF to backend...');
+
+      const response = await fetch('/api/invoice/send-email', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      if (response.ok) {
+        console.log('✅ Email sent successfully');
         toast.success('Invoice sent successfully');
         setIsEmailModalOpen(false);
         setEmailMessage('');
         setSelectedPayment(null);
+        
+        // Refresh data to show updated status
+        await loadPayments();
       } else {
-        toast.error('Failed to send invoice');
+        const error = await response.json();
+        console.error('❌ Email send failed:', error);
+        toast.error(error.error || 'Failed to send invoice');
       }
     } catch (error) {
-      console.error('Error sending invoice:', error);
+      console.error('❌ Error sending invoice:', error);
       toast.error('Failed to send invoice');
     }
   };
@@ -324,7 +407,8 @@ export default function InvoicesPage() {
       const statusMap: Record<string, PaymentStatus> = {
         'pending': 'pending',
         'paid': 'paid',
-        'expired': 'expired',
+        'expired': 'overdue', // Map expired to overdue
+        'overdue': 'overdue',
         'cancelled': 'cancelled',
         'canceled': 'cancelled', // Handle American spelling
         'complete': 'paid',
@@ -363,7 +447,7 @@ export default function InvoicesPage() {
       const statusConfig = {
         pending: { variant: 'default' as const, icon: Clock, text: 'Pending', className: 'bg-yellow-100 text-yellow-800' },
         paid: { variant: 'default' as const, icon: CheckCircle, text: 'Paid', className: 'bg-green-100 text-green-800' },
-        expired: { variant: 'destructive' as const, icon: XCircle, text: 'Expired', className: '' },
+        overdue: { variant: 'destructive' as const, icon: XCircle, text: 'Overdue', className: '' },
         cancelled: { variant: 'secondary' as const, icon: XCircle, text: 'Cancelled', className: '' }
       };
 
@@ -645,7 +729,7 @@ export default function InvoicesPage() {
                           </DropdownMenuItem>
                         )}
                         <Separator className="my-1" />
-                        {payment.type === 'pending-payment' && (
+                        {payment.type === 'pending-payment' && isValidStatusTransition(payment.status, 'paid', payment.type) && (
                           <DropdownMenuItem
                             onClick={() => handleStatusUpdate(payment, 'paid')}
                           >
@@ -653,33 +737,7 @@ export default function InvoicesPage() {
                             Mark as Paid
                           </DropdownMenuItem>
                         )}
-                        {payment.type === 'pending-payment' && (
-                          <DropdownMenuItem
-                            onClick={() => handleStatusUpdate(payment, 'expired')}
-                            className="text-red-600"
-                          >
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Mark as Expired
-                          </DropdownMenuItem>
-                        )}
-                        {payment.type === 'pending-payment' && (
-                          <DropdownMenuItem
-                            onClick={() => handleStatusUpdate(payment, 'cancelled')}
-                            className="text-red-600"
-                          >
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Cancel Payment
-                          </DropdownMenuItem>
-                        )}
-                        {payment.type === 'invoice' && (
-                          <DropdownMenuItem
-                            onClick={() => handleStatusUpdate(payment, 'paid')}
-                          >
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Mark as Paid
-                          </DropdownMenuItem>
-                        )}
-                        {payment.type === 'invoice' && (
+                        {payment.type === 'pending-payment' && isValidStatusTransition(payment.status, 'overdue', payment.type) && (
                           <DropdownMenuItem
                             onClick={() => handleStatusUpdate(payment, 'overdue')}
                             className="text-red-600"
@@ -688,13 +746,48 @@ export default function InvoicesPage() {
                             Mark as Overdue
                           </DropdownMenuItem>
                         )}
-                        {payment.type === 'invoice' && (
+                        {payment.type === 'pending-payment' && isValidStatusTransition(payment.status, 'cancelled', payment.type) && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(payment, 'cancelled')}
+                            className="text-red-600"
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Cancel Payment
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'invoice' && isValidStatusTransition(payment.status, 'paid', payment.type) && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(payment, 'paid')}
+                          >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Mark as Paid
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'invoice' && isValidStatusTransition(payment.status, 'overdue', payment.type) && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusUpdate(payment, 'overdue')}
+                            className="text-red-600"
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Mark as Overdue
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'invoice' && isValidStatusTransition(payment.status, 'cancelled', payment.type) && (
                           <DropdownMenuItem
                             onClick={() => handleStatusUpdate(payment, 'cancelled')}
                             className="text-red-600"
                           >
                             <XCircle className="mr-2 h-4 w-4" />
                             Cancel Invoice
+                          </DropdownMenuItem>
+                        )}
+                        {payment.type === 'invoice' && (
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteInvoice(payment as Invoice)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Invoice
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>

@@ -4,52 +4,69 @@ import { useState, useEffect } from 'react';
 import { Menu, X, LogOut, User, ChevronDown, Home, User as UserIcon, Settings, FileText, Phone } from 'lucide-react';
 import ProfileModal from '@/components/admin/ProfileModal';
 import { usePendingPayment } from '@/lib/hooks/usePendingPayment';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import BookNowButton from '@/components/BookNowButton';
 import logo  from "@/public/assets/logo-transparent.png"
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useUserStore } from '@/lib/stores/userStore';
+
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, isAuthenticated, signOut, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, signOut } = useAuth();
+  const searchParams = useSearchParams();
   
-  // Use authenticated user's email or fallback to demo email
-  const userEmail = user?.email || 'john@company.com';
-  const { pendingPayment, hasPendingPayment } = usePendingPayment(userEmail);
-
-  // Debug logging
-  console.log('Navigation render:', { 
-    user, 
-    isAuthenticated, 
-    authLoading,
-    userStore: useUserStore.getState()
-  });
-
   const pathname = usePathname();
   const isHomePage = pathname === '/';
   const isAdminPage = pathname.startsWith('/admin');
+  const isPaymentSuccessPage = pathname === '/payment/success';
+  
+  // Get email from URL params if on payment success page, otherwise use authenticated user's email
+  const urlEmail = searchParams.get('email');
+  const clientName = searchParams.get('client');
+  
+  // Additional state for payment success page specific logic
+  const [paymentSuccessEmail, setPaymentSuccessEmail] = useState<string | null>(null);
+  
+  // For payment success page, try to get email from URL or stored email, otherwise use authenticated user's email
+  const finalEmail = isPaymentSuccessPage && urlEmail ? urlEmail : 
+                    isPaymentSuccessPage && paymentSuccessEmail ? paymentSuccessEmail : 
+                    (user?.email || 'john@company.com');
+  
+  const { pendingPayment, shouldShowPaymentButton } = usePendingPayment(finalEmail);
+  
+  // Effect to get email from payment details when on payment success page
+  useEffect(() => {
+    if (isPaymentSuccessPage && !urlEmail && clientName) {
+      // Try to extract email from the page if available
+      // This will be set by the payment success page component
+      const storedEmail = sessionStorage.getItem('payment_success_email');
+      if (storedEmail) {
+        setPaymentSuccessEmail(storedEmail);
+      }
+    }
+  }, [isPaymentSuccessPage, urlEmail, clientName]);
 
   // Navigation links for home page (hash links for smooth scrolling)
   const homeNavLinks = [
     { href: '#home', label: 'Home', icon: Home },
-    { href: '#about', label: 'About', icon: UserIcon },
-    { href: '#services', label: 'Services', icon: Settings },
+    { href: '/about', label: 'About', icon: UserIcon },
+    { href: '/services', label: 'Services', icon: Settings },
     { href: '/content', label: 'Content', icon: FileText },
-    { href: '#contact', label: 'Contact', icon: Phone },
+    { href: '/contact', label: 'Contact', icon: Phone },
   ];
 
   // Navigation links for other pages (proper routing)
   const otherPageNavLinks = [
     { href: '/', label: 'Home', icon: Home },
-    { href: '/#about', label: 'About', icon: UserIcon },
-    { href: '/#services', label: 'Services', icon: Settings },
+    { href: '/about', label: 'About', icon: UserIcon },
+    { href: '/services', label: 'Services', icon: Settings },
     { href: '/content', label: 'Content', icon: FileText },
-    { href: '/#contact', label: 'Contact', icon: Phone },
+    { href: '/contact', label: 'Contact', icon: Phone },
   ];
 
   const navLinks = isHomePage ? homeNavLinks : otherPageNavLinks;
@@ -148,7 +165,7 @@ const Navigation = () => {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-gray-700 hover:text-primary transition-smooth px-2 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                    className="text-gray-700 hover:text-primary transition-smooth px-2 py-2 rounded-lg hover:bg-gray-50 text-sm font-bold"
                     onClick={(e) => handleLinkClick(link.href, e)}
                   >
                     {link.label}
@@ -159,10 +176,10 @@ const Navigation = () => {
   
             {/* CTA Buttons - Desktop */}
             <div className="hidden lg:flex items-center space-x-2 lg:pr-6">
-              {hasPendingPayment && (
+              {shouldShowPaymentButton && (
                 <a
-                  href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
-                  className="btn-secondary font-semibold whitespace-nowrap text-xs px-3 py-1.5"
+                  href={`/payment/pending?email=${encodeURIComponent(finalEmail)}`}
+                  className="btn-secondary font-bold whitespace-nowrap text-xs px-3 py-1.5"
                 >
                   Pay ${pendingPayment?.baseAmount || '0'}
                 </a>
@@ -240,18 +257,18 @@ const Navigation = () => {
                 </>
               ) : (
                 <>
-                  <Link href="/signup" className="btn-outline text-xs px-3 py-1.5">
+                  <Link href="/signup" className="btn-outline font-bold text-xs px-3 py-1.5">
                     Sign Up
                   </Link>
                 </>
               )}
   
-              <button
-                onClick={() => window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank')}
-                className="btn-primary text-xs px-3 py-1.5"
+              <BookNowButton
+                className="btn-primary font-bold text-xs px-3 py-1.5"
+                fallbackUrl={process.env.NEXT_PUBLIC_CALENDLY_URL}
               >
                 Book Now
-              </button>
+              </BookNowButton>
             </div>
   
             {/* Mobile menu button */}
@@ -282,7 +299,7 @@ const Navigation = () => {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="block text-gray-700 hover:text-primary px-6 py-4 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium touch-manipulation active:scale-98 active:bg-gray-100 min-h-14 flex items-center justify-center text-lg space-x-3"
+                    className="flex items-center justify-center text-gray-700 hover:text-primary px-6 py-4 rounded-xl hover:bg-gray-50 transition-all duration-200 font-bold touch-manipulation active:scale-98 active:bg-gray-100 min-h-14 text-lg space-x-3"
                     onClick={(e) => handleLinkClick(link.href, e)}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -294,10 +311,10 @@ const Navigation = () => {
               
               {/* Mobile CTA Buttons */}
               <div className="pt-4 space-y-3">
-                {hasPendingPayment && (
+                {shouldShowPaymentButton && (
                   <a
-                    href={`/payment/pending?email=${encodeURIComponent(userEmail)}`}
-                    className="block w-full text-center btn-secondary font-semibold px-4 py-3 rounded-lg"
+                    href={`/payment/pending?email=${encodeURIComponent(finalEmail)}`}
+                    className="block w-full text-center btn-secondary font-bold px-4 py-3 rounded-lg"
                   >
                     Pay ${pendingPayment?.baseAmount || '0'}
                   </a>
@@ -354,15 +371,13 @@ const Navigation = () => {
                   </Link>
                 )}
                 
-                <button
-                  onClick={() => {
-                    window.open(process.env.NEXT_PUBLIC_CALENDLY_URL, '_blank');
-                    setIsOpen(false);
-                  }}
-                  className="w-full text-center btn-primary px-4 py-3 rounded-lg"
+                <BookNowButton
+                  onClick={() => setIsOpen(false)}
+                  className="w-full text-center btn-primary font-bold px-4 py-3 rounded-lg"
+                  fallbackUrl={process.env.NEXT_PUBLIC_CALENDLY_URL}
                 >
                   Book Now
-                </button>
+                </BookNowButton>
               </div>
             </div>
           </div>

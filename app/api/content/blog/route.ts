@@ -7,15 +7,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as BlogPost['category'] | null;
     const search = searchParams.get('search');
-    const limit = searchParams.get('limit');
 
     const blogService = new BlogService();
     
+    // Get all posts for frontend pagination
     const response = await blogService.getAll({
       status: 'published',
       category: category || undefined,
-      search: search || undefined,
-      limit: limit ? parseInt(limit) : undefined,
+      search: search || undefined
     });
 
     if (response.error) {
@@ -27,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       posts: response.posts,
-      count: response.posts.length
+      total: response.total || response.posts.length
     });
   } catch (error) {
     console.error('Error in blog API route:', error);

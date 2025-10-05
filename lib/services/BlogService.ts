@@ -4,6 +4,7 @@ import {
   getDocs, 
   getDoc, 
   addDoc, 
+  setDoc,
   updateDoc, 
   deleteDoc, 
   query, 
@@ -73,9 +74,12 @@ export class BlogService {
     tag?: string;
     limit?: number;
     search?: string;
-  } = {}): Promise<{ posts: BlogPost[]; error?: string }> {
+    page?: number;
+    pageSize?: number;
+    offset?: number;
+  } = {}): Promise<{ posts: BlogPost[]; total?: number; hasMore?: boolean; error?: string }> {
     try {
-      const { status, category, tag, limit: pageLimit, search } = options;
+      const { status, category, tag, limit: pageLimit, search, page, pageSize, offset } = options;
       
       // Build query - avoid composite indexes by using minimal constraints
       const constraints = [];
@@ -126,7 +130,23 @@ export class BlogService {
       // Always sort by createdAt in memory
       posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       
-      return { posts };
+      // Handle pagination
+      const total = posts.length;
+      let paginatedPosts = posts;
+      
+      if (page && pageSize) {
+        const startIndex = offset || (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        paginatedPosts = posts.slice(startIndex, endIndex);
+      } else if (pageLimit) {
+        paginatedPosts = posts.slice(0, pageLimit);
+      }
+      
+      return { 
+        posts: paginatedPosts,
+        total: total,
+        hasMore: page && pageSize ? (offset || (page - 1) * pageSize) + pageSize < total : false
+      };
     } catch (error) {
       console.error('Error fetching blog posts:', error);
       return { posts: [], error: 'Failed to fetch blog posts' };
@@ -237,6 +257,10 @@ export class BlogService {
       if (postData.seoDescription) docData.seoDescription = postData.seoDescription;
       if (postData.resources) docData.resources = postData.resources;
       if (postData.references) docData.references = postData.references;
+      if (postData.featured !== undefined) docData.featured = postData.featured;
+      if (postData.scheduledDate) docData.scheduledDate = postData.scheduledDate;
+      if (postData.scheduledTime) docData.scheduledTime = postData.scheduledTime;
+      if (postData.isScheduled !== undefined) docData.isScheduled = postData.isScheduled;
       
       // Set publishedAt if status is published
       if (postData.status === 'published') {
@@ -252,7 +276,7 @@ export class BlogService {
         entity: 'blog',
         entityId: docRef.id,
         details: { title: postData.title, category: postData.category },
-        timestamp: Date.now(),
+
       });
       
       return { id: docRef.id };
@@ -317,6 +341,10 @@ export class BlogService {
       if (updates.seoDescription !== undefined) updateData.seoDescription = updates.seoDescription;
       if (updates.resources !== undefined) updateData.resources = updates.resources;
       if (updates.references !== undefined) updateData.references = updates.references;
+      if (updates.featured !== undefined) updateData.featured = updates.featured;
+      if (updates.scheduledDate !== undefined) updateData.scheduledDate = updates.scheduledDate;
+      if (updates.scheduledTime !== undefined) updateData.scheduledTime = updates.scheduledTime;
+      if (updates.isScheduled !== undefined) updateData.isScheduled = updates.isScheduled;
 
       // Set publishedAt if status is being changed to published
       if (updates.status === 'published') {
@@ -333,7 +361,7 @@ export class BlogService {
         entity: 'blog',
         entityId: id,
         details: { updates },
-        timestamp: Date.now(),
+
       });
       
       return {};
@@ -373,7 +401,7 @@ export class BlogService {
         action: 'delete',
         entity: 'blog',
         entityId: id,
-        timestamp: Date.now(),
+
       });
       
       return {};
@@ -384,16 +412,51 @@ export class BlogService {
   }
 
   /**
-   * Increment view count
+   * Increment view count (unique per user)
    */
-  async incrementViewCount(id: string): Promise<{ error?: string }> {
+  async incrementViewCount(id: string, userId?: string): Promise<{ error?: string }> {
     try {
-      const docRef = doc(db, this.collectionName, id);
-      await updateDoc(docRef, {
-        viewCount: increment(1),
-      });
+      // If no userId provided, just increment normally (for anonymous users)
+      if (!userId) {
+        const docRef = doc(db, this.collectionName, id);
+        await updateDoc(docRef, {
+          viewCount: increment(1),
+        });
+        return {};
+      }
+
+      // For authenticated users, check if they've already viewed this post
+      const viewTrackingRef = doc(db, 'blogViewTracking', `${id}_${userId}`);
       
-      return {};
+      try {
+        const viewDoc = await getDoc(viewTrackingRef);
+        
+        // If user hasn't viewed this post before, increment the view count
+        if (!viewDoc.exists()) {
+          // Mark that this user has viewed this post using setDoc with specific ID
+          await setDoc(viewTrackingRef, {
+            postId: id,
+            userId: userId,
+            viewedAt: serverTimestamp(),
+          });
+          
+          // Increment the view count
+          const docRef = doc(db, this.collectionName, id);
+          await updateDoc(docRef, {
+            viewCount: increment(1),
+          });
+        }
+        
+        return {};
+      } catch (viewError) {
+        console.error('Error checking view tracking:', viewError);
+        // Fallback to simple increment if tracking fails
+        const docRef = doc(db, this.collectionName, id);
+        await updateDoc(docRef, {
+          viewCount: increment(1),
+        });
+        return {};
+      }
     } catch (error) {
       console.error('Error incrementing view count:', error);
       return { error: 'Failed to update view count' };

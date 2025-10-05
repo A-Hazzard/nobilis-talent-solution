@@ -29,7 +29,7 @@ const publicRoutes = [
   '/blog',
   '/content',
   '/resources',
-  '/payment',
+
   '/payment/success',
   '/payment/pending',
 ];
@@ -45,7 +45,7 @@ const protectedApiRoutes = [
   '/api/content',
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Check if the route is protected
@@ -67,6 +67,36 @@ export function middleware(request: NextRequest) {
   
   // Check if user is authenticated
   const isAuthenticated = !!(authToken || refreshToken);
+
+  // If authenticated but onboarding not completed, force redirect to /onboarding
+  // Allow access to the onboarding page and API endpoints while checking
+  const isOnboardingPath = pathname === '/onboarding' || pathname.startsWith('/onboarding/');
+  const isApiPath = pathname.startsWith('/api/');
+  const isPublicPath = publicRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  );
+  
+  if (isAuthenticated && !isOnboardingPath && !isApiPath && !isPublicPath) {
+    // Call internal API to check onboarding status
+    const url = new URL('/api/auth/check-onboarding', request.url);
+    try {
+      const resp = await fetch(url, {
+        headers: authToken ? { authorization: `Bearer ${authToken}` } : undefined,
+        cache: 'no-store',
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        // Only redirect to onboarding if explicitly not completed
+        // This prevents loops when onboardingCompleted is undefined due to race conditions
+        if (data && data.role !== 'admin' && data.onboardingCompleted === false) {
+          return NextResponse.redirect(new URL('/onboarding', request.url));
+        }
+      }
+    } catch (e) {
+      // If check fails, do not block navigation; fail open
+      console.warn('Middleware: onboarding check failed', e);
+    }
+  }
   
   // Handle protected routes
   if (isProtectedRoute || isProtectedApiRoute) {
@@ -93,7 +123,23 @@ export function middleware(request: NextRequest) {
   
   // Handle public routes - redirect authenticated users away from auth pages
   if (isAuthenticated && (pathname === '/login' || pathname === '/signup')) {
-    // Redirect to admin dashboard if already authenticated
+    // If onboarding not completed, send to onboarding instead of admin
+    if (!isApiPath) {
+      const url = new URL('/api/auth/check-onboarding', request.url);
+      try {
+        const resp = await fetch(url, {
+          headers: authToken ? { authorization: `Bearer ${authToken}` } : undefined,
+          cache: 'no-store',
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.role !== 'admin' && data.onboardingCompleted === false) {
+            return NextResponse.redirect(new URL('/onboarding', request.url));
+          }
+        }
+      } catch {}
+    }
+    // Default redirect for authenticated users on auth pages
     return NextResponse.redirect(new URL('/admin', request.url));
   }
   
@@ -109,12 +155,12 @@ export function middleware(request: NextRequest) {
   // Content Security Policy
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://apis.google.com https://accounts.google.com",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://apis.google.com https://accounts.google.com https://assets.calendly.com https://va.vercel-scripts.com https://vitals.vercel-insights.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.stripe.com https://www.googleapis.com https://firestore.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
-    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://*.firebaseapp.com",
+    "img-src 'self' data: https: blob: https://firebasestorage.googleapis.com https://storage.googleapis.com",
+    "connect-src 'self' https://api.stripe.com https://www.googleapis.com https://firestore.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.calendly.com https://auth.calendly.com https://firebasestorage.googleapis.com https://storage.googleapis.com",
+    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://*.firebaseapp.com https://calendly.com https://*.calendly.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

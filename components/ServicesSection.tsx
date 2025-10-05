@@ -3,79 +3,72 @@ import Link from 'next/link';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { serviceImages } from '@/lib/constants/images';
 
 const ServicesSection = () => {
   const services = [
     {
-      title: 'Individual & Group Coaching — Grow with purpose.',
-      summary: 'Personalized coaching that sparks holistic growth, strengthens confidence, and helps individuals and teams be better.',
+      title: 'Executive Leadership Coaching',
+      subtitle: 'Grow with purpose.',
+      description:
+        'Personalized coaching that sparks holistic growth, strengthens confidence, and helps individuals and teams be better.',
+      image: serviceImages['individual-group-coaching'],
     },
     {
-      title: 'Performance Management Design — Solutions to drive engagement and results.',
-      summary: 'We reimagine the approach to managing performance with more human, agile, and impactful systems.',
+      title: 'Business, Individual & Group Coaching',
+      subtitle: 'Solutions to drive engagement and results.',
+      description:
+        'We reimagine how performance is managed. With an intentional focus on people, we redesign performance systems to be more human, agile, and impactful.',
+      image: serviceImages['performance-management-design'],
     },
     {
-      title: 'Leadership Development Design — Leaders who inspire action.',
-      summary: 'From emerging leaders to seasoned execs, we craft experiences that grow leaders who inspire, influence, and deliver results.',
+      title: 'Leadership Development',
+      subtitle: 'Leaders who inspire action.',
+      description:
+        'From emerging leaders to seasoned execs, we craft experiences that grow leaders who inspire, influence, and deliver in a changing world.',
+      image: serviceImages['leadership-development-design'],
     },
     {
-      title: 'Talent Strategy Development — People plans that work.',
-      summary: 'Design plans to attract, engage, retain, and grow the right people so your organization thrives long-term.',
+      title: 'Human Resources & Talent Management Consulting',
+      subtitle: 'People plans that work.',
+      description:
+        'We partner with you to design plans to attract, engage, retain, and grow the right people so your organization thrives long‑term.',
+      image: serviceImages['talent-strategy-development'],
     },
     {
-      title: 'Succession & Workforce Planning Design — Ready for tomorrow, today.',
-      summary: 'Scalable plans that ensure the right people are ready for the right roles, minimizing risk and maximizing impact.',
-    },
-    {
-      title: 'Training & Facilitation — Learning that sticks.',
-      summary: 'Interactive, engaging, and practical learning experiences that build skills and shift mindsets — in the room or online.',
-    },
-    {
-      title: 'Competency Model Development — Defining what great looks like.',
-      summary: 'Define the skills, behaviors, and mindsets that drive success to guide hiring, development, and performance.',
-    },
-    {
-      title: 'Targeted Talent Acquisition — The right people, right away.',
-      summary: 'Find and attract top talent that aligns with your culture and delivers on your strategy — strategic, data-informed, and human.',
+      title: 'E-learning Development & Live Training',
+      subtitle: 'Learning that sticks.',
+      description:
+        'Interactive, engaging, and practical learning experiences that build skills and shift mindsets — in the room or online.',
+      image: serviceImages['training-facilitation'],
     },
   ];
 
-  // More reliable Unsplash images with verified IDs
-  const serviceImages: string[] = [
-    'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=1200&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=1200&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=800&fit=crop&crop=center',
-  ];
+  // Show all 5 services on landing page
+  const landingPageServices = services;
 
   return (
-    <section id="services" className="pt-20 bg-background">
+    <section id="services" className="pt-14 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16" data-animate>
-          <h2 className="text-section text-accent mb-6">
-            Services
-          </h2>
+        <div className="text-center mb-10">
+          <h2 className="text-section text-accent mb-6">Services</h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            No pricing is displayed publicly. Explore offerings and connect to tailor solutions to your needs.
+            Explore our coaching, consulting, and training solutions designed to elevate individual and organizational performance.
           </p>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-20">
-          {services.map((service, idx) => (
-            <Card key={service.title} className="group h-full overflow-hidden hover-glow" data-animate>
+        {/* Services Grid - Show all 5 services on landing page */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-12">
+          {landingPageServices.map((service) => (
+            <Card key={service.title} className="group h-full overflow-hidden hover-glow flex flex-col">
               <div className="relative h-40 w-full overflow-hidden">
                 <Image
-                  src={serviceImages[idx % serviceImages.length]}
+                  src={service.image}
                   alt={service.title}
                   fill
                   className="object-cover transition-smooth group-hover:scale-105"
@@ -83,27 +76,26 @@ const ServicesSection = () => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                     if (target.parentElement) {
-                      target.parentElement.style.backgroundColor = '#f3f4f6';
+                      (target.parentElement as HTMLElement).style.backgroundColor = '#f3f4f6';
                     }
                   }}
                 />
               </div>
-              <CardHeader>
-                <CardTitle className="text-lg">{service.title}</CardTitle>
-                <CardDescription>{service.summary}</CardDescription>
+              <CardHeader className="flex-1">
+                <CardTitle className="text-lg font-semibold text-accent leading-tight">{service.title}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <Link href="#contact" className="text-primary hover:underline">
-                  Let's talk
+              <CardContent className="mt-auto">
+                <Link href="/services">
+                  <Button className="btn-primary w-full">Learn More</Button>
                 </Link>
               </CardContent>
             </Card>
           ))}
         </div>
-
       </div>
     </section>
   );
 };
 
 export default ServicesSection;
+

@@ -40,6 +40,7 @@ export class DownloadAnalyticsService {
       referrer?: string;
       source?: string;
       campaign?: string;
+      skipIncrement?: boolean; // Add flag to skip count increment
     }
   ): Promise<{ success: boolean; error?: string }> {
     try {
@@ -64,12 +65,15 @@ export class DownloadAnalyticsService {
       const downloadsRef = collection(db, 'downloads');
       await setDoc(doc(downloadsRef), payload);
 
-      // Update resource download count and last download timestamp
-      const resourceRef = doc(db, 'resources', resourceId);
-      await updateDoc(resourceRef, {
-        downloadCount: increment(1),
-        lastDownloaded: Timestamp.now(),
-      });
+      // Only increment download count if not skipped
+      if (!additionalData?.skipIncrement) {
+        // Update resource download count and last download timestamp
+        const resourceRef = doc(db, 'resources', resourceId);
+        await updateDoc(resourceRef, {
+          downloadCount: increment(1),
+          lastDownloaded: Timestamp.now(),
+        });
+      }
 
       return { success: true };
     } catch (error) {

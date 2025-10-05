@@ -1,5 +1,7 @@
 import nodemailer from "nodemailer";
 import type { EmailData, InvoiceEmailData } from "@/lib/types/services";
+import { getBaseUrl } from "@/lib/utils";
+import { formatUSDCurrency } from "@/lib/utils/currency";
 
 export class EmailService {
   private static instance: EmailService;
@@ -8,7 +10,7 @@ export class EmailService {
   private constructor() {
     // Initialize transporter with environment variables
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      host: process.env.SMTP_HOST || "smtp-mail.outlook.com",
       port: parseInt(process.env.SMTP_PORT || "587"),
       secure: process.env.SMTP_SECURE === "true",
       auth: {
@@ -16,8 +18,8 @@ export class EmailService {
         pass: process.env.SMTP_PASS || "",
       },
       tls: {
-        rejectUnauthorized: false // This will fix the self-signed certificate issue
-      }
+        rejectUnauthorized: false, // This will fix the self-signed certificate issue
+      },
     });
 
     // Initialize email service
@@ -33,7 +35,7 @@ export class EmailService {
   /**
    * Generate simple HTML email
    */
-  private generateSimpleHTML(subject: string, content: string): string {
+  generateSimpleHTML(subject: string, content: string): string {
     return `
           <!DOCTYPE html>
           <html>
@@ -52,7 +54,7 @@ export class EmailService {
           <body>
               <div class="container">
                   <div class="header">
-                      <h1>Payne Leadership</h1>
+                      <h1>Nobilis Talent Solutions</h1>
                       <p>${subject}</p>
                   </div>
                   
@@ -61,9 +63,8 @@ export class EmailService {
                   </div>
                   
                   <div class="footer">
-                      <p>Payne Leadership<br>
-                      123 Business St, City, State 12345<br>
-                      +1 (555) 123-4567 | contact@payneleadership.com</p>
+                      <p>Nobilis Talent Solutions<br>
+                      +1 (678) 956-1146 | ${process.env.SUPPORT_EMAIL || 'support@nobilistalent.com'}</p>
                   </div>
               </div>
           </body>
@@ -87,11 +88,23 @@ export class EmailService {
         attachments: data.attachments,
       };
 
+      console.log('📧 EmailService: Sending email...', {
+        to: data.to,
+        subject: data.subject,
+        hasAttachments: !!data.attachments && data.attachments.length > 0,
+        attachmentCount: data.attachments?.length || 0,
+        attachmentDetails: data.attachments?.map(a => ({
+          filename: a.filename,
+          size: Buffer.isBuffer(a.content) ? a.content.length : 'unknown',
+          contentType: a.contentType
+        })) || []
+      });
+
       const info = await this.transporter.sendMail(mailOptions);
-      console.log("Email sent successfully:", info.messageId);
+      console.log("✅ Email sent successfully:", info.messageId);
       return { success: true };
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error("❌ Error sending email:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -106,6 +119,7 @@ export class EmailService {
     data: InvoiceEmailData
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      const baseUrl = getBaseUrl();
       const dueDate = data.invoice.dueDate.toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
@@ -115,9 +129,9 @@ export class EmailService {
       const itemsHtml = data.invoice.items
         .map(
           (item) =>
-            `<div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+            `<div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;">
           <span>${item.description}</span>
-          <span>$${item.total.toFixed(2)}</span>
+          <span style="margin-left: 10px;">$${item.total.toFixed(2)}</span>
         </div>`
         )
         .join("");
@@ -125,7 +139,7 @@ export class EmailService {
       const content = `
         <p>Dear ${data.clientName},</p>
         
-        ${data.customMessage ? `<p>${data.customMessage}</p>` : ''}
+        ${data.customMessage ? `<p>${data.customMessage}</p>` : ""}
         
         <p>Please find your invoice details below.</p>
         
@@ -145,13 +159,15 @@ export class EmailService {
         </div>
         
         <p>Please review the invoice above and complete your payment at your earliest convenience.</p>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/payment?invoice=${data.invoice.invoiceNumber}" 
+        <a href="${baseUrl}/payment/pending?email=${encodeURIComponent(
+        data.clientEmail
+      )}" 
            style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Pay Now</a>
         
         <p>If you have any questions, please don't hesitate to contact us.</p>
         
         <p>Best regards,<br>
-        Payne Leadership Team</p>
+        Nobilis Talent Solutions Team</p>
       `;
 
       const html = this.generateSimpleHTML("Invoice", content);
@@ -164,13 +180,23 @@ export class EmailService {
 
       // Add PDF attachment if provided
       if (data.pdfAttachment) {
+        const pdfBuffer = Buffer.isBuffer(data.pdfAttachment.content) 
+          ? data.pdfAttachment.content 
+          : Buffer.from(data.pdfAttachment.content);
+          
         emailData.attachments = [
           {
             filename: data.pdfAttachment.filename,
-            content: data.pdfAttachment.content,
-            contentType: data.pdfAttachment.contentType,
+            content: pdfBuffer,
+            contentType: "application/pdf",
           },
         ];
+        
+        console.log('📎 EmailService: PDF attachment prepared:', {
+          filename: data.pdfAttachment.filename,
+          size: pdfBuffer.length,
+          isBuffer: Buffer.isBuffer(pdfBuffer)
+        });
       }
 
       return await this.sendEmail(emailData);
@@ -207,14 +233,14 @@ export class EmailService {
         <p>${resetLink}</p>
         
         <p>Best regards,<br>
-        Payne Leadership Team</p>
+        Nobilis Talent Solutions Team</p>
       `;
 
       const html = this.generateSimpleHTML("Password Reset Request", content);
 
       return await this.sendEmail({
         to,
-        subject: "Password Reset Request - Payne Leadership",
+        subject: "Password Reset Request - Nobilis Talent Solutions",
         html,
       });
     } catch (error) {
@@ -226,7 +252,7 @@ export class EmailService {
     }
   }
 
-  /**git
+  /**
    * Send welcome email
    */
   async sendWelcomeEmail(
@@ -234,10 +260,11 @@ export class EmailService {
     userName: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      const baseUrl = getBaseUrl();
       const content = `
         <p>Hello ${userName},</p>
         
-        <p>Welcome to Payne Leadership! We're thrilled to have you as part of our community.</p>
+        <p>Welcome to Nobilis Talent Solutions! We're thrilled to have you as part of our community.</p>
         
         <p>Here's what you can do to get started:</p>
         <ul>
@@ -247,23 +274,23 @@ export class EmailService {
           <li>Access our resources</li>
         </ul>
         
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin" 
+        <a href="${baseUrl}/admin" 
            style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
         
         <p>If you have any questions or need assistance, don't hesitate to reach out to our support team.</p>
         
         <p>Best regards,<br>
-        Payne Leadership Team</p>
+        Nobilis Talent Solutions Team</p>
       `;
 
       const html = this.generateSimpleHTML(
-        "Welcome to Payne Leadership!",
+        "Welcome to Nobilis Talent Solutions!",
         content
       );
 
       return await this.sendEmail({
         to,
-        subject: "Welcome to Payne Leadership!",
+        subject: "Welcome to Nobilis Talent Solutions!",
         html,
       });
     } catch (error) {
@@ -284,43 +311,52 @@ export class EmailService {
     lastName: string;
     company?: string;
     challenges: string;
-    contactMethod: 'email' | 'phone';
+    contactMethod: "email" | "phone";
   }): Promise<{ success: boolean; error?: string }> {
     try {
+      const baseUrl = getBaseUrl();
       const content = `
         <p>Dear ${data.firstName} ${data.lastName},</p>
         
-        <p>Thank you for reaching out to Payne Leadership! We've received your message and appreciate you taking the time to share your challenges with us.</p>
+        <p>Thank you for contacting Nobilis Talent Solutions! We've received your message and appreciate you taking the time to share your challenges with us.</p>
         
         <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
           <h4>Your Message Summary:</h4>
-          <p><strong>Company:</strong> ${data.company || 'Not specified'}</p>
-          <p><strong>Preferred Contact Method:</strong> ${data.contactMethod === 'email' ? 'Email' : 'Phone'}</p>
+          <p><strong>Company:</strong> ${data.company || "Not specified"}</p>
+          <p><strong>Preferred Contact Method:</strong> ${
+            data.contactMethod === "email" ? "Email" : "Phone"
+          }</p>
           <p><strong>Your Challenges:</strong></p>
-          <p style="font-style: italic; margin-left: 20px;">"${data.challenges}"</p>
+          <p style="font-style: italic; margin-left: 20px;">"${
+            data.challenges
+          }"</p>
         </div>
         
-        <p>Our team will review your information and get back to you within 24 hours via your preferred contact method (${data.contactMethod === 'email' ? 'email' : 'phone'}).</p>
+        <p>Our team will review your information and get back to you within 24 hours via your preferred contact method (${
+          data.contactMethod === "email" ? "email" : "phone"
+        }).</p>
         
         <p>In the meantime, you might find these resources helpful:</p>
         <ul>
-          <li><a href="${process.env.NEXT_PUBLIC_APP_URL}/resources">Free Leadership Resources</a></li>
-
-          <li><a href="${process.env.NEXT_PUBLIC_APP_URL}/blog">Leadership Blog</a></li>
+          <li><a href="${baseUrl}/resources">Free Leadership Resources</a></li>
+          <li><a href="${baseUrl}/blog">Leadership Blog</a></li>
         </ul>
         
-        <p>If you have any urgent questions, feel free to call us directly at +1 (555) 123-4567.</p>
+        <p>If you have any urgent questions, feel free to call us directly at (678) 956-1146.</p>
         
         <p>Best regards,<br>
         Kareem Payne<br>
-        Payne Leadership</p>
+        Nobilis Talent Solutions</p>
       `;
 
-      const html = this.generateSimpleHTML("Thank You for Contacting Us", content);
+      const html = this.generateSimpleHTML(
+        "Thank You for Contacting Nobilis Talent Solutions",
+        content
+      );
 
       return await this.sendEmail({
         to: data.to,
-        subject: "Thank You for Contacting Payne Leadership",
+        subject: "Thank You for Contacting Nobilis Talent Solutions",
         html,
       });
     } catch (error) {
@@ -345,7 +381,7 @@ export class EmailService {
       phone?: string;
       company?: string;
       challenges: string;
-      contactMethod: 'email' | 'phone';
+      contactMethod: "email" | "phone";
       submittedAt: string;
     };
   }): Promise<{ success: boolean; error?: string }> {
@@ -355,35 +391,64 @@ export class EmailService {
         
         <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
           <h4>Contact Details:</h4>
-          <p><strong>Name:</strong> ${data.contactData.firstName} ${data.contactData.lastName}</p>
-          <p><strong>Email:</strong> <a href="mailto:${data.contactData.email}">${data.contactData.email}</a></p>
-          ${data.contactData.phone ? `<p><strong>Phone:</strong> <a href="tel:${data.contactData.phone}">${data.contactData.phone}</a></p>` : ''}
-          ${data.contactData.company ? `<p><strong>Company:</strong> ${data.contactData.company}</p>` : ''}
-          <p><strong>Preferred Contact Method:</strong> ${data.contactData.contactMethod === 'email' ? 'Email' : 'Phone'}</p>
-          <p><strong>Submitted:</strong> ${new Date(data.contactData.submittedAt).toLocaleString()}</p>
+          <p><strong>Name:</strong> ${data.contactData.firstName} ${
+        data.contactData.lastName
+      }</p>
+          <p><strong>Email:</strong> <a href="mailto:${
+            data.contactData.email
+          }">${data.contactData.email}</a></p>
+          ${
+            data.contactData.phone
+              ? `<p><strong>Phone:</strong> <a href="tel:${data.contactData.phone}">${data.contactData.phone}</a></p>`
+              : ""
+          }
+          ${
+            data.contactData.company
+              ? `<p><strong>Company:</strong> ${data.contactData.company}</p>`
+              : ""
+          }
+          <p><strong>Preferred Contact Method:</strong> ${
+            data.contactData.contactMethod === "email" ? "Email" : "Phone"
+          }</p>
+          <p><strong>Submitted:</strong> ${new Date(
+            data.contactData.submittedAt
+          ).toLocaleString()}</p>
           
           <h4>Challenges:</h4>
-          <p style="font-style: italic; margin-left: 20px;">"${data.contactData.challenges}"</p>
+          <p style="font-style: italic; margin-left: 20px;">"${
+            data.contactData.challenges
+          }"</p>
         </div>
         
         <p><strong>Action Required:</strong> Please respond to this contact within 24 hours.</p>
         
         <div style="margin: 20px 0;">
-          <a href="mailto:${data.contactData.email}?subject=Re: Your inquiry to Payne Leadership" 
+          <a href="mailto:${
+            data.contactData.email
+          }?subject=Re: Your inquiry to Nobilis Talent Solutions" 
              style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin-right: 10px;">Reply via Email</a>
           
-          ${data.contactData.phone ? `<a href="tel:${data.contactData.phone}" 
-             style="display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 6px;">Call Now</a>` : ''}
+          ${
+            data.contactData.phone
+              ? `<a href="tel:${data.contactData.phone}" 
+             style="margin-top: 10px; display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 6px;">Call Now</a>`
+              : ""
+          }
         </div>
         
         <p>Contact ID: ${data.contactData.id}</p>
       `;
 
-      const html = this.generateSimpleHTML("New Contact Form Submission", content);
+      const html = this.generateSimpleHTML(
+        "New Contact Form Submission",
+        content
+      );
 
       return await this.sendEmail({
         to: data.to,
-        subject: `New Contact: ${data.contactData.firstName} ${data.contactData.lastName} - ${data.contactData.company || 'No Company'}`,
+        subject: `New Contact: ${data.contactData.firstName} ${
+          data.contactData.lastName
+        } - ${data.contactData.company || "No Company"}`,
         html,
       });
     } catch (error) {
@@ -396,7 +461,7 @@ export class EmailService {
   }
 
   /**
-   * Send payment confirmation email
+   * Send payment confirmation email with PDF invoice attachment (legacy method)
    */
   async sendPaymentConfirmation(data: {
     to: string;
@@ -405,6 +470,7 @@ export class EmailService {
     amount: number;
     paymentMethod: string;
     transactionId: string;
+    invoiceData?: any; // Invoice data for PDF generation
   }): Promise<{ success: boolean; error?: string }> {
     try {
       const content = `
@@ -421,21 +487,132 @@ export class EmailService {
           <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
         </div>
         
-        <p>Your payment has been received and your invoice has been marked as paid. The details above serve as your receipt.</p>
+        <p>Your payment has been received and your invoice has been marked as paid. Please find your invoice attached to this email.</p>
         
         <p>If you have any questions about this payment, please don't hesitate to contact us.</p>
         
         <p>Best regards,<br>
-        Payne Leadership Team</p>
+        Nobilis Talent Solutions Team</p>
       `;
 
       const html = this.generateSimpleHTML("Payment Confirmation", content);
+
+      // Generate PDF invoice if invoice data is provided
+      let attachments: any[] = [];
+      if (data.invoiceData) {
+        console.log('📄 EmailService: Starting PDF generation with data:', {
+          invoiceNumber: data.invoiceNumber,
+          clientName: data.invoiceData.clientName,
+          total: data.invoiceData.total,
+          itemsCount: data.invoiceData.items?.length
+        });
+        
+        // PDF generation is now frontend-only
+        console.log('⚠️ EmailService: PDF generation skipped (frontend-only)');
+      } else {
+        console.log('⚠️ EmailService: No invoice data provided, skipping PDF generation');
+      }
+
+      console.log('📧 EmailService: Sending email with attachments:', {
+        to: data.to,
+        subject: `Payment Confirmation - Invoice #${data.invoiceNumber}`,
+        attachmentCount: attachments.length,
+        attachmentFilenames: attachments.map(a => a.filename)
+      });
 
       return await this.sendEmail({
         to: data.to,
         subject: `Payment Confirmation - Invoice #${data.invoiceNumber}`,
         html,
+        attachments,
       });
+    } catch (error) {
+      console.error("Error sending payment confirmation email:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  /**
+   * Send payment confirmation email with pre-generated PDF attachment (new method)
+   */
+  async sendPaymentConfirmationWithPDF(data: {
+    to: string;
+    clientName: string;
+    invoiceNumber: string;
+    amount: number;
+    paymentMethod: string;
+    transactionId: string;
+    pdfAttachment?: {
+      filename: string;
+      content: Buffer | string;
+      contentType: string;
+    };
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const content = `
+        <p>Dear ${data.clientName},</p>
+        
+        <p>Thank you for your payment! We've successfully processed your transaction.</p>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+          <h4>Payment Details:</h4>
+          <p><strong>Invoice Number:</strong> ${data.invoiceNumber}</p>
+          <p><strong>Amount Paid:</strong> ${formatUSDCurrency(data.amount)}</p>
+          <p><strong>Payment Method:</strong> ${data.paymentMethod}</p>
+          <p><strong>Transaction ID:</strong> ${data.transactionId}</p>
+          <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        </div>
+        
+        <p>Your payment has been received and your invoice has been marked as paid. Please find your invoice attached to this email.</p>
+        
+        <p>If you have any questions about this payment, please don't hesitate to contact us.</p>
+        
+        <p>Best regards,<br>
+        Nobilis Talent Solutions Team</p>
+      `;
+
+      const html = this.generateSimpleHTML("Payment Confirmation", content);
+
+      const emailData: EmailData = {
+        to: data.to,
+        subject: `Payment Confirmation - Invoice #${data.invoiceNumber}`,
+        html,
+      };
+
+      // Add PDF attachment if provided (same pattern as sendInvoiceEmail)
+      if (data.pdfAttachment) {
+        const pdfBuffer = Buffer.isBuffer(data.pdfAttachment.content) 
+          ? data.pdfAttachment.content 
+          : Buffer.from(data.pdfAttachment.content);
+          
+        emailData.attachments = [
+          {
+            filename: data.pdfAttachment.filename,
+            content: pdfBuffer,
+            contentType: "application/pdf",
+          },
+        ];
+        
+        console.log('📎 EmailService: PDF attachment prepared for payment confirmation:', {
+          filename: data.pdfAttachment.filename,
+          size: pdfBuffer.length,
+          isBuffer: Buffer.isBuffer(pdfBuffer)
+        });
+      } else {
+        console.log('⚠️ EmailService: No PDF attachment provided for payment confirmation');
+      }
+
+      console.log('📧 EmailService: Sending payment confirmation email with attachments:', {
+        to: data.to,
+        subject: emailData.subject,
+        attachmentCount: emailData.attachments?.length || 0,
+        attachmentFilenames: emailData.attachments?.map(a => a.filename) || []
+      });
+
+      return await this.sendEmail(emailData);
     } catch (error) {
       console.error("Error sending payment confirmation email:", error);
       return {
@@ -458,6 +635,7 @@ export class EmailService {
     meetingLink?: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
+      const baseUrl = getBaseUrl();
       const content = `
         <p>Dear ${data.clientName},</p>
         
@@ -469,25 +647,33 @@ export class EmailService {
           <p><strong>Date:</strong> ${data.appointmentDate}</p>
           <p><strong>Time:</strong> ${data.appointmentTime}</p>
           <p><strong>Duration:</strong> ${data.duration}</p>
-          ${data.meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${data.meetingLink}">Join Meeting</a></p>` : ''}
+          ${
+            data.meetingLink
+              ? `<p><strong>Meeting Link:</strong> <a href="${data.meetingLink}">Join Meeting</a></p>`
+              : ""
+          }
         </div>
         
         <p>Please add this appointment to your calendar. You'll receive a reminder 24 hours before the scheduled time.</p>
         
-        ${data.meetingLink ? `
+        ${
+          data.meetingLink
+            ? `
         <p><strong>Important:</strong> This will be a virtual meeting. Please ensure you have a stable internet connection and a quiet environment for our session.</p>
-        ` : `
+        `
+            : `
         <p><strong>Location:</strong> We'll contact you with the meeting location details closer to the appointment date.</p>
-        `}
+        `
+        }
         
         <p>If you need to reschedule or cancel this appointment, please contact us at least 24 hours in advance.</p>
         
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/calendar" 
+        <a href="${baseUrl}/admin/calendar" 
            style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">View Calendar</a>
         
         <p>Best regards,<br>
         Kareem Payne<br>
-        Payne Leadership</p>
+        Nobilis Talent Solutions</p>
       `;
 
       const html = this.generateSimpleHTML("Appointment Confirmation", content);

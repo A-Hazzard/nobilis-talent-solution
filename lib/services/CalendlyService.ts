@@ -1,5 +1,6 @@
 import type { CalendarEvent } from '@/shared/types/entities';
 import type { CalendlyScheduledEvent } from '@/lib/types/services';
+import { getBaseUrl } from '@/lib/utils';
 
 export class CalendlyService {
   private static instance: CalendlyService;
@@ -16,13 +17,26 @@ export class CalendlyService {
   }
 
   /**
-   * Set the OAuth access token
+   * Set the access token
    */
-  setAccessToken(token: string) {
+  setAccessToken(token: string): void {
     this.accessToken = token;
-    // Store token in localStorage for persistence
-    localStorage.setItem('calendly_access_token', token);
-    console.log('🔑 Calendly access token set and stored');
+    console.log('🔑 Calendly access token set');
+  }
+
+  /**
+   * Get the current access token
+   */
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
+
+  /**
+   * Clear the access token
+   */
+  clearAccessToken(): void {
+    this.accessToken = null;
+    console.log('🔑 Calendly access token cleared');
   }
 
   /**
@@ -30,11 +44,26 @@ export class CalendlyService {
    */
   getAuthorizationUrl(): string {
     const clientId = process.env.NEXT_PUBLIC_CALENDLY_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_CALENDLY_REDIRECT_URI;
     
-    if (!clientId || !redirectUri) {
+    if (!clientId) {
       throw new Error('Calendly OAuth configuration missing');
     }
+
+    // Determine the correct redirect URI based on environment
+    let redirectUri: string;
+    
+    if (typeof window !== 'undefined') {
+      // Client-side: use current origin
+      redirectUri = `${window.location.origin}/api/auth/calendly/callback`;
+    } else {
+      // Server-side: use environment variable or fallback to getBaseUrl
+      redirectUri = process.env.NEXT_PUBLIC_CALENDLY_REDIRECT_URI || `${getBaseUrl()}/api/auth/calendly/callback`;
+    }
+    
+    console.log('🔗 Using redirect URI:', redirectUri);
+    console.log('🔍 Environment:', process.env.NODE_ENV);
+    console.log('🔍 Base URL:', getBaseUrl());
+    console.log('🔍 Window origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
 
     // Don't specify scope - let Calendly use default scopes
     const params = new URLSearchParams({
@@ -50,10 +79,18 @@ export class CalendlyService {
   }
 
   /**
+   * Get the redirect URI for Calendly OAuth
+   */
+  getRedirectUri(): string {
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}/api/auth/calendly/callback`;
+  }
+
+  /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return !!this.accessToken;
+    return !!this.getAccessToken();
   }
 
   /**
@@ -61,22 +98,32 @@ export class CalendlyService {
    */
   async getUserInfo(): Promise<{ data: any; error?: string }> {
     try {
-      if (!this.accessToken) {
+      const token = this.getAccessToken();
+      if (!token) {
         return { data: null, error: 'Not authenticated. Please connect your Calendly account.' };
       }
 
+      console.log('🔍 Testing token with getUserInfo...');
       const response = await fetch(`${this.baseUrl}/users/me`, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
         if (response.status === 401) {
+          console.log('❌ Token is invalid, clearing it...');
+          this.clearAccessToken();
           return { data: null, error: 'Authentication expired. Please reconnect your Calendly account.' };
         }
-        throw new Error(`Calendly API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ Calendly API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Calendly API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
@@ -101,7 +148,8 @@ export class CalendlyService {
     page_token?: string;
   } = {}): Promise<{ data: CalendlyScheduledEvent[]; error?: string }> {
     try {
-      if (!this.accessToken) {
+      const token = this.getAccessToken();
+      if (!token) {
         return { data: [], error: 'Not authenticated. Please connect your Calendly account.' };
       }
 
@@ -134,7 +182,7 @@ export class CalendlyService {
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -176,7 +224,7 @@ export class CalendlyService {
         const nextPageUrl = `${this.baseUrl}/scheduled_events?${nextPageParams}`;
         const nextPageResponse = await fetch(nextPageUrl, {
           headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
@@ -219,7 +267,8 @@ export class CalendlyService {
     page_token?: string;
   } = {}): Promise<{ data: any[]; error?: string }> {
     try {
-      if (!this.accessToken) {
+      const token = this.getAccessToken();
+      if (!token) {
         return { data: [], error: 'Not authenticated. Please connect your Calendly account.' };
       }
 
@@ -240,7 +289,7 @@ export class CalendlyService {
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -451,7 +500,8 @@ export class CalendlyService {
     }>;
   }): Promise<{ data: CalendlyScheduledEvent | null; error?: string }> {
     try {
-      if (!this.accessToken) {
+      const token = this.getAccessToken();
+      if (!token) {
         return { data: null, error: 'Not authenticated. Please connect your Calendly account.' };
       }
 
@@ -461,7 +511,7 @@ export class CalendlyService {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(eventData),
@@ -499,7 +549,8 @@ export class CalendlyService {
    */
   async checkEventExists(eventUri: string): Promise<{ exists: boolean; error?: string }> {
     try {
-      if (!this.accessToken) {
+      const token = this.getAccessToken();
+      if (!token) {
         return { exists: false, error: 'Not authenticated. Please connect your Calendly account.' };
       }
 
@@ -508,7 +559,7 @@ export class CalendlyService {
       const response = await fetch(eventUri, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -554,7 +605,8 @@ export class CalendlyService {
     meeting_notes_plain?: string;
   }): Promise<{ data: CalendlyScheduledEvent | null; error?: string }> {
     try {
-      if (!this.accessToken) {
+      const token = this.getAccessToken();
+      if (!token) {
         return { data: null, error: 'Not authenticated. Please connect your Calendly account.' };
       }
 
@@ -568,7 +620,7 @@ export class CalendlyService {
       const response = await fetch(url, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(updateData),
@@ -612,7 +664,8 @@ export class CalendlyService {
    */
   async cancelEvent(eventUri: string, reason?: string): Promise<{ data: boolean; error?: string }> {
     try {
-      if (!this.accessToken) {
+      const token = this.getAccessToken();
+      if (!token) {
         return { data: false, error: 'Not authenticated. Please connect your Calendly account.' };
       }
 
@@ -625,7 +678,7 @@ export class CalendlyService {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

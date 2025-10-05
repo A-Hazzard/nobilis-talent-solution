@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Download, Activity } from 'lucide-react';
-import type { AuditLog } from '@/shared/types/audit';
 import { 
   formatTimeAgo, 
   getEntityIcon, 
@@ -21,17 +20,7 @@ import { useToast } from '@/lib/hooks/use-toast';
 // Force dynamic rendering to prevent pre-rendering issues
 export const dynamic = 'force-dynamic';
 
-interface AuditLogsState {
-  logs: AuditLog[];
-  isLoading: boolean;
-  currentPage: number;
-  totalPages: number;
-  totalLogs: number;
-  searchTerm: string;
-  entityTypeFilter: string;
-  actionFilter: string;
-  error: string | null;
-}
+import type { AuditLogsState } from '@/lib/types/components';
 
 export default function AuditLogsPage() {
   const { toast } = useToast();
@@ -74,6 +63,15 @@ export default function AuditLogsPage() {
       const response = await fetch(`/api/audit/logs?${params}`);
       
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          setState(prev => ({ 
+            ...prev, 
+            error: 'Access denied. Admin privileges required to view audit logs.',
+            isLoading: false 
+          }));
+          return;
+        }
+        
         const errorText = await response.text();
         console.error('API Error Response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -87,10 +85,10 @@ export default function AuditLogsPage() {
         
         setState(prev => ({
           ...prev,
-          logs,
-          totalLogs: total,
-          totalPages,
-          currentPage: page,
+          logs: logs || [],
+          totalLogs: total || 0,
+          totalPages: totalPages || 1,
+          currentPage: page || 1,
         }));
       } else {
         setState(prev => ({ ...prev, error: result.error || 'Failed to load audit logs' }));
@@ -295,11 +293,17 @@ export default function AuditLogsPage() {
         </CardHeader>
         <CardContent>
           {state.logs.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">
-                No audit logs found
+            <div className="text-center py-12">
+              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Activity className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Audit Logs Found</h3>
+              <p className="text-gray-500 max-w-md mx-auto">
+                {state.searchTerm || state.entityTypeFilter !== 'all' || state.actionFilter !== 'all' 
+                  ? 'No logs match your current filters. Try adjusting your search criteria.'
+                  : 'No audit logs have been recorded yet. Activity will appear here as users perform actions in the system.'
+                }
               </p>
-
             </div>
           ) : (
             <div className="space-y-4">
@@ -335,7 +339,7 @@ export default function AuditLogsPage() {
                         </span>
                       </div>
                         
-                      <div className="space-y-1">
+                      <div className="space-y-2">
                         <p className="font-medium text-gray-900 text-sm sm:text-base break-words">
                           {(() => {
                             // Parse details if it's a JSON string
@@ -351,8 +355,9 @@ export default function AuditLogsPage() {
                             return parsedDetails?.title || log.entityId || 'Untitled';
                           })()}
                         </p>
+
+                        {/* Enhanced: Show detailed changes */}
                         {(() => {
-                          // Parse details for description
                           let parsedDetails = log.details;
                           if (typeof log.details === 'string') {
                             try {
@@ -361,10 +366,62 @@ export default function AuditLogsPage() {
                               return null;
                             }
                           }
+                          
+                          // Display changes if available
+                          if (parsedDetails?.changes && Object.keys(parsedDetails.changes).length > 0) {
+                            return (
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-gray-700">Changes:</p>
+                                <div className="bg-gray-50 border rounded p-2 space-y-1">
+                                  {Object.entries(parsedDetails.changes).map(([field, change]: [string, any]) => (
+                                    <div key={field} className="text-xs text-gray-600">
+                                      <span className="font-medium capitalize">{field}:</span>{' '}
+                                      <span className="text-red-600">{change.before || 'null'}</span>
+                                      {' → '}
+                                      <span className="text-green-600">{change.after || 'null'}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // Show before/after data if available
+                          if (parsedDetails?.beforeData && parsedDetails?.afterData) {
+                            const beforeData = parsedDetails.beforeData;
+                            const afterData = parsedDetails.afterData;
+                            const importantFields = ['status', 'name', 'title', 'email', 'amount', 'total'];
+                            
+                            const changedFields = importantFields.filter(field => 
+                              beforeData[field] !== afterData[field] && 
+                              (afterData[field] !== undefined || beforeData[field] !== undefined)
+                            );
+
+                            if (changedFields.length > 0) {
+                              return (
+                                <div className="space-y-1">
+                                  <p className="text-xs font-medium text-gray-700">Changes:</p>
+                                  <div className="bg-gray-50 border rounded p-2 space-y-1">
+                                    {changedFields.map(field => (
+                                      <div key={field} className="text-xs text-gray-600">
+                                        <span className="font-medium capitalize">{field}:</span>{' '}
+                                        <span className="text-red-600">{beforeData[field] || 'null'}</span>
+                                        {' → '}
+                                        <span className="text-green-600">{afterData[field] || 'null'}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            }
+                          }
+
+                          // Fallback to description if available
                           return parsedDetails?.description ? (
                             <p className="text-xs sm:text-sm text-gray-600 break-words">{parsedDetails.description}</p>
                           ) : null;
                         })()}
+
                         <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                           <span className="break-all">By: {log.userEmail}</span>
                           {(() => {

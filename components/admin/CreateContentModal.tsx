@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -330,9 +331,11 @@ export function CreateContentModal({
               </div>
               {formData.featuredImage && (
                 <div className="mt-2">
-                  <img
+                  <Image
                     src={formData.featuredImage}
                     alt="Featured image preview"
+                    width={400}
+                    height={160}
                     className="w-full h-32 sm:h-40 object-cover rounded-md border"
                   />
                 </div>
@@ -564,9 +567,11 @@ export function CreateContentModal({
               </div>
               {resourceFormData.thumbnailUrl && (
                 <div className="mt-2">
-                  <img
+                  <Image
                     src={resourceFormData.thumbnailUrl}
                     alt="Resource thumbnail preview"
+                    width={400}
+                    height={160}
                     className="w-full h-32 sm:h-40 object-cover rounded-md border"
                   />
                 </div>

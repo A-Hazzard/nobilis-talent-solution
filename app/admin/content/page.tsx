@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1016,10 +1017,11 @@ export default function ContentPage() {
                 >
                   {post.featuredImage && (
                     <div className="h-32 overflow-hidden relative">
-                      <img 
+                      <Image 
                         src={post.featuredImage} 
                         alt={post.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                       {post.featured && (
                         <div className="absolute top-2 right-2">
@@ -1252,10 +1254,11 @@ export default function ContentPage() {
                 >
                   {resource.thumbnailUrl && (
                     <div className="h-32 overflow-hidden relative">
-                      <img 
+                      <Image 
                         src={resource.thumbnailUrl} 
                         alt={resource.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                       {resource.featured && (
                         <div className="absolute top-2 right-2">
@@ -1453,10 +1456,12 @@ export default function ContentPage() {
                  </div>
                  {formData.featuredImage && (
                    <div className="mt-2">
-                     <img 
+                     <Image 
                        src={formData.featuredImage} 
                        alt="Featured image preview" 
-                       className="w-32 h-20 object-cover rounded border"
+                       width={128}
+                       height={80}
+                       className="object-cover rounded border"
                      />
                    </div>
                  )}
@@ -1799,9 +1804,11 @@ export default function ContentPage() {
             {previewPost && (
               <div className="prose max-w-none">
                 {previewPost.featuredImage && (
-                  <img 
+                  <Image 
                     src={previewPost.featuredImage} 
                     alt={previewPost.title}
+                    width={800}
+                    height={192}
                     className="w-full h-48 object-cover rounded-lg mb-4"
                   />
                 )}
@@ -2096,10 +2103,12 @@ export default function ContentPage() {
                 </div>
                 {resourceFormData.thumbnailUrl && (
                   <div className="mt-2">
-                    <img 
+                    <Image 
                       src={resourceFormData.thumbnailUrl} 
                       alt="Resource thumbnail preview" 
-                      className="w-32 h-20 object-cover rounded border"
+                      width={128}
+                      height={80}
+                      className="object-cover rounded border"
                     />
                   </div>
                 )}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import type { PaymentConfirmation } from '@/shared/types/payment';
@@ -364,13 +365,13 @@ export default function PaymentSuccessPage() {
 
           {/* Action Buttons */}
           <div className="text-center space-y-4">
-            <a
+            <Link
               href="/"
               className="btn-primary inline-flex items-center space-x-2"
             >
               <span>Return to Home</span>
               <ArrowRight className="w-4 h-4" />
-            </a>
+            </Link>
             
             <div className="text-sm text-muted-foreground">
               Questions? Contact us at{' '}

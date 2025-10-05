@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -737,10 +738,11 @@ export default function ContentPage() {
                     <Card key={post.id} className="group hover:shadow-2xl transition-all duration-300 border-2 border-primary/20 hover:border-primary/40 overflow-hidden h-full flex flex-col">
                       {post.featuredImage ? (
                         <div className="relative h-48 overflow-hidden">
-                          <img
+                          <Image
                             src={post.featuredImage}
                             alt={post.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute top-4 left-4">
                             <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0">
@@ -832,10 +834,11 @@ export default function ContentPage() {
                   <Card key={post.id} className="group hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-primary/30 overflow-hidden h-full flex flex-col">
                     {post.featuredImage ? (
                       <div className="relative h-48 overflow-hidden">
-                        <img
+                        <Image
                           src={post.featuredImage}
                           alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute top-4 left-4">
                           <Badge variant="secondary" className="bg-white/90 text-gray-800">
@@ -985,10 +988,11 @@ export default function ContentPage() {
                     <Card key={resource.id} className="group hover:shadow-2xl transition-all duration-300 border-2 border-primary/20 hover:border-primary/40 overflow-hidden h-full flex flex-col">
                       {resource.thumbnailUrl ? (
                         <div className="relative h-48 overflow-hidden">
-                          <img 
+                          <Image 
                             src={resource.thumbnailUrl} 
                             alt={resource.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute top-4 left-4 flex flex-col gap-2">
                             <Badge className="bg-gradient-to-r from-primary to-secondary text-white border-0">
@@ -1113,10 +1117,11 @@ export default function ContentPage() {
                     <Card key={resource.id} className="group hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-primary/30 overflow-hidden h-full flex flex-col">
                       {resource.thumbnailUrl ? (
                         <div className="relative h-48 overflow-hidden">
-                          <img 
+                          <Image 
                             src={resource.thumbnailUrl} 
                             alt={resource.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute top-4 left-4 flex flex-col gap-2">
                             <Badge variant="secondary" className="bg-white/90 text-gray-800">

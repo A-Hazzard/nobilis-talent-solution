@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { loadStripe } from '@stripe/stripe-js';
 import { CreditCard, Heart, AlertCircle, Clock } from 'lucide-react';
 import Navigation from '@/components/Navigation';
@@ -149,9 +150,9 @@ export default function PendingPaymentPage() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               {error}
             </p>
-            <a href="/" className="btn-primary">
+            <Link href="/" className="btn-primary">
               Return to Home
-            </a>
+            </Link>
           </div>
         </div>
         {/* Footer rendered globally in RootLayout */}
@@ -175,9 +176,9 @@ export default function PendingPaymentPage() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               You don't have any pending payments at the moment.
             </p>
-            <a href="/" className="btn-primary">
+            <Link href="/" className="btn-primary">
               Return to Home
-            </a>
+            </Link>
           </div>
         </div>
         {/* Footer rendered globally in RootLayout */}

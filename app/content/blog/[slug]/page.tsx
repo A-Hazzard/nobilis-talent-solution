@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -322,10 +323,11 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
           {/* Featured Image */}
           {post.featuredImage && (
             <div className="relative h-96 overflow-hidden rounded-t-lg">
-              <img
+              <Image
                 src={post.featuredImage}
                 alt={post.title}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
           )}

@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 import tseslint from "@typescript-eslint/eslint-plugin";
 import tsparser from "@typescript-eslint/parser";
+import nextPlugin from "@next/eslint-plugin-next";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,6 +16,7 @@ const config = [
     files: ["**/*.{js,jsx,ts,tsx}"],
     plugins: {
       "@typescript-eslint": tseslint,
+      "@next/next": nextPlugin,
     },
     languageOptions: {
       parser: tsparser,
@@ -44,6 +46,10 @@ const config = [
         }
       ],
       "no-unused-vars": "off", // Turn off base rule as it conflicts with TypeScript version
+      
+      // Next.js specific rules
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
     },
   },
   {

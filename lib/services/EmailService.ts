@@ -507,46 +507,8 @@ export class EmailService {
           itemsCount: data.invoiceData.items?.length
         });
         
-        try {
-          const { PDFService } = await import("@/lib/services/PDFService");
-          const pdfService = PDFService.getInstance();
-          
-          console.log('📄 EmailService: PDFService imported, generating PDF...');
-          const pdfResult = await pdfService.generateInvoicePDF(
-            data.invoiceData,
-            data.invoiceNumber
-          );
-          
-          console.log('📄 EmailService: PDF generation result:', {
-            success: pdfResult.success,
-            hasData: !!pdfResult.data,
-            dataSize: pdfResult.data ? pdfResult.data.length : 0,
-            error: pdfResult.error
-          });
-          
-          if (pdfResult.success && pdfResult.data) {
-            const pdfBuffer = Buffer.isBuffer(pdfResult.data) 
-              ? pdfResult.data 
-              : Buffer.from(pdfResult.data);
-              
-            attachments.push({
-              filename: `invoice-${data.invoiceNumber}.pdf`,
-              content: pdfBuffer,
-              contentType: "application/pdf",
-            });
-            
-            console.log('📎 EmailService: PDF attachment added to email:', {
-              filename: `invoice-${data.invoiceNumber}.pdf`,
-              size: pdfBuffer.length,
-              isBuffer: Buffer.isBuffer(pdfBuffer)
-            });
-          } else {
-            console.log('❌ EmailService: PDF generation failed or no data returned');
-          }
-        } catch (pdfError) {
-          console.error("❌ EmailService: Failed to generate PDF invoice:", pdfError);
-          // Continue without PDF attachment
-        }
+        // PDF generation is now frontend-only
+        console.log('⚠️ EmailService: PDF generation skipped (frontend-only)');
       } else {
         console.log('⚠️ EmailService: No invoice data provided, skipping PDF generation');
       }

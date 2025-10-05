@@ -121,10 +121,17 @@ export async function POST(request: NextRequest) {
         entity: 'lead',
         entityId: docRef.id,
         details: { 
+          title: `Created new lead: ${leadData.firstName} ${leadData.lastName}`,
+          description: `Admin created a new lead account for ${leadData.email}`,
           firstName: leadData.firstName, 
           lastName: leadData.lastName,
           leadEmail: leadData.email,
-          onboardingCompleted: true 
+          organization: leadData.organization || 'Not specified',
+          onboardingCompleted: true,
+          ipAddress: request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     'unknown',
+          userAgent: request.headers.get('user-agent') || 'unknown',
         },
       });
       

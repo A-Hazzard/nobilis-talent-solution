@@ -196,36 +196,23 @@ export async function POST(request: NextRequest) {
                   });
                 }
                 
-                const invoiceData = {
+                const _invoiceData = {
                   invoiceNumber,
                   clientName: pendingPayment?.clientName,
                   clientEmail: pendingPayment?.clientEmail,
+                  issueDate: new Date().toISOString(),
+                  dueDate: new Date().toISOString(),
                   items,
                   subtotal: docTotalAmount,
                   taxAmount: 0,
                   total: docTotalAmount,
-                  dueDate: new Date(),
                   bonusAmount: docBonusAmount,
                   notes: docBonusAmount > 0 ? `Includes $${docBonusAmount.toFixed(2)} bonus payment` : undefined
                 };
                 
-                console.log(`📄 [${requestId}] Invoice data for PDF:`, invoiceData);
-                console.log(`📄 [${requestId}] Generating PDF for payment confirmation...`);
-                
-                const { PDFService } = await import('@/lib/services/PDFService');
-                const pdfService = PDFService.getInstance();
-                const pdf = await pdfService.generateInvoicePDF(invoiceData, invoiceNumber);
-                
-                if (pdf.success && pdf.data) {
-                  pdfAttachment = {
-                    filename: `invoice-${invoiceNumber}.pdf`,
-                    content: pdf.data,
-                    contentType: 'application/pdf'
-                  };
-                  console.log(`✅ [${requestId}] PDF generated successfully, size:`, pdf.data.length, 'bytes');
-                } else {
-                  console.log(`❌ [${requestId}] PDF generation failed:`, pdf.error);
-                }
+                console.log(`📄 [${requestId}] Invoice data prepared (PDF generation skipped - frontend only)`);
+                // PDF generation is now frontend-only
+                // The confirmation email will be sent without PDF attachment
               } else {
                 console.log(`❌ [${requestId}] Pending payment document not found`);
               }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/lib/firebase/admin';
 import { getAuth, isAdmin } from '@/lib/helpers/auth';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 import type { CalendlyConfig } from '@/shared/types/entities';
 
 // Get Firebase Admin Firestore
@@ -125,6 +126,24 @@ export async function POST(request: NextRequest) {
     const configRef = db.collection('calendly-config').doc('main');
     await configRef.set(configData, { merge: true });
 
+    // Log the configuration update for audit
+    await logAdminAction({
+      userId: authResult.user.uid,
+      userEmail: authResult.user.email,
+      action: 'update',
+      entity: 'calendar',
+      details: {
+        title: 'Calendly Configuration Updated',
+        description: `Admin updated Calendly booking URL to: ${bookingUrl}`,
+        bookingUrl,
+        isActive,
+        ipAddress: request.headers.get('x-forwarded-for') || 
+                   request.headers.get('x-real-ip') || 
+                   'unknown',
+        userAgent: request.headers.get('user-agent') || 'unknown',
+      },
+    });
+
     return NextResponse.json({
       data: {
         id: 'main',
@@ -168,6 +187,22 @@ export async function DELETE(request: NextRequest) {
     // Delete the config
     const configRef = db.collection('calendly-config').doc('main');
     await configRef.delete();
+
+    // Log the configuration deletion for audit
+    await logAdminAction({
+      userId: authResult.user.uid,
+      userEmail: authResult.user.email,
+      action: 'delete',
+      entity: 'calendar',
+      details: {
+        title: 'Calendly Configuration Deleted',
+        description: 'Admin deleted the Calendly configuration',
+        ipAddress: request.headers.get('x-forwarded-for') || 
+                   request.headers.get('x-real-ip') || 
+                   'unknown',
+        userAgent: request.headers.get('user-agent') || 'unknown',
+      },
+    });
 
     return NextResponse.json({
       message: 'Calendly configuration deleted successfully'

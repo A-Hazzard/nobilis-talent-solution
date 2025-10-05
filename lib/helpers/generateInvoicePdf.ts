@@ -1,4 +1,5 @@
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type InvoiceItem = {
   description: string;
@@ -22,458 +23,216 @@ type InvoiceData = {
 };
 
 /**
- * Generates an invoice PDF on the frontend matching the original design
+ * Generates invoice HTML matching the original Puppeteer design
+ */
+function generateInvoiceHTML(data: InvoiceData): string {
+  const invoiceDate = new Date(data.issueDate).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+
+  const dueDate = new Date(data.dueDate).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+
+  const logoUrl = window.location.origin + '/assets/logo-transparent.png';
+
+  return `
+    <div class="invoice-container" style="width: 800px; padding: 20px; font-family: Arial, sans-serif; color: #333; background: #fff;">
+        <!-- Header Section -->
+        <div class="header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 20px;">
+            <div class="logo-section" style="flex: 1;">
+                <img src="${logoUrl}" alt="Company Logo" crossorigin="anonymous" style="width: 120px; height: auto; margin-bottom: 15px; display: block;" />
+                <div class="company-info" style="font-size: 11px; line-height: 1.4; color: #555;">
+                    <strong>Nobilis Talent Solutions</strong><br>
+                    Kareem Payne<br>
+                    3344 Cobb Parkway<br>
+                    STE 200<br>
+                    Acworth, GA, 30101<br>
+                    Phone: +1 (678) 956-1146<br>
+                    Email: support@nobilis-talent.com
+                </div>
+            </div>
+            
+            <div class="invoice-header" style="flex: 1; text-align: right;">
+                <div class="invoice-title" style="font-size: 32px; font-weight: bold; color: #333; margin-bottom: 5px; letter-spacing: 2px;">INVOICE</div>
+                <div class="invoice-number" style="font-size: 14px; color: #888; margin-bottom: 20px;">#${data.invoiceNumber}</div>
+                
+                <div class="invoice-dates" style="text-align: right; font-size: 11px; line-height: 1.6;">
+                    <div class="date-row" style="margin-bottom: 5px;">
+                        <span class="date-label" style="display: inline-block; width: 60px; text-align: left; color: #666;">Date:</span>
+                        <span>${invoiceDate}</span>
+                    </div>
+                    <div class="date-row" style="margin-bottom: 5px;">
+                        <span class="date-label" style="display: inline-block; width: 60px; text-align: left; color: #666;">Due Date:</span>
+                        <span>${dueDate}</span>
+                    </div>
+                </div>
+                
+                <div class="balance-due" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #ff6b35;">
+                    <div class="balance-label" style="font-size: 11px; color: #666; margin-bottom: 2px;">Balance Due:</div>
+                    <div class="balance-amount" style="font-size: 16px; font-weight: bold; color: #333;">$${data.total.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Billing Section -->
+        <div class="billing-section" style="display: flex; justify-content: space-between; margin-bottom: 40px;">
+            <div class="bill-to" style="flex: 1;">
+                <h3 style="font-size: 12px; font-weight: bold; margin-bottom: 10px; color: #333;">Bill To:</h3>
+                <div class="client-details" style="font-size: 11px; line-height: 1.5; color: #555;">
+                    ${data.clientName}<br>
+                    ${data.clientEmail || ''}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Items Table -->
+        <table class="items-table" style="width: 100%; border-collapse: collapse; margin-bottom: 30px; border: 1px solid #ddd;">
+            <thead>
+                <tr>
+                    <th style="background-color: #4a4a4a; color: white; padding: 12px 15px; text-align: left; font-size: 11px; font-weight: bold; text-transform: uppercase;">Item</th>
+                    <th class="center" style="background-color: #4a4a4a; color: white; padding: 12px 15px; text-align: center; font-size: 11px; font-weight: bold; text-transform: uppercase;">Quantity</th>
+                    <th class="right" style="background-color: #4a4a4a; color: white; padding: 12px 15px; text-align: right; font-size: 11px; font-weight: bold; text-transform: uppercase;">Rate</th>
+                    <th class="right" style="background-color: #4a4a4a; color: white; padding: 12px 15px; text-align: right; font-size: 11px; font-weight: bold; text-transform: uppercase;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.items.map((item, index) => `
+                    <tr style="${index % 2 === 1 ? 'background-color: #f9f9f9;' : ''}">
+                        <td style="padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 11px;">${item.description}</td>
+                        <td class="center" style="padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 11px; text-align: center;">${item.quantity}</td>
+                        <td class="right" style="padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 11px; text-align: right;">$${item.unitPrice.toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}</td>
+                        <td class="right" style="padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 11px; text-align: right;">$${item.total.toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        
+        <!-- Totals Section -->
+        <div class="totals-section" style="margin-top: 30px; text-align: right;">
+            <table class="totals-table" style="margin-left: auto; width: 300px;">
+                <tr>
+                    <td style="padding: 8px 15px; font-size: 11px; text-align: right; color: #666;">Subtotal:</td>
+                    <td style="padding: 8px 15px; font-size: 11px; text-align: right; font-weight: bold; width: 100px;">$${data.subtotal.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}</td>
+                </tr>
+                ${data.bonusAmount && data.bonusAmount > 0 ? `
+                <tr>
+                    <td style="padding: 8px 15px; font-size: 11px; text-align: right; color: #666;">Bonus Amount:</td>
+                    <td style="padding: 8px 15px; font-size: 11px; text-align: right; font-weight: bold; width: 100px;">$${data.bonusAmount.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}</td>
+                </tr>
+                ` : ''}
+                <tr class="total-row" style="border-top: 2px solid #333; font-size: 12px;">
+                    <td style="padding: 20px 15px 8px; font-weight: bold; color: #333; text-align: right;">Total:</td>
+                    <td style="padding: 20px 15px 8px; font-weight: bold; color: #333; text-align: right; width: 100px;">$${data.total.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+  `;
+}
+
+/**
+ * Generates an invoice PDF from HTML template using jsPDF + html2canvas
  * @param data - Invoice data
  * @returns PDF as Blob
  */
 export async function generateInvoicePdf(data: InvoiceData): Promise<Blob> {
   try {
-    // Create new PDF document
-    const pdf = await PDFDocument.create();
-    
-    // Add page with Letter size
-    const page = pdf.addPage([612, 792]); // 8.5" x 11"
-    const { width, height } = page.getSize();
-    
-    // Embed fonts
-    const helvetica = await pdf.embedFont(StandardFonts.Helvetica);
-    const helveticaBold = await pdf.embedFont(StandardFonts.HelveticaBold);
-    
-    // Define colors (matching original design)
-    const BLACK = rgb(0, 0, 0);
-    const DARK_GRAY = rgb(0.29, 0.29, 0.29); // #4a4a4a for table header
-    const GRAY = rgb(0.4, 0.4, 0.4); // #666 for labels
-    const LIGHT_GRAY = rgb(0.55, 0.55, 0.55); // #888 for invoice number
-    const ACCENT_ORANGE = rgb(1, 0.42, 0.21); // #ff6b35 for balance due
-    const TABLE_BG = rgb(0.98, 0.98, 0.98); // #f9f9f9 for table rows
-    
-    // Margins
-    const MARGIN = 50;
-    let yPosition = height - MARGIN;
-    
-    // === LOGO AND COMPANY INFO (LEFT SIDE) ===
-    
-    // Try to embed logo
-    let logoHeight = 0;
-    try {
-      // Fetch logo from public assets
-      const logoResponse = await fetch('/assets/logo-transparent.png');
-      const logoArrayBuffer = await logoResponse.arrayBuffer();
-      const logoImage = await pdf.embedPng(logoArrayBuffer);
-      
-      // Scale logo to width of 120px (matching original design)
-      const logoDims = logoImage.scale(120 / logoImage.width);
-      
-      page.drawImage(logoImage, {
-        x: MARGIN,
-        y: yPosition - logoDims.height,
-        width: logoDims.width,
-        height: logoDims.height,
-      });
-      
-      logoHeight = logoDims.height + 15; // Logo height + margin
-      yPosition -= logoHeight;
-    } catch (error) {
-      console.warn('Could not load logo:', error);
-      // Continue without logo
-    }
-    
-    // Company Info (under logo)
-    const companyInfo = [
-      'Nobilis Talent Solutions',
-      'Kareem Payne',
-      '3344 Cobb Parkway',
-      'STE 200',
-      'Acworth, GA, 30101',
-      'Phone: +1 (678) 956-1146',
-      'Email: support@nobilistalent.com'
-    ];
-    
-    const infoFontSize = 9;
-    for (let i = 0; i < companyInfo.length; i++) {
-      page.drawText(companyInfo[i], {
-        x: MARGIN,
-        y: yPosition,
-        size: infoFontSize,
-        font: i === 0 ? helveticaBold : helvetica,
-        color: LIGHT_GRAY,
-      });
-      yPosition -= 12;
-    }
-    
-    // === INVOICE HEADER (RIGHT SIDE) ===
-    const rightX = width - MARGIN - 150;
-    let rightY = height - MARGIN;
-    
-    // INVOICE title (large, bold, with letter spacing)
-    page.drawText('INVOICE', {
-      x: rightX,
-      y: rightY,
-      size: 32,
-      font: helveticaBold,
-      color: BLACK,
+    // Create a temporary container for the HTML
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.width = '800px';
+    container.innerHTML = generateInvoiceHTML(data);
+    document.body.appendChild(container);
+
+    // Wait for images (logo) to load
+    const images = container.querySelectorAll('img');
+    await Promise.all(
+      Array.from(images).map(
+        img =>
+          new Promise((resolve) => {
+            if (img.complete) {
+              resolve(null);
+            } else {
+              img.onload = () => resolve(null);
+              img.onerror = () => resolve(null); // Continue even if image fails
+              // Timeout after 3 seconds
+              setTimeout(() => resolve(null), 3000);
+            }
+          })
+      )
+    );
+
+    // Convert HTML to canvas
+    const canvas = await html2canvas(container, {
+      scale: 2, // Higher quality (2x resolution)
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: 800,
     });
-    rightY -= 25;
-    
-    // Invoice Number
-    page.drawText(`#${data.invoiceNumber}`, {
-      x: rightX,
-      y: rightY,
-      size: 14,
-      font: helvetica,
-      color: LIGHT_GRAY,
+
+    // Remove temporary container
+    document.body.removeChild(container);
+
+    // Calculate dimensions for A4 page
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const pdfWidth = 210; // A4 width in mm
+    const pdfHeight = 297; // A4 height in mm
+    const ratio = pdfWidth / imgWidth;
+    const scaledHeight = imgHeight * ratio;
+
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: scaledHeight > pdfHeight ? 'portrait' : 'portrait',
+      unit: 'mm',
+      format: 'a4',
     });
-    rightY -= 35;
-    
-    // Invoice Dates
-    const invoiceDate = formatDate(data.issueDate);
-    const dueDate = formatDate(data.dueDate);
-    
-    page.drawText('Date:', {
-      x: rightX,
-      y: rightY,
-      size: 9,
-      font: helvetica,
-      color: GRAY,
-    });
-    
-    page.drawText(invoiceDate, {
-      x: rightX + 60,
-      y: rightY,
-      size: 9,
-      font: helvetica,
-      color: BLACK,
-    });
-    rightY -= 15;
-    
-    page.drawText('Due Date:', {
-      x: rightX,
-      y: rightY,
-      size: 9,
-      font: helvetica,
-      color: GRAY,
-    });
-    
-    page.drawText(dueDate, {
-      x: rightX + 60,
-      y: rightY,
-      size: 9,
-      font: helvetica,
-      color: BLACK,
-    });
-    rightY -= 25;
-    
-    // Balance Due Box (with orange accent)
-    const balanceBoxWidth = 150;
-    const balanceBoxHeight = 50;
-    
-    // Orange left border
-    page.drawRectangle({
-      x: rightX,
-      y: rightY - balanceBoxHeight,
-      width: 4,
-      height: balanceBoxHeight,
-      color: ACCENT_ORANGE,
-    });
-    
-    // Light gray background
-    page.drawRectangle({
-      x: rightX + 4,
-      y: rightY - balanceBoxHeight,
-      width: balanceBoxWidth - 4,
-      height: balanceBoxHeight,
-      color: rgb(0.97, 0.98, 0.98), // #f8f9fa
-    });
-    
-    // Balance Due label
-    page.drawText('Balance Due:', {
-      x: rightX + 10,
-      y: rightY - 15,
-      size: 9,
-      font: helvetica,
-      color: GRAY,
-    });
-    
-    // Balance amount
-    page.drawText(formatCurrency(data.total), {
-      x: rightX + 10,
-      y: rightY - 35,
-      size: 16,
-      font: helveticaBold,
-      color: BLACK,
-    });
-    
-    // === BILL TO SECTION ===
-    yPosition = height - MARGIN - 180; // Position after header
-    
-    page.drawText('Bill To:', {
-      x: MARGIN,
-      y: yPosition,
-      size: 12,
-      font: helveticaBold,
-      color: BLACK,
-    });
-    yPosition -= 20;
-    
-    page.drawText(data.clientName, {
-      x: MARGIN,
-      y: yPosition,
-      size: 9,
-      font: helvetica,
-      color: LIGHT_GRAY,
-    });
-    yPosition -= 12;
-    
-    if (data.clientEmail) {
-      page.drawText(data.clientEmail, {
-        x: MARGIN,
-        y: yPosition,
-        size: 9,
-        font: helvetica,
-        color: LIGHT_GRAY,
-      });
-    }
-    
-    yPosition -= 50;
-    
-    // === ITEMS TABLE ===
-    // Table Header Background (dark gray matching original)
-    const tableHeaderHeight = 25;
-    page.drawRectangle({
-      x: MARGIN,
-      y: yPosition - tableHeaderHeight,
-      width: width - (MARGIN * 2),
-      height: tableHeaderHeight,
-      color: DARK_GRAY,
-    });
-    
-    // Table Headers (white text on dark background)
-    const tableY = yPosition - 10;
-    page.drawText('Item', {
-      x: MARGIN + 10,
-      y: tableY,
-      size: 9,
-      font: helveticaBold,
-      color: rgb(1, 1, 1), // White
-    });
-    
-    page.drawText('Quantity', {
-      x: width - MARGIN - 220,
-      y: tableY,
-      size: 9,
-      font: helveticaBold,
-      color: rgb(1, 1, 1), // White
-    });
-    
-    page.drawText('Rate', {
-      x: width - MARGIN - 130,
-      y: tableY,
-      size: 9,
-      font: helveticaBold,
-      color: rgb(1, 1, 1), // White
-    });
-    
-    page.drawText('Amount', {
-      x: width - MARGIN - 60,
-      y: tableY,
-      size: 9,
-      font: helveticaBold,
-      color: rgb(1, 1, 1), // White
-    });
-    
-    yPosition -= tableHeaderHeight + 5;
-    
-    // Table Items (with alternating row backgrounds)
-    let itemIndex = 0;
-    for (const item of data.items) {
-      const rowHeight = 25;
-      
-      // Alternating row background
-      if (itemIndex % 2 === 1) {
-        page.drawRectangle({
-          x: MARGIN,
-          y: yPosition - rowHeight + 5,
-          width: width - (MARGIN * 2),
-          height: rowHeight,
-          color: TABLE_BG,
-        });
-      }
-      
-      // Item description (truncate if too long)
-      const maxDescLength = 60;
-      const desc = item.description.length > maxDescLength 
-        ? item.description.substring(0, maxDescLength) + '...' 
-        : item.description;
-      
-      page.drawText(desc, {
-        x: MARGIN + 10,
-        y: yPosition,
-        size: 9,
-        font: helvetica,
-        color: BLACK,
-      });
-      
-      // Quantity (centered)
-      page.drawText(item.quantity.toString(), {
-        x: width - MARGIN - 215,
-        y: yPosition,
-        size: 9,
-        font: helvetica,
-        color: BLACK,
-      });
-      
-      // Unit Price (right aligned)
-      const rateText = formatCurrency(item.unitPrice);
-      const rateWidth = helvetica.widthOfTextAtSize(rateText, 9);
-      page.drawText(rateText, {
-        x: width - MARGIN - 130 - rateWidth,
-        y: yPosition,
-        size: 9,
-        font: helvetica,
-        color: BLACK,
-      });
-      
-      // Total (right aligned)
-      const totalText = formatCurrency(item.total);
-      const totalWidth = helvetica.widthOfTextAtSize(totalText, 9);
-      page.drawText(totalText, {
-        x: width - MARGIN - 10 - totalWidth,
-        y: yPosition,
-        size: 9,
-        font: helvetica,
-        color: BLACK,
-      });
-      
-      yPosition -= rowHeight;
-      itemIndex++;
-      
-      // Check if we need a new page
-      if (yPosition < 150 && itemIndex < data.items.length) {
-        pdf.addPage([612, 792]);
-        yPosition = height - MARGIN;
+
+    // Add image to PDF
+    const imgData = canvas.toDataURL('image/png');
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, scaledHeight);
+
+    // If content exceeds one page, add additional pages
+    if (scaledHeight > pdfHeight) {
+      let heightLeft = scaledHeight - pdfHeight;
+      let position = -pdfHeight;
+
+      while (heightLeft > 0) {
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
+        heightLeft -= pdfHeight;
+        position -= pdfHeight;
       }
     }
-    
-    yPosition -= 10;
-    
-    // === TOTALS SECTION ===
-    const totalsX = width - MARGIN - 200;
-    const totalsValueX = width - MARGIN - 80;
-    
-    // Subtotal
-    page.drawText('Subtotal:', {
-      x: totalsX,
-      y: yPosition,
-      size: 9,
-      font: helvetica,
-      color: BLACK,
-    });
-    
-    const subtotalText = formatCurrency(data.subtotal);
-    const subtotalWidth = helvetica.widthOfTextAtSize(subtotalText, 9);
-    page.drawText(subtotalText, {
-      x: totalsValueX - subtotalWidth,
-      y: yPosition,
-      size: 9,
-      font: helveticaBold,
-      color: BLACK,
-    });
-    yPosition -= 15;
-    
-    // Bonus Amount (if applicable - matching original design)
-    if (data.bonusAmount && data.bonusAmount > 0) {
-      page.drawText('Bonus Amount:', {
-        x: totalsX,
-        y: yPosition,
-        size: 9,
-        font: helvetica,
-        color: BLACK,
-      });
-      
-      const bonusText = formatCurrency(data.bonusAmount);
-      const bonusWidth = helvetica.widthOfTextAtSize(bonusText, 9);
-      page.drawText(bonusText, {
-        x: totalsValueX - bonusWidth,
-        y: yPosition,
-        size: 9,
-        font: helveticaBold,
-        color: BLACK,
-      });
-      yPosition -= 15;
-    }
-    
-    // Top border for total row
-    yPosition -= 5;
-    page.drawLine({
-      start: { x: totalsX - 10, y: yPosition },
-      end: { x: width - MARGIN, y: yPosition },
-      color: BLACK,
-      thickness: 2,
-    });
-    yPosition -= 15;
-    
-    // Total
-    page.drawText('Total:', {
-      x: totalsX,
-      y: yPosition,
-      size: 10,
-      font: helveticaBold,
-      color: BLACK,
-    });
-    
-    const totalText = formatCurrency(data.total);
-    const totalWidth = helveticaBold.widthOfTextAtSize(totalText, 10);
-    page.drawText(totalText, {
-      x: totalsValueX - totalWidth,
-      y: yPosition,
-      size: 10,
-      font: helveticaBold,
-      color: BLACK,
-    });
-    
-    // === NOTES SECTION ===
-    if (data.notes) {
-      yPosition -= 40;
-      
-      page.drawText('Notes:', {
-        x: MARGIN,
-        y: yPosition,
-        size: 10,
-        font: helveticaBold,
-        color: GRAY,
-      });
-      yPosition -= 15;
-      
-      // Wrap notes text
-      const maxWidth = width - (MARGIN * 2);
-      const wrappedNotes = wrapText(data.notes, maxWidth, helvetica, 9);
-      
-      for (const line of wrappedNotes) {
-        if (yPosition < 50) break; // Don't overflow
-        
-        page.drawText(line, {
-          x: MARGIN,
-          y: yPosition,
-          size: 9,
-          font: helvetica,
-          color: BLACK,
-        });
-        yPosition -= 12;
-      }
-    }
-    
-    // === FOOTER ===
-    page.drawText('Thank you for your business!', {
-      x: width / 2 - 70,
-      y: 30,
-      size: 10,
-      font: helveticaBold,
-      color: GRAY,
-    });
-    
-    // Save and return as Blob
-    const pdfBytes = await pdf.save();
-    return new Blob([pdfBytes], { type: 'application/pdf' });
+
+    // Return as Blob
+    return pdf.output('blob');
   } catch (error) {
     console.error('PDF generation failed:', error);
     throw new Error(
@@ -482,50 +241,4 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Blob> {
   }
 }
 
-/**
- * Wraps text to fit within a specified width
- */
-function wrapText(text: string, maxWidth: number, font: any, size: number): string[] {
-  const words = text.split(' ');
-  const lines: string[] = [];
-  let currentLine = '';
-  
-  for (const word of words) {
-    const testLine = currentLine ? `${currentLine} ${word}` : word;
-    const width = font.widthOfTextAtSize(testLine, size);
-    
-    if (width > maxWidth && currentLine) {
-      lines.push(currentLine);
-      currentLine = word;
-    } else {
-      currentLine = testLine;
-    }
-  }
-  
-  if (currentLine) lines.push(currentLine);
-  return lines;
-}
-
-/**
- * Formats currency values
- */
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', { 
-    style: 'currency', 
-    currency: 'USD' 
-  }).format(amount);
-}
-
-/**
- * Formats date strings
- */
-function formatDate(date: string | Date): string {
-  const d = new Date(date);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
-  });
-}
 

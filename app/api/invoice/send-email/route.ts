@@ -23,6 +23,14 @@ export async function POST(request: NextRequest) {
     const message = formData.get('message') as string;
     const pdfFile = formData.get('pdf') as File;
 
+    console.log('📥 Received FormData:', {
+      invoiceId,
+      message,
+      hasPdfFile: !!pdfFile,
+      pdfFileSize: pdfFile?.size,
+      pdfFileName: pdfFile?.name
+    });
+
     if (!invoiceId) {
       return NextResponse.json(
         { error: 'Invoice ID is required' },
@@ -64,9 +72,16 @@ export async function POST(request: NextRequest) {
 
     // Convert File to Buffer for email attachment
     const pdfBuffer = Buffer.from(await pdfFile.arrayBuffer());
+    
+    console.log('📄 PDF Buffer created:', {
+      size: pdfBuffer.length,
+      isBuffer: Buffer.isBuffer(pdfBuffer)
+    });
 
     // Send email with invoice
     const emailService = EmailService.getInstance();
+    console.log('📧 Sending email with PDF attachment...');
+    
     const emailResult = await emailService.sendInvoiceEmail({
       invoice,
       clientEmail: invoice.clientEmail,
@@ -78,6 +93,8 @@ export async function POST(request: NextRequest) {
         contentType: 'application/pdf'
       }
     });
+    
+    console.log('📧 Email result:', emailResult);
 
     if (!emailResult.success) {
       return NextResponse.json(

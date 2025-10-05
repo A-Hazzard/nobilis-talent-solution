@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { migrateAuthProvider } from '@/lib/utils/migrateAuthProvider';
 import { getAuth } from '@/lib/helpers/auth';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +18,23 @@ export async function POST(request: NextRequest) {
 
     // Run the migration
     const result = await migrateAuthProvider();
+
+    // Log the migration action for audit
+    await logAdminAction({
+      userId: authResult.user.uid,
+      userEmail: authResult.user.email,
+      action: 'update',
+      entity: 'auth',
+      details: {
+        title: 'Auth Provider Migration',
+        description: 'Admin executed auth provider migration',
+        migrationResult: result,
+        ipAddress: request.headers.get('x-forwarded-for') || 
+                   request.headers.get('x-real-ip') || 
+                   'unknown',
+        userAgent: request.headers.get('user-agent') || 'unknown',
+      },
+    });
 
     return NextResponse.json({
       success: true,

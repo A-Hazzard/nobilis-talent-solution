@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CreatePendingPaymentRequest, PendingPaymentResponse } from '@/shared/types/payment';
 import { getAdminFirestore } from '@/lib/firebase/admin';
 import { EmailService } from '@/lib/services/EmailService';
-import { PDFService } from '@/lib/services/PDFService';
 import type { InvoicePreview } from '@/shared/types/payment';
 
 export async function POST(request: NextRequest) {
@@ -78,28 +77,14 @@ export async function POST(request: NextRequest) {
       await docRef.update({ invoiceNumber, updatedAt: new Date() });
 
       const emailService = EmailService.getInstance();
-      const pdfService = PDFService.getInstance();
-      const pdf = await pdfService.generateInvoicePDF(invoice, invoiceNumber);
 
-      // Determine content type and filename based on PDF generation success
-      const isPDF = pdf.success;
-      const filename = isPDF 
-        ? `invoice-${invoiceNumber}.pdf` 
-        : `invoice-${invoiceNumber}.html`;
-      const contentType = isPDF 
-        ? 'application/pdf' 
-        : 'text/html';
-
+      // Send email notification without PDF (admin will send PDF manually from dashboard)
       await emailService.sendInvoiceEmail({
         invoice,
         clientEmail,
         clientName,
-        customMessage: isPDF 
-          ? 'Please find your invoice attached. You can also pay securely from your dashboard.'
-          : 'Please find your invoice attached (HTML format). You can also pay securely from your dashboard.',
-        pdfAttachment: pdf.data
-          ? { filename, content: pdf.data, contentType }
-          : undefined,
+        customMessage: 'You have a new invoice. Please check your dashboard to view and pay.',
+        // No PDF attachment - admin will send manually from dashboard
       });
     } catch (e) {
       console.error('Invoice email send failed (non-blocking):', e);

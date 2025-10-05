@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/config';
 import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { EmailService } from '@/lib/services/EmailService';
-import { PDFService } from '@/lib/services/PDFService';
 import { getAuth } from '@/lib/helpers/auth';
 import { ServerAuditLogger } from '@/lib/helpers/auditLogger';
 
@@ -149,31 +148,21 @@ export async function PUT(request: NextRequest) {
             });
           }
           
-          const invoiceData = {
+          const _invoiceData = {
             invoiceNumber,
             clientName: current.clientName,
             clientEmail: current.clientEmail,
+            issueDate: new Date().toISOString(),
+            dueDate: new Date().toISOString(),
             items,
             subtotal: totalAmount,
             taxAmount: 0,
-            total: totalAmount,
-            dueDate: new Date()
+            total: totalAmount
           };
           
-          console.log('📄 Admin Update: Generating PDF for completion email...');
-          const pdfService = PDFService.getInstance();
-          const pdf = await pdfService.generateInvoicePDF(invoiceData, invoiceNumber);
-          
-          if (pdf.success && pdf.data) {
-            pdfAttachment = {
-              filename: `invoice-${invoiceNumber}.pdf`,
-              content: pdf.data,
-              contentType: 'application/pdf'
-            };
-            console.log('✅ Admin Update: PDF generated successfully, size:', pdf.data.length, 'bytes');
-          } else {
-            console.log('❌ Admin Update: PDF generation failed:', pdf.error);
-          }
+          console.log('📄 Admin Update: Invoice data prepared (PDF generation skipped - frontend only)');
+          // PDF generation is now frontend-only
+          // The completion email will be sent without PDF attachment
         } catch (pdfError) {
           console.error('❌ Admin Update: PDF generation error:', pdfError);
         }

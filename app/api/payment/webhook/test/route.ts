@@ -67,11 +67,10 @@ export async function POST(request: NextRequest) {
 
       console.log('🧪 Webhook Test: Simulated session data:', simulatedSession);
 
-      // Test 3: Test PDF generation
-      console.log('🧪 Webhook Test: Testing PDF generation...');
+      // Test 3: PDF generation (deprecated - frontend only)
+      console.log('🧪 Webhook Test: PDF generation test skipped (frontend-only)');
       try {
-        const { PDFService } = await import('@/lib/services/PDFService');
-        const pdfService = PDFService.getInstance();
+        // PDF generation is now frontend-only
         
         const baseAmount = Number(pendingPayment.baseAmount || 0);
         const bonusAmount = Number(pendingPayment.bonusAmount || 0);
@@ -107,62 +106,37 @@ export async function POST(request: NextRequest) {
           notes: bonusAmount > 0 ? `Includes $${bonusAmount.toFixed(2)} bonus payment` : undefined
         };
 
-        console.log('🧪 Webhook Test: Invoice data for PDF:', invoiceData);
+        console.log('🧪 Webhook Test: PDF generation skipped (frontend-only)');
         
-        const pdf = await pdfService.generateInvoicePDF(invoiceData, invoiceData.invoiceNumber);
-        
-        if (pdf.success && pdf.data) {
-          console.log('✅ Webhook Test: PDF generated successfully, size:', pdf.data.length, 'bytes');
-          
-          // Test 4: Test email sending
-          console.log('🧪 Webhook Test: Testing email sending...');
-          const emailService = EmailService.getInstance();
-          
-          const pdfAttachment = {
-            filename: `test-invoice-${invoiceData.invoiceNumber}.pdf`,
-            content: pdf.data,
-            contentType: 'application/pdf'
-          };
+        // Test 4: Test email sending
+        console.log('🧪 Webhook Test: Testing email sending (without PDF)...');
+        const emailService = EmailService.getInstance();
 
-          const emailResult = await emailService.sendPaymentConfirmationWithPDF({
-            to: pendingPayment.clientEmail,
-            clientName: pendingPayment.clientName,
-            invoiceNumber: invoiceData.invoiceNumber,
-            amount: totalAmount,
-            paymentMethod: 'card',
-            transactionId: simulatedSession.id,
-            pdfAttachment
-          });
+        const emailResult = await emailService.sendPaymentConfirmationWithPDF({
+          to: pendingPayment.clientEmail,
+          clientName: pendingPayment.clientName,
+          invoiceNumber: invoiceData.invoiceNumber,
+          amount: totalAmount,
+          paymentMethod: 'card',
+          transactionId: simulatedSession.id,
+          // No PDF attachment - frontend only
+        });
 
-          console.log('🧪 Webhook Test: Email result:', emailResult);
+        console.log('🧪 Webhook Test: Email result:', emailResult);
 
-          return NextResponse.json({
-            success: true,
-            message: 'Webhook test completed successfully',
-            testResults: {
-              pendingPaymentFound: true,
-              pdfGenerated: pdf.success,
-              pdfSize: pdf.data?.length || 0,
-              emailSent: emailResult.success,
+        return NextResponse.json({
+          success: true,
+          message: 'Webhook test completed successfully (PDF generation skipped)',
+          testResults: {
+            pendingPaymentFound: true,
+            pdfGenerated: false, // Deprecated - frontend only
+            pdfSize: 0,
+            emailSent: emailResult.success,
               emailError: emailResult.error,
               simulatedSession: simulatedSession,
               invoiceData: invoiceData
             }
           });
-
-        } else {
-          console.log('❌ Webhook Test: PDF generation failed:', pdf.error);
-          return NextResponse.json({
-            success: false,
-            error: 'PDF generation failed',
-            pdfError: pdf.error,
-            testResults: {
-              pendingPaymentFound: true,
-              pdfGenerated: false,
-              emailSent: false
-            }
-          }, { status: 500 });
-        }
 
       } catch (error) {
         console.error('❌ Webhook Test: Error during PDF generation or email:', error);

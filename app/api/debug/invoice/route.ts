@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from '@/lib/helpers/auth';
-import { PDFService } from '@/lib/services/PDFService';
+// PDFService removed - PDF generation is now frontend-only
 import { EmailService } from '@/lib/services/EmailService';
 
 export async function GET(request: NextRequest) {
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       
       // Services test
       services: {
-        pdfService: 'available',
+        pdfService: 'deprecated - frontend only',
         emailService: 'available',
       }
     };
@@ -46,13 +46,8 @@ export async function GET(request: NextRequest) {
       debugInfo.auth.error = error instanceof Error ? error.message : 'Unknown auth error';
     }
 
-    // Test PDF service
-    try {
-      const _pdfService = PDFService.getInstance();
-      debugInfo.services.pdfService = 'initialized';
-    } catch (error) {
-      debugInfo.services.pdfService = `error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-    }
+    // PDF service is deprecated (frontend-only now)
+    debugInfo.services.pdfService = 'deprecated - frontend only';
 
     // Test email service
     try {
@@ -80,36 +75,11 @@ export async function POST(request: NextRequest) {
     const { testType } = await request.json();
     
     if (testType === 'pdf') {
-      // Test PDF generation
-      const pdfService = PDFService.getInstance();
-      const testInvoice = {
-        invoiceNumber: 'TEST-001',
-        clientName: 'Test Client',
-        clientEmail: 'test@example.com',
-        items: [
-          {
-            id: '1',
-            description: 'Test Service',
-            quantity: 1,
-            unitPrice: 100,
-            total: 100,
-            type: 'service' as const
-          }
-        ],
-        subtotal: 100,
-        taxAmount: 0,
-        total: 100,
-        dueDate: new Date()
-      };
-
-      const result = await pdfService.generateInvoicePDF(testInvoice, 'TEST-001');
-      
       return NextResponse.json({
-        success: result.success,
-        error: result.error,
-        dataSize: result.data?.length || 0,
+        error: 'PDF service is deprecated. PDF generation is now frontend-only.',
+        message: 'Use generateInvoicePdf() helper on the frontend',
         timestamp: new Date().toISOString()
-      });
+      }, { status: 410 });
     }
 
     if (testType === 'email') {

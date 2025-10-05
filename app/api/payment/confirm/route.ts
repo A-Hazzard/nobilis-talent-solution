@@ -359,36 +359,23 @@ export async function POST(request: NextRequest) {
             });
           }
           
-          const invoiceData = {
+          const _invoiceData = {
             invoiceNumber,
             clientName: clientName || 'Unknown Client',
             clientEmail: clientEmail || 'unknown@example.com',
+            issueDate: new Date().toISOString(),
+            dueDate: new Date().toISOString(),
             items,
             subtotal: amountTotal,
             taxAmount: 0,
             total: amountTotal,
-            dueDate: new Date(),
             bonusAmount: bonusAmount,
             notes: bonusAmount > 0 ? `Includes $${bonusAmount.toFixed(2)} bonus payment` : undefined
           };
           
-          console.log('📄 Payment Confirm: Invoice data for PDF:', invoiceData);
-          console.log('📄 Payment Confirm: Generating PDF for payment confirmation...');
-          
-          const { PDFService } = await import('@/lib/services/PDFService');
-          const pdfService = PDFService.getInstance();
-          const pdf = await pdfService.generateInvoicePDF(invoiceData, invoiceNumber);
-          
-          if (pdf.success && pdf.data) {
-            pdfAttachment = {
-              filename: `invoice-${invoiceNumber}.pdf`,
-              content: pdf.data,
-              contentType: 'application/pdf'
-            };
-            console.log('✅ Payment Confirm: PDF generated successfully, size:', pdf.data.length, 'bytes');
-          } else {
-            console.log('❌ Payment Confirm: PDF generation failed:', pdf.error);
-          }
+          console.log('📄 Payment Confirm: Invoice data prepared (PDF generation skipped - frontend only)');
+          // PDF generation is now frontend-only
+          // The confirmation email will be sent without PDF attachment
         } catch (pdfError) {
           console.error('❌ Payment Confirm: Failed to generate PDF:', pdfError);
         }

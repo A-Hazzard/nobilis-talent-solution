@@ -347,6 +347,8 @@ export default function InvoicesPage() {
     try {
       const invoice = selectedPayment as Invoice;
       
+      console.log('🔄 Generating PDF for invoice:', invoice.invoiceNumber);
+      
       // Generate PDF on frontend
       const pdfBlob = await generateInvoicePdf({
         invoiceNumber: invoice.invoiceNumber,
@@ -360,11 +362,15 @@ export default function InvoicesPage() {
         notes: emailMessage,
       });
 
+      console.log('✅ PDF generated successfully, size:', pdfBlob.size, 'bytes');
+
       // Create FormData with PDF
       const formData = new FormData();
       formData.append('pdf', pdfBlob, `invoice-${invoice.invoiceNumber}.pdf`);
       formData.append('invoiceId', invoice.id);
       formData.append('message', emailMessage || '');
+
+      console.log('📤 Sending PDF to backend...');
 
       const response = await fetch('/api/invoice/send-email', {
         method: 'POST',
@@ -373,6 +379,7 @@ export default function InvoicesPage() {
       });
 
       if (response.ok) {
+        console.log('✅ Email sent successfully');
         toast.success('Invoice sent successfully');
         setIsEmailModalOpen(false);
         setEmailMessage('');
@@ -382,10 +389,11 @@ export default function InvoicesPage() {
         await loadPayments();
       } else {
         const error = await response.json();
+        console.error('❌ Email send failed:', error);
         toast.error(error.error || 'Failed to send invoice');
       }
     } catch (error) {
-      console.error('Error sending invoice:', error);
+      console.error('❌ Error sending invoice:', error);
       toast.error('Failed to send invoice');
     }
   };

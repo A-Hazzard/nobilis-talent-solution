@@ -15,6 +15,7 @@ import type { User as AppUser } from '@/shared/types/entities';
 import type { UserProfile } from '@/lib/types/services';
 import { validateSignupForm, validateLoginForm } from '@/lib/utils/validation';
 import { logAdminLogin } from '@/lib/utils/auditUtils';
+import { logAdminAction } from '@/lib/helpers/auditLogger';
 
 export class AuthService {
   private static instance: AuthService;
@@ -64,6 +65,28 @@ export class AuthService {
       // Log admin login for audit
       if (userCredential.user.uid === 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1') {
         await logAdminLogin();
+      }
+      
+      // Log user login for audit (all users)
+      try {
+        await logAdminAction({
+          userId: userCredential.user.uid,
+          userEmail: userCredential.user.email || '',
+          action: 'login',
+          entity: 'auth',
+          entityId: userCredential.user.uid,
+          details: {
+            title: `User login: ${userCredential.user.email}`,
+            description: `User logged in successfully`,
+            userEmail: userCredential.user.email || '',
+            authProvider: 'email',
+            ipAddress: 'client-side', // This is called from client-side
+            userAgent: 'client-side', // This is called from client-side
+          },
+        });
+      } catch (auditError) {
+        console.error('Failed to log user login audit:', auditError);
+        // Don't fail login if audit logging fails
       }
       
       return { user: userCredential.user, error: null };
@@ -191,6 +214,32 @@ export class AuthService {
         displayName: `${firstName} ${lastName}`,
         authProvider: 'email',
       });
+
+      // Log user creation for audit
+      try {
+        await logAdminAction({
+          userId: userCredential.user.uid,
+          userEmail: userCredential.user.email || '',
+          action: 'create',
+          entity: 'auth',
+          entityId: userCredential.user.uid,
+          details: {
+            title: `New user registered: ${firstName} ${lastName}`,
+            description: `User created account with email: ${email}`,
+            firstName,
+            lastName,
+            userEmail: email,
+            organization: organization || 'Not specified',
+            phone: phone || '',
+            authProvider: 'email',
+            ipAddress: 'client-side', // This is called from client-side
+            userAgent: 'client-side', // This is called from client-side
+          },
+        });
+      } catch (auditError) {
+        console.error('Failed to log user creation audit:', auditError);
+        // Don't fail signup if audit logging fails
+      }
 
       return { user: userCredential.user, error: null };
     } catch (error: any) {
@@ -338,6 +387,32 @@ export class AuthService {
           authProvider: 'google',
         });
         
+        // Log new user creation for audit
+        try {
+          await logAdminAction({
+            userId: firebaseUser.uid,
+            userEmail: firebaseUser.email || '',
+            action: 'create',
+            entity: 'auth',
+            entityId: firebaseUser.uid,
+            details: {
+              title: `New user registered via Google: ${firstName} ${lastName}`,
+              description: `User created account with Google: ${firebaseUser.email}`,
+              firstName,
+              lastName,
+              userEmail: firebaseUser.email || '',
+              organization: '',
+              phone: '',
+              authProvider: 'google',
+              ipAddress: 'client-side', // This is called from client-side
+              userAgent: 'client-side', // This is called from client-side
+            },
+          });
+        } catch (auditError) {
+          console.error('Failed to log Google user creation audit:', auditError);
+          // Don't fail signup if audit logging fails
+        }
+        
         userProfile = await this.getUserProfile(firebaseUser.uid);
       } else {
         // For existing users, validate they're using the correct provider
@@ -368,6 +443,29 @@ export class AuthService {
       // Log admin login if applicable
       if (userProfile?.role === 'admin') {
         await logAdminLogin(firebaseUser.uid, firebaseUser.email || '');
+      }
+      
+      // Log user login for audit (all users)
+      try {
+        await logAdminAction({
+          userId: firebaseUser.uid,
+          userEmail: firebaseUser.email || '',
+          action: 'login',
+          entity: 'auth',
+          entityId: firebaseUser.uid,
+          details: {
+            title: `User login via Google: ${firebaseUser.email}`,
+            description: `User logged in successfully with Google`,
+            userEmail: firebaseUser.email || '',
+            authProvider: 'google',
+            isNewUser,
+            ipAddress: 'client-side', // This is called from client-side
+            userAgent: 'client-side', // This is called from client-side
+          },
+        });
+      } catch (auditError) {
+        console.error('Failed to log Google user login audit:', auditError);
+        // Don't fail login if audit logging fails
       }
       
       console.log('AuthService: Google sign-in successful');

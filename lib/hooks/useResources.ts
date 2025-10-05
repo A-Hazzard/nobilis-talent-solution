@@ -110,10 +110,11 @@ export function useResources(): [ResourcesState, ResourcesActions] {
       } else {
         // Log audit action
         await logAdminAction({
+          userId: 'admin',
+          userEmail: 'admin@nobilistalent.com',
           action: 'create',
           entity: 'resource',
           entityId: response.id,
-
           details: {
             title: `Resource created: ${formData.title}`,
             resourceTitle: formData.title,
@@ -173,10 +174,11 @@ export function useResources(): [ResourcesState, ResourcesActions] {
       } else {
         // Log audit action
         await logAdminAction({
+          userId: 'admin',
+          userEmail: 'admin@nobilistalent.com',
           action: 'update',
           entity: 'resource',
           entityId: editingResource.id,
-
           details: {
             title: `Resource updated: ${formData.title}`,
             resourceTitle: formData.title,
@@ -233,10 +235,11 @@ export function useResources(): [ResourcesState, ResourcesActions] {
         // Log audit action
         if (resourceToDelete) {
           await logAdminAction({
+            userId: 'admin',
+            userEmail: 'admin@nobilistalent.com',
             action: 'delete',
             entity: 'resource',
             entityId: id,
-  
             details: {
               title: `Resource deleted: ${resourceToDelete.title}`,
               resourceTitle: resourceToDelete.title,

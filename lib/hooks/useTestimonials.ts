@@ -85,10 +85,11 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
       } else {
         // Log audit action
         await logAdminAction({
+          userId: 'admin',
+          userEmail: 'admin@nobilistalent.com',
           action: 'create',
           entity: 'testimonial',
           entityId: response.id || formData.clientName,
-
           details: {
             title: `Testimonial added`,
             clientName: formData.clientName,
@@ -153,10 +154,11 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
       } else {
         // Log audit action
         await logAdminAction({
+          userId: 'admin',
+          userEmail: 'admin@nobilistalent.com',
           action: 'update',
           entity: 'testimonial',
           entityId: editingTestimonial.id,
-
           details: {
             title: `Testimonial updated`,
             clientName: formData.clientName,
@@ -213,10 +215,11 @@ export function useTestimonials(): [TestimonialsState, TestimonialsActions] {
         // Log audit action
         if (testimonialToDelete) {
           await logAdminAction({
+            userId: 'admin',
+            userEmail: 'admin@nobilistalent.com',
             action: 'delete',
             entity: 'testimonial',
             entityId: id,
-  
             details: {
               title: `Testimonial deleted`,
               clientName: testimonialToDelete.clientName,

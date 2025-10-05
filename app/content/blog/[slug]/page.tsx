@@ -66,7 +66,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         // Increment aggregate view counter on the post
         if (response.post) {
           try {
-            await blogService.incrementViewCount(response.post.id, user?.id);
+            await blogService.incrementViewCount(response.post.id, user?.id || undefined);
           } catch {
             // non-blocking
           }

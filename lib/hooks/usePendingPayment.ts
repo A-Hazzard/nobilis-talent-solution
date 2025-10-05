@@ -9,19 +9,20 @@ export function usePendingPayment(userEmail?: string) {
   const [shouldShowPaymentButton, setShouldShowPaymentButton] = useState(false);
 
   useEffect(() => {
-    if (!userEmail) {
-      setPendingPayment(null);
-      setHasCompletedPayment(false);
-      setShouldShowPaymentButton(false);
-      return;
-    }
+    // Allow checking payment status even without user email
+    // This enables checking for payment status independently of user authentication
 
     const checkPendingPayment = async () => {
       setIsLoading(true);
       setError('');
 
       try {
-        const response = await fetch(`/api/payment/user-status?email=${encodeURIComponent(userEmail)}`);
+        // Build URL with email parameter only if userEmail is provided
+        const url = userEmail 
+          ? `/api/payment/user-status?email=${encodeURIComponent(userEmail)}`
+          : '/api/payment/user-status';
+        
+        const response = await fetch(url);
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));

@@ -205,11 +205,14 @@ export class LeadsService {
       // Audit log
       await logAdminAction({
         userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        userEmail: 'admin@nobilistalent.com',
         action: 'update',
         entity: 'lead',
         entityId: id,
-        details: { updates },
-
+        details: { 
+          title: `Lead updated: ${updates.firstName || ''} ${updates.lastName || ''}`,
+          updates 
+        },
       });
       
       return {};
@@ -230,10 +233,13 @@ export class LeadsService {
       // Audit log
       await logAdminAction({
         userId: 'wG2jJtLiFCOaRF6jZ2DMo8u8yAh1',
+        userEmail: 'admin@nobilistalent.com',
         action: 'delete',
         entity: 'lead',
         entityId: id,
-
+        details: {
+          title: `Lead deleted: ${id}`,
+        },
       });
       
       return {};

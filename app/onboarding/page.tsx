@@ -262,7 +262,7 @@ export default function OnboardingPage() {
         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Users className="w-8 h-8 text-blue-600" />
         </div>
-        <CardTitle className="text-3xl font-bold">Welcome to Payne Leadership!</CardTitle>
+        <CardTitle className="text-3xl font-bold">Welcome to Nobilis Talent Solutions</CardTitle>
         <CardDescription className="text-lg">
           Let's get you set up for success. This quick setup will help us personalize your experience.
         </CardDescription>
